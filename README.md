@@ -1,11 +1,7 @@
-# `flutter_libepiccash`
+# `flutter_libmwc`
 ## Dependencies
 ### Rust
 Install Rust: https://www.rust-lang.org/tools/install
-```sh
-rustup install 1.67.1
-rustup default 1.67.1
-```
 
 ### `cargo-ndk`
 ```sh
@@ -20,7 +16,7 @@ rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-andro
 
 ## Install dependencies
 ```sh
-# https://github.com/EpicCash/epic/blob/master/doc/build.md#requirements
+# https://github.com/mwcproject/mwc-node/blob/master/doc/build.md#requirements
 sudo apt install build-essential \
 	cmake \
 	git \

@@ -1,6 +1,6 @@
-// import 'package:epic_wallet/backup_key_view.dart';
+// import 'package:Mwc_wallet/backup_key_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_libepiccash_example/mnemonic_view.dart';
+import 'package:flutter_libmwc_example/mnemonic_view.dart';
 import 'package:numeric_keyboard/numeric_keyboard.dart';
 
 class PasswordView extends StatelessWidget {
@@ -10,7 +10,7 @@ class PasswordView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Epic cash wallet',
+      title: 'Mwc cash wallet',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -23,7 +23,7 @@ class PasswordView extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: EpicPasswordView(
+      home: MwcPasswordView(
         title: 'Please enter password',
         name: name,
       ),
@@ -33,9 +33,9 @@ class PasswordView extends StatelessWidget {
 // This widget is the root of your application.
 }
 
-class EpicPasswordView extends StatefulWidget {
+class MwcPasswordView extends StatefulWidget {
   final String name;
-  const EpicPasswordView({Key? key, required this.title, required this.name})
+  const MwcPasswordView({Key? key, required this.title, required this.name})
       : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
@@ -50,10 +50,10 @@ class EpicPasswordView extends StatefulWidget {
   final String title;
 
   @override
-  State<EpicPasswordView> createState() => _EpicPasswordView();
+  State<MwcPasswordView> createState() => _MwcPasswordView();
 }
 
-class _EpicPasswordView extends State<EpicPasswordView> {
+class _MwcPasswordView extends State<MwcPasswordView> {
   var text = "";
 
   @override

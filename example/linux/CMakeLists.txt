@@ -4,10 +4,10 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "flutter_libepiccash_example")
+set(BINARY_NAME "flutter_libmwc_example")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.example.flutter_libepiccash")
+set(APPLICATION_ID "com.example.flutter_libmwc")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -117,10 +117,10 @@ install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../../linux/bin/aarch64-unknown-linux-gnu/release/libepic_cash_wallet.so" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../../linux/bin/aarch64-unknown-linux-gnu/release/libmwc_wallet.so" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
           COMPONENT Runtime)
 else()
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../../linux/bin/x86_64-unknown-linux-gnu/release/libepic_cash_wallet.so" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../../linux/bin/x86_64-unknown-linux-gnu/release/libmwc_wallet.so" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
           COMPONENT Runtime)
 endif()
 

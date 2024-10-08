@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_libepiccash
+  flutter_libmwc
   flutter_secure_storage_windows
 )
 

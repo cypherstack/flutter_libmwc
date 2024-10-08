@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter_libepiccash_example/password_view.dart';
+import 'package:flutter_libmwc_example/password_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_libepiccash_example/recover_view.dart';
+import 'package:flutter_libmwc_example/recover_view.dart';
 
 class WalletNameView extends StatelessWidget {
   const WalletNameView({Key? key, required this.recover}) : super(key: key);
@@ -24,14 +24,14 @@ class WalletNameView extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: EpicWalletNameView(
+      home: MwcWalletNameView(
           title: 'Please enter wallet name', recover: recover),
     );
   }
 }
 
-class EpicWalletNameView extends StatefulWidget {
-  const EpicWalletNameView(
+class MwcWalletNameView extends StatefulWidget {
+  const MwcWalletNameView(
       {Key? key, required this.title, required this.recover})
       : super(key: key);
   final bool recover;
@@ -48,10 +48,10 @@ class EpicWalletNameView extends StatefulWidget {
   final String title;
 
   @override
-  State<EpicWalletNameView> createState() => _EpicWalletNameView();
+  State<MwcWalletNameView> createState() => _MwcWalletNameView();
 }
 
-class _EpicWalletNameView extends State<EpicWalletNameView> {
+class _MwcWalletNameView extends State<MwcWalletNameView> {
   var name = "";
 
   void _setWalletName(value) {

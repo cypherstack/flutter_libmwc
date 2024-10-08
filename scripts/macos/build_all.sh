@@ -13,7 +13,7 @@ cp -r ../../rust build/rust
 cd build/rust
 
 # building
-cbindgen src/lib.rs -l c > libepic_cash_wallet.h
+cbindgen src/lib.rs -l c > libmwc_wallet.h
 cargo lipo --release --targets aarch64-apple-darwin
 
 # moving files to the ios project
@@ -25,5 +25,5 @@ rm -rf ${inc} ${libs}
 mkdir ${inc}
 mkdir ${libs}
 
-cp libepic_cash_wallet.h ${inc}
-cp target/aarch64-apple-darwin/release/libepic_cash_wallet.a ${libs}
+cp libmwc_wallet.h ${inc}
+cp target/aarch64-apple-darwin/release/libmwc_wallet.a ${libs}

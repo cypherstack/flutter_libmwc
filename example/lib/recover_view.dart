@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:ffi/ffi.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_libepiccash/epic_cash.dart';
-import 'package:flutter_libepiccash_example/transaction_view.dart';
+import 'package:flutter_libmwc/mwc.dart';
+import 'package:flutter_libmwc_example/transaction_view.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -29,13 +29,13 @@ class RecoverWalletView extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: EpicRecoverWalletView(title: 'Recover from mnemonic', name: name),
+      home: MwcRecoverWalletView(title: 'Recover from mnemonic', name: name),
     );
   }
 }
 
-class EpicRecoverWalletView extends StatefulWidget {
-  const EpicRecoverWalletView(
+class MwcRecoverWalletView extends StatefulWidget {
+  const MwcRecoverWalletView(
       {Key? key, required this.title, required this.name})
       : super(key: key);
 
@@ -52,10 +52,10 @@ class EpicRecoverWalletView extends StatefulWidget {
   final String title;
 
   @override
-  State<EpicRecoverWalletView> createState() => _EpicRecoverWalletView();
+  State<MwcRecoverWalletView> createState() => _MwcRecoverWalletView();
 }
 
-class _EpicRecoverWalletView extends State<EpicRecoverWalletView> {
+class _MwcRecoverWalletView extends State<MwcRecoverWalletView> {
   String mnemonic = "";
   String password = "";
   String walletConfig = "";
@@ -96,7 +96,7 @@ class _EpicRecoverWalletView extends State<EpicRecoverWalletView> {
   String _getWalletConfig(name) {
     var config = {};
     config["wallet_dir"] =
-        "/data/user/0/com.example.flutter_libepiccash_example/app_flutter/$name/";
+        "/data/user/0/com.example.flutter_libmwc_example/app_flutter/$name/";
     config["check_node_api_http_addr"] = "http://95.216.215.107:3413";
     config["chain"] = "mainnet";
     config["account"] = "default";

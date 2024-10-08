@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'flutter_libepiccash_platform_interface.dart';
+import 'flutter_libmwc_platform_interface.dart';
 
-/// An implementation of [FlutterLibepiccashPlatform] that uses method channels.
-class MethodChannelFlutterLibepiccash extends FlutterLibepiccashPlatform {
+/// An implementation of [FlutterLibmwcPlatform] that uses method channels.
+class MethodChannelFlutterLibmwc extends FlutterLibmwcPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('flutter_libepiccash');
+  final methodChannel = const MethodChannel('flutter_libmwc');
 
   @override
   Future<String?> getPlatformVersion() async {

@@ -1,4 +1,4 @@
-package com.example.flutter_libepiccash
+package com.example.flutter_libmwc
 
 import androidx.annotation.NonNull
 
@@ -8,8 +8,8 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
-/** FlutterLibepiccashPlugin */
-class FlutterLibepiccashPlugin: FlutterPlugin, MethodCallHandler {
+/** FlutterLibmwcPlugin */
+class FlutterLibmwcPlugin: FlutterPlugin, MethodCallHandler {
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -17,7 +17,7 @@ class FlutterLibepiccashPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_libepiccash")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_libmwc")
     channel.setMethodCallHandler(this)
   }
 

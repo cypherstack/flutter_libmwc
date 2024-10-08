@@ -1,3 +1,6 @@
-[submodule "rust/epic-wallet"]
-	path = rust/epic-wallet
-	url = https://github.com/cypherstack/epic-wallet
+[submodule "rust/mwc-wallet"]
+	path = rust/mwc-wallet
+	url = https://github.com/mwcproject/mwc-wallet
+[submodule "rust/mwc-node"]
+	path = rust/mwc-node
+	url = https://github.com/mwcproject/mwc-node

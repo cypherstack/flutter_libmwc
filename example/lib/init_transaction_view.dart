@@ -24,14 +24,14 @@ class InitTransactionView extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: EpicInitTransactionView(
+      home: MwcInitTransactionView(
           title: 'Please enter amount to send', password: password),
     );
   }
 }
 
-class EpicInitTransactionView extends StatefulWidget {
-  const EpicInitTransactionView(
+class MwcInitTransactionView extends StatefulWidget {
+  const MwcInitTransactionView(
       {Key? key, required this.title, required this.password})
       : super(key: key);
   final String password;
@@ -48,10 +48,10 @@ class EpicInitTransactionView extends StatefulWidget {
   final String title;
 
   @override
-  State<EpicInitTransactionView> createState() => _EpicInitTransactionView();
+  State<MwcInitTransactionView> createState() => _MwcInitTransactionView();
 }
 
-class _EpicInitTransactionView extends State<EpicInitTransactionView> {
+class _MwcInitTransactionView extends State<MwcInitTransactionView> {
   var amount = "";
   var walletConfig = "";
   final storage = new FlutterSecureStorage();

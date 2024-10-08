@@ -17,10 +17,10 @@ if [ "$IS_ARM" = true ]  ; then
     echo "Building arm version"
     cargo build --target aarch64-unknown-linux-gnu --release --lib
     mkdir -p ../../../../linux/bin/aarch64-unknown-linux-gnu/release
-    cp target/aarch64-unknown-linux-gnu/release/libepic_cash_wallet.so ../../../../linux/bin/aarch64-unknown-linux-gnu/release/
+    cp target/aarch64-unknown-linux-gnu/release/libmwc_wallet.so ../../../../linux/bin/aarch64-unknown-linux-gnu/release/
 else
     echo "Building x86_64 version"
     cargo build --target x86_64-unknown-linux-gnu --release --lib
     mkdir -p ../../../../linux/bin/x86_64-unknown-linux-gnu/release
-    cp target/x86_64-unknown-linux-gnu/release/libepic_cash_wallet.so ../../../../linux/bin/x86_64-unknown-linux-gnu/release/
+    cp target/x86_64-unknown-linux-gnu/release/libmwc_wallet.so ../../../../linux/bin/x86_64-unknown-linux-gnu/release/
 fi

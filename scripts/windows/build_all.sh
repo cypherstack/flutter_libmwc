@@ -21,10 +21,10 @@ if [ "$IS_ARM" = true ]  ; then
     cargo build --target aarch64-pc-windows-gnu --release --lib
 
     mkdir -p target/x86_64-pc-windows-gnu/release
-    cp target/aarch64-pc-windows-gnu/release/libepic_cash_wallet.so target/x86_64-pc-windows-gnu/release/
+    cp target/aarch64-pc-windows-gnu/release/libmwc_wallet.so target/x86_64-pc-windows-gnu/release/
 else
     echo "Building x86_64 version"
     cargo build --target x86_64-pc-windows-gnu --release --lib
 fi
 
-cp target/x86_64-pc-windows-gnu/release/epic_cash_wallet.dll ../libepic_cash_wallet.dll
+cp target/x86_64-pc-windows-gnu/release/mwc_wallet.dll ../libmwc_wallet.dll

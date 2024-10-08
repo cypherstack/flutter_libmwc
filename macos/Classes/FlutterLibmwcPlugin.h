@@ -29,7 +29,7 @@ const char *rust_create_tx(const char *wallet,
                            const char *amount,
                            const char *to_address,
                            const char *secret_key_index,
-                           const char *epicbox_config,
+                           const char *mwcmqs_config,
                            const char *confirmations,
                            const char *note);
 
@@ -50,7 +50,7 @@ const char *rust_tx_send_http(const char *wallet,
 
 const char *rust_get_wallet_address(const char *wallet,
                                     const char *index,
-                                    const char *epicbox_config);
+                                    const char *mwcmqs_config);
 
 const char *rust_validate_address(const char *address);
 
@@ -58,6 +58,6 @@ const char *rust_get_tx_fees(const char *wallet,
                              const char *c_amount,
                              const char *min_confirmations);
 
-void *rust_epicbox_listener_start(const char *wallet, const char *epicbox_config);
+void *rust_mwcmqs_listener_start(const char *wallet, const char *mwcmqs_config);
 
 const char *_listener_cancel(void *handler);

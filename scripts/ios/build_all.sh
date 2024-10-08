@@ -15,7 +15,7 @@ cd build/rust
 rustup target add aarch64-apple-ios x86_64-apple-ios
 
 # building
-cbindgen src/lib.rs -l c > libepic_cash_wallet.h
+cbindgen src/lib.rs -l c > libmwc_wallet.h
 cargo lipo --release
 
 # moving files to the ios project
@@ -27,5 +27,5 @@ rm -rf ${inc} ${libs}
 mkdir ${inc}
 mkdir ${libs}
 
-cp libepic_cash_wallet.h ${inc}
-cp target/aarch64-apple-ios/release/libepic_cash_wallet.a ${libs}
+cp libmwc_wallet.h ${inc}
+cp target/aarch64-apple-ios/release/libmwc_wallet.a ${libs}

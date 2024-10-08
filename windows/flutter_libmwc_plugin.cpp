@@ -1,4 +1,4 @@
-#include "flutter_libepiccash_plugin.h"
+#include "flutter_libmwc_plugin.h"
 
 // This must be included before many other Windows headers.
 #include <windows.h>
@@ -13,17 +13,17 @@
 #include <memory>
 #include <sstream>
 
-namespace flutter_libepiccash {
+namespace flutter_libmwc {
 
 // static
-void FlutterLibepiccashPlugin::RegisterWithRegistrar(
+void FlutterLibmwcPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "flutter_libepiccash",
+          registrar->messenger(), "flutter_libmwc",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<FlutterLibepiccashPlugin>();
+  auto plugin = std::make_unique<FlutterLibmwcPlugin>();
 
   channel->SetMethodCallHandler(
       [plugin_pointer = plugin.get()](const auto &call, auto result) {
@@ -33,11 +33,11 @@ void FlutterLibepiccashPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-FlutterLibepiccashPlugin::FlutterLibepiccashPlugin() {}
+FlutterLibmwcPlugin::FlutterLibmwcPlugin() {}
 
-FlutterLibepiccashPlugin::~FlutterLibepiccashPlugin() {}
+FlutterLibmwcPlugin::~FlutterLibmwcPlugin() {}
 
-void FlutterLibepiccashPlugin::HandleMethodCall(
+void FlutterLibmwcPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue> &method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   if (method_call.method_name().compare("getPlatformVersion") == 0) {
@@ -56,4 +56,4 @@ void FlutterLibepiccashPlugin::HandleMethodCall(
   }
 }
 
-}  // namespace flutter_libepiccash
+}  // namespace flutter_libmwc

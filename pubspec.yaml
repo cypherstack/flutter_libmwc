@@ -1,4 +1,4 @@
-name: flutter_libepiccash
+name: flutter_libmwc
 description: A new Flutter plugin project.
 version: 0.0.1
 homepage:
@@ -39,16 +39,16 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.flutter_libepiccash
-        pluginClass: FlutterLibepiccashPlugin
+        package: com.example.flutter_libmwc
+        pluginClass: FlutterLibmwcPlugin
       ios:
-        pluginClass: FlutterLibepiccashPlugin
+        pluginClass: FlutterLibmwcPlugin
       linux:
-        pluginClass: FlutterLibepiccashPlugin
+        pluginClass: FlutterLibmwcPlugin
       macos:
-        pluginClass: FlutterLibepiccashPlugin
+        pluginClass: FlutterLibmwcPlugin
       windows:
-        pluginClass: FlutterLibepiccashPluginCApi
+        pluginClass: FlutterLibmwcPluginCApi
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

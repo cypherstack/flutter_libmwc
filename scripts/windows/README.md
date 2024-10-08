@@ -1,4 +1,4 @@
-# `flutter_libepiccash`
+# `flutter_libmwc`
 ## Dependencies
 Run `deps.sh` (may need to alter permissions like with `chmod +x *.sh`) to install x86_64-w64-mingw32-gcc or run
 ```sh

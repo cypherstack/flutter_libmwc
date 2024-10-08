@@ -7,28 +7,27 @@ use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use stack_epic_wallet_api::{self, Owner};
-use stack_epic_wallet_config::{WalletConfig, EpicboxConfig};
-use stack_epic_wallet_libwallet::{Address, AddressType, EpicboxAddress};
-use stack_epic_wallet_libwallet::api_impl::types::{InitTxArgs, InitTxSendArgs};
-use stack_epic_wallet_libwallet::api_impl::owner;
-use stack_epic_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, EpicboxListenChannel, HTTPNodeClient};
+use grin_wallet_api::{self, Owner};
+use grin_wallet_config::{WalletConfig, MQSConfig};
+use grin_wallet_libwallet::api_impl::types::{InitTxArgs, InitTxSendArgs};
+use grin_wallet_libwallet::api_impl::owner;
+use grin_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, MwcMqsChannel, MWCMQSAddress, Address, AddressType, HTTPNodeClient};
 
-use stack_epic_keychain::mnemonic;
-use stack_epic_wallet_util::epic_core::global::ChainTypes;
-use stack_epic_util::file::get_first_line;
-use stack_epic_wallet_util::epic_util::ZeroingString;
-use stack_epic_util::Mutex;
-use stack_epic_wallet_libwallet::{address, scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error};
-use stack_epic_wallet_controller::Error as EpicWalletControllerError;
+use grin_keychain::mnemonic;
+use grin_wallet_util::grin_core::global::ChainTypes;
+use grin_util::file::get_first_line;
+use grin_wallet_util::grin_util::ZeroingString;
+use grin_util::Mutex;
+use grin_wallet_libwallet::{address, scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress};
+use grin_wallet_controller::{controller, Error as MWCWalletControllerError};
 
-use stack_epic_wallet_util::epic_keychain::{Keychain, ExtKeychain};
+use grin_wallet_util::grin_keychain::{Keychain, ExtKeychain};
 
-use stack_epic_util::secp::rand::Rng;
+use grin_util::secp::rand::Rng;
 
-use stack_epic_util::secp::key::{SecretKey, PublicKey};
-use stack_epic_util::secp::{Secp256k1};
-
+use grin_util::secp::key::{SecretKey, PublicKey};
+use grin_util::secp::{Secp256k1};
+use ed25519_dalek::{PublicKey as DalekPublicKey, SecretKey as DalekSecretKey};
 use android_logger::FilterBuilder;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -69,8 +68,8 @@ fn init_logger() {
     android_logger::init_once(
         AndroidConfig::default()
             .with_min_level(Level::Trace)
-            .with_tag("libepiccash")
-            .with_filter(FilterBuilder::new().parse("debug,epic-cash-wallet::crate=super").build()),
+            .with_tag("libmwc")
+            .with_filter(FilterBuilder::new().parse("debug,mwc-wallet::crate=super").build()),
     );
 }
 
@@ -117,10 +116,18 @@ fn create_wallet_config(config: Config) -> Result<WalletConfig, Error> {
         tls_certificate_file: None,
         tls_certificate_key: None,
         dark_background_color_scheme: Some(true),
-        keybase_notify_ttl: Some(1440),
         no_commit_cache: Some(false),
         owner_api_include_foreign: Some(false),
         owner_api_listen_port: Some(WalletConfig::default_owner_api_listen_port()),
+        libp2p_listen_port: todo!(),
+        owner_api_include_mqs_listener: todo!(),
+        grinbox_address_index: todo!(),
+        wallet_data_dir: todo!(),
+        accept_fee_base: todo!(),
+        eth_swap_contract_address: todo!(),
+        erc20_swap_contract_address: todo!(),
+        eth_infura_project_id: todo!(),
+        swap_electrumx_addr: todo!(),
     })
 }
 
@@ -205,25 +212,25 @@ fn _wallet_init(
 
     let str_password = match password.to_str() {
         Ok(str_pass) => {str_pass}, Err(e) => {return Err(
-            Error::from(EpicWalletControllerError::GenericError(format!("{}", e.to_string())))
+            Error::GenericError(format!("{}", e.to_string()))
         )}
     };
 
     let str_config = match config.to_str() {
         Ok(str_conf) => {str_conf}, Err(e) => {return Err(
-            Error::from(EpicWalletControllerError::GenericError(format!("{}", e.to_string())))
+            Error::GenericError(format!("{}", e.to_string()))
         )}
     };
 
     let phrase = match mnemonic.to_str() {
         Ok(str_phrase) => {str_phrase}, Err(e) => {return Err(
-            Error::from(EpicWalletControllerError::GenericError(format!("{}", e.to_string())))
+            Error::GenericError(format!("{}", e.to_string()))
         )}
     };
 
     let str_name = match name.to_str() {
         Ok(str_name) => {str_name}, Err(e) => {return Err(
-            Error::from(EpicWalletControllerError::GenericError(format!("{}", e.to_string())))
+            Error::GenericError(format!("{}", e.to_string()))
         )}
     };
 
@@ -416,10 +423,10 @@ fn _recover_from_mnemonic(
         Ok(config) => {
             config
         }, Err(err) => {
-            return Err(Error::from(EpicWalletControllerError::GenericError(format!(
+            return Err(Error::GenericError(format!(
                 "Wallet config error : {}",
                 err.to_string()
-            ))))
+            )))
         }
     };
     let phrase = c_mnemonic.to_str().unwrap();
@@ -511,7 +518,7 @@ pub unsafe extern "C" fn rust_create_tx(
     amount: *const c_char,
     to_address: *const c_char,
     secret_key_index: *const c_char,
-    epicbox_config: *const c_char,
+    mwcmqs_config: *const c_char,
     confirmations: *const c_char,
     note: *const c_char
 ) -> *const c_char {
@@ -522,13 +529,13 @@ pub unsafe extern "C" fn rust_create_tx(
     let address = CStr::from_ptr(to_address).to_str().unwrap();
     let note = CStr::from_ptr(note).to_str().unwrap();
     let key_index: u32 = CStr::from_ptr(secret_key_index).to_str().unwrap().parse().unwrap();
-    let epicbox_config = CStr::from_ptr(epicbox_config).to_str().unwrap();
+    let mwcmqs_config = CStr::from_ptr(mwcmqs_config).to_str().unwrap();
 
     let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
 
     let listen = Listener {
         wallet_ptr_str: wallet_data.to_string(),
-        epicbox_config: epicbox_config.parse().unwrap()
+        mwcmqs_config: mwcmqs_config.parse().unwrap()
     };
 
     let handle = listener_spawn(&listen);
@@ -546,7 +553,7 @@ pub unsafe extern "C" fn rust_create_tx(
         amount,
         address,
         key_index,
-        epicbox_config,
+        mwcmqs_config,
         min_confirmations,
         note
     ) {
@@ -572,7 +579,7 @@ fn _create_tx(
     amount: u64,
     address: &str,
     _secret_key_index: u32,
-    epicbox_config: &str,
+    mwcmqs_config: &str,
     minimum_confirmations: u64,
     note: &str
 ) -> Result<*const c_char, Error> {
@@ -583,7 +590,7 @@ fn _create_tx(
         amount,
         minimum_confirmations,
         false,
-        epicbox_config,
+        mwcmqs_config,
         address,
         note) {
         Ok(slate) => {
@@ -678,7 +685,7 @@ pub unsafe extern "C" fn rust_tx_cancel(
     let wallet_ptr = CStr::from_ptr(wallet);
     let tx_id = CStr::from_ptr(tx_id);
     let tx_id = tx_id.to_str().unwrap();
-    let uuid = Uuid::parse_str(tx_id).map_err(|e| EpicWalletControllerError::GenericError(e.to_string())).unwrap();
+    let uuid = Uuid::parse_str(tx_id).map_err(|e| MWCWalletControllerError::GenericError(e.to_string())).unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
     let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
@@ -898,12 +905,12 @@ fn _tx_send_http(
 pub unsafe extern "C" fn rust_get_wallet_address(
     wallet: *const c_char,
     index: *const c_char,
-    epicbox_config: *const c_char,
+    mwcmqs_config: *const c_char,
 ) -> *const c_char {
     let wallet_ptr = CStr::from_ptr(wallet);
     let index = CStr::from_ptr(index);
-    let epicbox_config = CStr::from_ptr(epicbox_config);
-    let epicbox_config = epicbox_config.to_str().unwrap();
+    let mwcmqs_config = CStr::from_ptr(mwcmqs_config);
+    let mwcmqs_config = mwcmqs_config.to_str().unwrap();
     let index: u32 = index.to_str().unwrap().to_string().parse().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
@@ -916,7 +923,7 @@ pub unsafe extern "C" fn rust_get_wallet_address(
         wallet,
         sek_key,
         index,
-        epicbox_config
+        mwcmqs_config
     ) {
         Ok(address) => {
             address
@@ -935,9 +942,9 @@ fn _get_wallet_address(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
     index: u32,
-    epicbox_config: &str
+    mwcmqs_config: &str
 ) -> Result<*const c_char, Error> {
-    let address = get_wallet_address(&wallet, keychain_mask, index, epicbox_config);
+    let address = get_wallet_address(&wallet, keychain_mask, index, mwcmqs_config);
     let s = CString::new(address).unwrap();
     let p = s.as_ptr(); // Get a pointer to the underlaying memory for s
     std::mem::forget(s); // Give up the responsibility of cleaning up/freeing s
@@ -948,13 +955,13 @@ pub fn get_wallet_address(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
     index: u32,
-    epicbox_config: &str,
+    mwcmqs_config: &str,
 ) -> String {
 
-    let epicbox_conf = serde_json::from_str::<EpicboxConfig>(epicbox_config).unwrap();
-    let api = Owner::new(wallet.clone(), None);
-    let address = api.get_public_address(keychain_mask.as_ref(), index).unwrap();
-    format!("{}@{}", address.public_key, epicbox_conf.epicbox_domain.as_deref().unwrap_or(""))
+    let mwcmqs_conf = serde_json::from_str::<MQSConfig>(mwcmqs_config).unwrap();
+    let api = Owner::new(wallet.clone(), None, None);
+    let address = api.get_mqs_address(keychain_mask.as_ref()).unwrap();
+    format!("{:?}@{}", address, mwcmqs_conf.mwcmqs_domain)
 }
 
 #[no_mangle]
@@ -1041,10 +1048,10 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
         Ok(config) => {
             config
         }, Err(e) => {
-            return  Err(Error::from(EpicWalletControllerError::GenericError(format!(
+            return  Err(Error::GenericError(format!(
                 "Error getting wallet config: {}",
                 e.to_string()
-            ))));
+            )));
         }
     };
 
@@ -1072,6 +1079,7 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
         32,
         wallet_pass,
         false,
+        None
     ) {
         Ok(_) => {
             "".to_string()
@@ -1085,7 +1093,7 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
 
 pub fn get_wallet_secret_key_pair(
     wallet: &Wallet, keychain_mask: Option<SecretKey>, index: u32
-) -> Result<(SecretKey, PublicKey), Error>{
+) -> Result<(DalekSecretKey, DalekPublicKey), Error>{
     let parent_key_id = {
         wallet_lock!(wallet, w);
         w.parent_key_id().clone()
@@ -1100,9 +1108,9 @@ pub fn get_wallet_secret_key_pair(
             return  Err(err);
         }
     };
-    let s = Secp256k1::new();
-    let sec_key = match address::address_from_derivation_path(
-        &k, &parent_key_id, index
+
+    let sec_key = match proofaddress::payment_proof_address_dalek_secret(
+        &k, Some(index)
     ) {
         Ok(s_key) => {
             s_key
@@ -1111,19 +1119,7 @@ pub fn get_wallet_secret_key_pair(
             return Err(err);
         }
     };
-    let pub_key = match PublicKey::from_secret_key(&s, &sec_key) {
-        Ok(p_key) => {
-            p_key
-        }
-        Err(err) => {
-            return Err(Error::from(
-                EpicWalletControllerError::GenericError(
-                    format!("{}", err.to_string())
-                )
-            ));
-        }
-    };
-
+    let pub_key = DalekPublicKey::from(&sec_key);
     Ok((sec_key, pub_key))
 }
 
@@ -1149,7 +1145,7 @@ pub fn get_wallet_info(
     refresh_from_node: bool,
     min_confirmations: u64
 ) -> Result<WalletInfoFormatted, Error> {
-    let api = Owner::new(wallet.clone(), None);
+    let api = Owner::new(wallet.clone(), None, None);
 
     match api.retrieve_summary_info(keychain_mask.as_ref(), refresh_from_node, min_confirmations) {
         Ok((_, wallet_summary)) => {
@@ -1193,10 +1189,10 @@ pub fn recover_from_mnemonic(mnemonic: &str, password: &str, config: &Config, na
     };
 
     //First check if wallet seed directory exists, if not create
-    if let Ok(exists_wallet_seed) = lc.wallet_exists(None) {
+    if let Ok(exists_wallet_seed) = lc.wallet_exists(None, None) {
         return if exists_wallet_seed {
             match lc.recover_from_mnemonic(
-                ZeroingString::from(mnemonic), ZeroingString::from(password)
+                ZeroingString::from(mnemonic), ZeroingString::from(password), None
             ) {
                 Ok(_) => {
                     Ok(())
@@ -1212,6 +1208,7 @@ pub fn recover_from_mnemonic(mnemonic: &str, password: &str, config: &Config, na
                 32,
                 ZeroingString::from(password),
                 false,
+                None,
             ) {
                 Ok(_) => {
                     Ok(())
@@ -1249,7 +1246,7 @@ fn create_seed(seed_length: u64) -> Vec<u8> {
 }
 
 /*
-    Get wallet that will be used for calls to epic wallet
+    Get wallet that will be used for calls to mwc wallet
 */
 fn get_wallet(config: &Config) -> Result<Wallet, Error> {
     let wallet_config = match create_wallet_config(config.clone()) {
@@ -1260,7 +1257,7 @@ fn get_wallet(config: &Config) -> Result<Wallet, Error> {
         }
     };
     let node_api_secret = get_first_line(wallet_config.node_api_secret_path.clone());
-    let node_client = HTTPNodeClient::new(&wallet_config.check_node_api_http_addr, node_api_secret).unwrap();
+    let node_client = HTTPNodeClient::new(vec![wallet_config.check_node_api_http_addr.clone()], node_api_secret).unwrap();
     let wallet =  match inst_wallet::<
         DefaultLCProvider<HTTPNodeClient, ExtKeychain>,
         HTTPNodeClient,
@@ -1314,10 +1311,10 @@ pub fn get_chain_height(config: &str) -> Result<u64, Error> {
         Ok(config) => {
             config
         }, Err(_e) => {
-            return Err(Error::from(EpicWalletControllerError::GenericError(format!(
+            return Err(Error::GenericError(format!(
                 "{}",
                 "Unable to get wallet config"
-            ))))
+            )))
         }
     };
     let wallet_config = match create_wallet_config(config.clone()) {
@@ -1329,15 +1326,9 @@ pub fn get_chain_height(config: &str) -> Result<u64, Error> {
         }
     };
     let node_api_secret = get_first_line(wallet_config.node_api_secret_path.clone());
-    let node_client = HTTPNodeClient::new(&wallet_config.check_node_api_http_addr, node_api_secret);
-    let chain_tip = match node_client?.chain_height() {
-        Ok(tip) => {
-            tip
-        }
-        Err(err) => {
-            return  Err(err);
-        }
-    };
+    let node_client = HTTPNodeClient::new(vec![wallet_config.check_node_api_http_addr], node_api_secret)
+        .map_err(|e| Error::ClientCallback(format!("{}", e)))?;
+    let chain_tip = node_client.get_chain_tip()?;
     Ok(chain_tip.0)
 }
 
@@ -1364,10 +1355,10 @@ pub fn wallet_scan_outputs(
     };
 
     if tip == 0 {
-        return Err(Error::from(EpicWalletControllerError::GenericError(format!(
+        return Err(Error::GenericError(format!(
             "{}",
             "Unable to scan, could not determine chain height"
-        ))));
+        )));
     }
 
     let start_height: u64 = match start_height {
@@ -1399,9 +1390,11 @@ pub fn wallet_scan_outputs(
         false,
         start_height,
         end_height,
-        &None
+        &None,
+        false,
+        true
     ) {
-        Ok(info) => {
+        Ok(_) => {
 
 
             let parent_key_id = {
@@ -1419,7 +1412,7 @@ pub fn wallet_scan_outputs(
                         return Err(err);
                     }
                 };
-                match batch.save_last_confirmed_height(&parent_key_id, info.clone().height) {
+                match batch.save_last_confirmed_height(&parent_key_id, end_height) {
                     Ok(_) => {
                         ()
                     }
@@ -1438,7 +1431,7 @@ pub fn wallet_scan_outputs(
             };
 
 
-            let result = info.height;
+            let result = end_height;
             Ok(serde_json::to_string(&result).unwrap())
         }, Err(e) => {
             return  Err(e);
@@ -1479,7 +1472,7 @@ pub fn tx_strategies(
         ..Default::default()
     };
 
-    match owner::init_send_tx(&mut **w, keychain_mask.as_ref(), args, true) {
+    match owner::init_send_tx(&mut **w, keychain_mask.as_ref(), &args, true, 1) {
         Ok(slate) => {
             result.push(Strategy {
                 selection_strategy_is_use_all: false,
@@ -1500,10 +1493,11 @@ pub fn txs_get(
     keychain_mask: Option<SecretKey>,
     refresh_from_node: bool,
 ) -> Result<String, Error> {
-    let api = Owner::new(wallet.clone(), None);
+    let api = Owner::new(wallet.clone(), None, None);
     let txs = match api.retrieve_txs(
         keychain_mask.as_ref(),
         refresh_from_node,
+        None,
         None,
         None
     ) {
@@ -1527,17 +1521,17 @@ pub fn tx_create(
     amount: u64,
     minimum_confirmations: u64,
     selection_strategy_is_use_all: bool,
-    epicbox_config: &str,
+    mwcmqs_config: &str,
     address: &str,
     note: &str,
 ) -> Result<String, Error> {
-    let owner_api = Owner::new(wallet.clone(), None);
-    let epicbox_conf = serde_json::from_str::<EpicboxConfig>(epicbox_config).unwrap();
+    let owner_api = Owner::new(wallet.clone(), None, None);
+    //let mwcmqs_conf = serde_json::from_str::<MQSConfig>(mwcmqs_config).unwrap();
 
-    owner_api.set_epicbox_config(Some(epicbox_conf));
     let init_send_args = InitTxSendArgs {
-        method: "epicbox".to_string(),
+        method: "mwcmqs".to_string(),
         dest: address.to_string(),
+        apisecret: None,
         finalize: false,
         post_tx: false,
         fluff: false
@@ -1556,7 +1550,7 @@ pub fn tx_create(
     };
 
 
-    match owner_api.init_send_tx(keychain_mask.as_ref(), args) {
+    match owner_api.init_send_tx(keychain_mask.as_ref(), &args, 1) {
         Ok(slate)=> {
             debug!("SLATE SEND RESPONSE IS  {:?}", slate);
             //Get transaction for the slate, we will use type to determing if we should finalize or receive tx
@@ -1564,7 +1558,8 @@ pub fn tx_create(
                 keychain_mask.as_ref(),
                 false,
                 None,
-                Some(slate.id)
+                Some(slate.id),
+                None
             ) {
                 Ok(txs_result) => {
                     txs_result
@@ -1589,7 +1584,7 @@ pub fn tx_create(
     Cancel tx by id
 */
 pub fn tx_cancel(wallet: &Wallet, keychain_mask: Option<SecretKey>, tx_slate_id: Uuid) -> Result<String, Error> {
-    let api = Owner::new(wallet.clone(), None);
+    let api = Owner::new(wallet.clone(), None, None);
     match  api.cancel_tx(keychain_mask.as_ref(), None, Some(tx_slate_id)) {
         Ok(_) => {
             Ok("cancelled".to_owned())
@@ -1603,9 +1598,9 @@ pub fn tx_cancel(wallet: &Wallet, keychain_mask: Option<SecretKey>, tx_slate_id:
     Get transaction by slate id
 */
 pub fn tx_get(wallet: &Wallet, refresh_from_node: bool, tx_slate_id: &str) -> Result<String, Error> {
-    let api = Owner::new(wallet.clone(), None);
-    let uuid = Uuid::parse_str(tx_slate_id).map_err(|e| EpicWalletControllerError::GenericError(e.to_string())).unwrap();
-    let txs = api.retrieve_txs(None, refresh_from_node, None, Some(uuid)).unwrap();
+    let api = Owner::new(wallet.clone(), None, None);
+    let uuid = Uuid::parse_str(tx_slate_id).map_err(|e| MWCWalletControllerError::GenericError(e.to_string())).unwrap();
+    let txs = api.retrieve_txs(None, refresh_from_node, None, Some(uuid), None).unwrap();
     Ok(serde_json::to_string(&txs.1).unwrap())
 }
 
@@ -1629,10 +1624,10 @@ pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<
         Ok(config) => {
             config
         }, Err(_e) => {
-            return Err(Error::from(EpicWalletControllerError::GenericError(format!(
+            return Err(Error::GenericError(format!(
                 "{}",
                 "Unable to get wallet config"
-            ))))
+            )))
         }
     };
     let wallet = match get_wallet(&config) {
@@ -1655,13 +1650,14 @@ pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<
                 return  Err(err);
             }
         };
-        if let Ok(exists_wallet) = lc.wallet_exists(None) {
+        if let Ok(exists_wallet) = lc.wallet_exists(None, None) {
             if exists_wallet {
                 let temp = match lc.open_wallet(
                     None,
                     ZeroingString::from(password),
                     true,
-                    false) {
+                    false,
+                None) {
                     Ok(tmp_key) => {
                         tmp_key
                     }
@@ -1695,7 +1691,7 @@ pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<
     if opened {
         Ok((wallet, secret_key))
     } else {
-        Err(Error::from(EpicWalletControllerError::WalletSeedDoesntExist))
+        Err(Error::WalletSeedDoesntExist)
     }
 }
 
@@ -1703,13 +1699,13 @@ pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<
 pub fn close_wallet(wallet: &Wallet) -> Result<String, Error> {
     let mut wallet_lock = wallet.lock();
     let lc = wallet_lock.lc_provider()?;
-    match lc.wallet_exists(None)? {
+    match lc.wallet_exists(None, None)? {
         true => {
             lc.close_wallet(None)?
         }
         false => {
             return Err(
-                Error::from(EpicWalletControllerError::WalletSeedDoesntExist)
+                Error::WalletSeedDoesntExist
             );
         }
     }
@@ -1717,9 +1713,9 @@ pub fn close_wallet(wallet: &Wallet) -> Result<String, Error> {
 }
 
 pub fn validate_address(str_address: &str) -> bool {
-    match EpicboxAddress::from_str(str_address) {
+    match MWCMQSAddress::from_str(str_address) {
         Ok(addr) => {
-            if addr.address_type() == AddressType::Epicbox {
+            if addr.address_type() == AddressType::MWCMQS {
                 return true;
             }
             false
@@ -1743,7 +1739,7 @@ pub fn delete_wallet(config: Config) -> Result<String, Error> {
     };
     //First close the wallet
     if let Ok(_) = close_wallet(&wallet) {
-        let api = Owner::new(wallet.clone(), None);
+        let api = Owner::new(wallet.clone(), None, None);
         match api.delete_wallet(None) {
             Ok(_) => {
                 result.push_str("deleted");
@@ -1754,7 +1750,7 @@ pub fn delete_wallet(config: Config) -> Result<String, Error> {
         };
     } else {
         return Err(
-            Error::from(EpicWalletControllerError::GenericError(format!("{}", "Error closing wallet")))
+            Error::GenericError(format!("{}", "Error closing wallet"))
         );
     }
     Ok(result)
@@ -1769,13 +1765,14 @@ pub fn tx_send_http(
     amount: u64,
     address: &str,
 ) -> Result<String, Error>{
-    let api = Owner::new(wallet.clone(), None);
+    let api = Owner::new(wallet.clone(), None, None);
     let init_send_args = InitTxSendArgs {
         method: "http".to_string(),
         dest: address.to_string(),
         finalize: true,
         post_tx: true,
-        fluff: true
+        fluff: true,
+        apisecret: None
     };
 
     let args = InitTxArgs {
@@ -1790,7 +1787,7 @@ pub fn tx_send_http(
         ..Default::default()
     };
 
-    match api.init_send_tx(keychain_mask.as_ref(), args) {
+    match api.init_send_tx(keychain_mask.as_ref(), &args, 1) {
         Ok(slate) => {
             println!("{}", "CREATE_TX_SUCCESS");
             //Get transaction for slate, for UI display
@@ -1798,7 +1795,8 @@ pub fn tx_send_http(
                 keychain_mask.as_ref(),
                 false,
                 None,
-                Some(slate.id)
+                Some(slate.id),
+                None
             ) {
                 Ok(txs_result) => {
                     txs_result
@@ -1824,7 +1822,7 @@ pub fn tx_send_http(
 pub struct Listener {
     pub wallet_ptr_str: String,
     // pub wallet_data: (i64, Option<SecretKey>),
-    pub epicbox_config: String
+    pub mwcmqs_config: String
 }
 
 
@@ -1843,22 +1841,21 @@ impl Task for Listener {
         // let wallet_data = &self.wallet_data;
         // let wlt = wallet_data.clone().0;
         unsafe {
-            let epicbox_conf = serde_json::from_str::<EpicboxConfig>(&self.epicbox_config.as_str()).unwrap();
+            let mwcmqs_conf = serde_json::from_str::<MQSConfig>(&self.mwcmqs_config.as_str()).unwrap();
             // let wallet_data = &self.wallet_data;
             // let wlt = wallet_data.0;
             // let sek_key = wallet_data.clone().1;
             ensure_wallet!(wlt, wallet);
             while !cancel_tok.cancelled() {
-                let listener = EpicboxListenChannel::new().unwrap();
-                let mut reconnections = 0;
-                listener.listen(
+                let _ = controller::init_start_mwcmqs_listener(
                     wallet.clone(),
+                    mwcmqs_conf.clone(),
                     Arc::new(Mutex::new(sek_key.clone())),
-                    epicbox_conf.clone(),
-                    &mut reconnections,
-                ).expect("TODO: Error Listening on Epicbox");
+                    false,
+                )
+                .map_err(|e| MWCWalletControllerError::GenericError(e.to_string()));
+                };
                 spins += 1;
-            }
         }
         Ok(spins)
     }
@@ -1876,19 +1873,19 @@ export_task! {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_epicbox_listener_start(
+pub unsafe extern "C" fn rust_mwcmqs_listener_start(
     wallet: *const c_char,
-    epicbox_config: *const c_char,
+    mwcmqs_config: *const c_char,
 ) -> *mut c_void {
     let wallet_ptr = CStr::from_ptr(wallet);
-    let epicbox_config = CStr::from_ptr(epicbox_config);
-    let epicbox_config = epicbox_config.to_str().unwrap();
+    let mwcmqs_config = CStr::from_ptr(mwcmqs_config);
+    let mwcmqs_config = mwcmqs_config.to_str().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
     // let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let listen = Listener {
         wallet_ptr_str: wallet_data.to_string(),
-        epicbox_config: epicbox_config.parse().unwrap()
+        mwcmqs_config: mwcmqs_config.parse().unwrap()
     };
 
     let handler = listener_spawn(&listen);

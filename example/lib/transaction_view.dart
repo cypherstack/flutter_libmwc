@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_libepiccash_example/init_transaction_view.dart';
+import 'package:flutter_libmwc_example/init_transaction_view.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TransactionView extends StatelessWidget {
@@ -26,7 +26,7 @@ class TransactionView extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: EpicTransactionView(
+      home: MwcTransactionView(
         title: 'Transactions',
         password: password,
       ),
@@ -34,10 +34,10 @@ class TransactionView extends StatelessWidget {
   }
 }
 
-class EpicTransactionView extends StatefulWidget {
+class MwcTransactionView extends StatefulWidget {
   final String password;
 
-  const EpicTransactionView(
+  const MwcTransactionView(
       {Key? key, required this.title, required this.password})
       : super(key: key);
 
@@ -53,10 +53,10 @@ class EpicTransactionView extends StatefulWidget {
   final String title;
 
   @override
-  State<EpicTransactionView> createState() => _EpicTransactionView();
+  State<MwcTransactionView> createState() => _MwcTransactionView();
 }
 
-class _EpicTransactionView extends State<EpicTransactionView> {
+class _MwcTransactionView extends State<MwcTransactionView> {
   String walletConfig = "";
   final storage = const FlutterSecureStorage();
 

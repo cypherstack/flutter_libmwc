@@ -3,13 +3,13 @@ import 'dart:io' as io;
 
 import 'package:ffi/ffi.dart';
 
-final DynamicLibrary epicCashNative = io.Platform.isWindows
-    ? DynamicLibrary.open("libepic_cash_wallet.dll")
+final DynamicLibrary mwcNative = io.Platform.isWindows
+    ? DynamicLibrary.open("libmwc_wallet.dll")
     : io.Platform.environment.containsKey('FLUTTER_TEST')
     ? DynamicLibrary.open(
-    'crypto_plugins/flutter_libepiccash/scripts/linux/build/libepic_cash_wallet.so')
+    'crypto_plugins/flutter_libmwc/scripts/linux/build/libmwc_wallet.so')
     : io.Platform.isAndroid || io.Platform.isLinux
-    ? DynamicLibrary.open('libepic_cash_wallet.so')
+    ? DynamicLibrary.open('libmwc_wallet.so')
     : DynamicLibrary.process();
 
 typedef WalletMnemonic = Pointer<Utf8> Function();
@@ -44,13 +44,13 @@ typedef CreateTransactionFFI = Pointer<Utf8> Function(Pointer<Utf8>,
     Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>,
     Pointer<Utf8>);
 
-typedef EpicboxListenerStart = Pointer<Void> Function(
+typedef MWCMQSListenerStart = Pointer<Void> Function(
     Pointer<Utf8>, Pointer<Utf8>);
-typedef EpicboxListenerStartFFI = Pointer<Void> Function(
+typedef MWCMQSListenerStartFFI = Pointer<Void> Function(
     Pointer<Utf8>, Pointer<Utf8>);
 
-typedef EpicboxListenerStop = Pointer<Utf8> Function(Pointer<Void>);
-typedef EpicboxListenerStopFFI = Pointer<Utf8> Function(Pointer<Void>);
+typedef MWCMQSListenerStop = Pointer<Utf8> Function(Pointer<Void>);
+typedef MWCMQSListenerStopFFI = Pointer<Utf8> Function(Pointer<Void>);
 
 typedef GetTransactions = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>);
 typedef GetTransactionsFFI = Pointer<Utf8> Function(
@@ -88,7 +88,7 @@ typedef TxHttpSend = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
 typedef TxHttpSendFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
     Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>);
 
-final WalletMnemonic _walletMnemonic = epicCashNative
+final WalletMnemonic _walletMnemonic = mwcNative
     .lookup<NativeFunction<WalletMnemonicFFI>>("get_mnemonic")
     .asFunction();
 
@@ -96,7 +96,7 @@ String walletMnemonic() {
   return _walletMnemonic().toDartString();
 }
 
-final WalletInit _initWallet = epicCashNative
+final WalletInit _initWallet = mwcNative
     .lookup<NativeFunction<WalletInitFFI>>("wallet_init")
     .asFunction();
 
@@ -107,7 +107,7 @@ String initWallet(
       .toDartString();
 }
 
-final WalletInfo _walletInfo = epicCashNative
+final WalletInfo _walletInfo = mwcNative
     .lookup<NativeFunction<WalletInfoFFI>>("rust_wallet_balances")
     .asFunction();
 
@@ -120,7 +120,7 @@ Future<String> getWalletInfo(
       .toDartString();
 }
 
-final RecoverWallet _recoverWallet = epicCashNative
+final RecoverWallet _recoverWallet = mwcNative
     .lookup<NativeFunction<RecoverWalletFFI>>("rust_recover_from_mnemonic")
     .asFunction();
 
@@ -131,7 +131,7 @@ String recoverWallet(
       .toDartString();
 }
 
-final ScanOutPuts _scanOutPuts = epicCashNative
+final ScanOutPuts _scanOutPuts = mwcNative
     .lookup<NativeFunction<ScanOutPutsFFI>>("rust_wallet_scan_outputs")
     .asFunction();
 
@@ -144,46 +144,46 @@ Future<String> scanOutPuts(
   ).toDartString();
 }
 
-final EpicboxListenerStart _epicboxListenerStart = epicCashNative
-    .lookup<NativeFunction<EpicboxListenerStartFFI>>(
-    "rust_epicbox_listener_start")
+final MWCMQSListenerStart _MWCMQSListenerStart = mwcNative
+    .lookup<NativeFunction<MWCMQSListenerStartFFI>>(
+    "rust_MWCMQS_listener_start")
     .asFunction();
 
-Pointer<Void> epicboxListenerStart(String wallet, String epicboxConfig) {
-  return _epicboxListenerStart(
+Pointer<Void> MWCMQSListenerStart(String wallet, String MWCMQSConfig) {
+  return _MWCMQSListenerStart(
     wallet.toNativeUtf8(),
-    epicboxConfig.toNativeUtf8(),
+    MWCMQSConfig.toNativeUtf8(),
   );
 }
 
-final EpicboxListenerStop _epicboxListenerStop = epicCashNative
-    .lookup<NativeFunction<EpicboxListenerStopFFI>>("_listener_cancel")
+final MWCMQSListenerStop _MWCMQSListenerStop = mwcNative
+    .lookup<NativeFunction<MWCMQSListenerStopFFI>>("_listener_cancel")
     .asFunction();
 
-String epicboxListenerStop(Pointer<Void> handler) {
-  return _epicboxListenerStop(
+String MWCMQSListenerStop(Pointer<Void> handler) {
+  return _MWCMQSListenerStop(
     handler,
   ).toDartString();
 }
 
-final CreateTransaction _createTransaction = epicCashNative
+final CreateTransaction _createTransaction = mwcNative
     .lookup<NativeFunction<CreateTransactionFFI>>("rust_create_tx")
     .asFunction();
 
 Future<String> createTransaction(String wallet, int amount, String address,
-    int secretKey, String epicboxConfig, int minimumConfirmations, String note) async {
+    int secretKey, String MWCMQSConfig, int minimumConfirmations, String note) async {
   return _createTransaction(
     wallet.toNativeUtf8(),
     amount.toString().toNativeUtf8().cast<Int8>(),
     address.toNativeUtf8(),
     secretKey.toString().toNativeUtf8().cast<Int8>(),
-    epicboxConfig.toNativeUtf8(),
+    MWCMQSConfig.toNativeUtf8(),
     minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
     note.toNativeUtf8(),
   ).toDartString();
 }
 
-final GetTransactions _getTransactions = epicCashNative
+final GetTransactions _getTransactions = mwcNative
     .lookup<NativeFunction<GetTransactionsFFI>>("rust_txs_get")
     .asFunction();
 
@@ -193,7 +193,7 @@ Future<String> getTransactions(String wallet, int refreshFromNode) async {
       .toDartString();
 }
 
-final CancelTransaction _cancelTransaction = epicCashNative
+final CancelTransaction _cancelTransaction = mwcNative
     .lookup<NativeFunction<CancelTransactionFFI>>("rust_tx_cancel")
     .asFunction();
 
@@ -202,7 +202,7 @@ String cancelTransaction(String wallet, String transactionId) {
       .toDartString();
 }
 
-final GetChainHeight _getChainHeight = epicCashNative
+final GetChainHeight _getChainHeight = mwcNative
     .lookup<NativeFunction<GetChainHeightFFI>>("rust_get_chain_height")
     .asFunction();
 
@@ -211,19 +211,19 @@ int getChainHeight(String config) {
   return int.parse(latestHeight);
 }
 
-final AddressInfo _addressInfo = epicCashNative
+final AddressInfo _addressInfo = mwcNative
     .lookup<NativeFunction<AddressInfoFFI>>("rust_get_wallet_address")
     .asFunction();
 
-String getAddressInfo(String wallet, int index, String epicboxConfig) {
+String getAddressInfo(String wallet, int index, String MWCMQSConfig) {
   return _addressInfo(
       wallet.toNativeUtf8(),
       index.toString().toNativeUtf8().cast<Int8>(),
-      epicboxConfig.toNativeUtf8())
+      MWCMQSConfig.toNativeUtf8())
       .toDartString();
 }
 
-final ValidateAddress _validateSendAddress = epicCashNative
+final ValidateAddress _validateSendAddress = mwcNative
     .lookup<NativeFunction<ValidateAddressFFI>>("rust_validate_address")
     .asFunction();
 
@@ -231,7 +231,7 @@ String validateSendAddress(String address) {
   return _validateSendAddress(address.toNativeUtf8()).toDartString();
 }
 
-final TransactionFees _transactionFees = epicCashNative
+final TransactionFees _transactionFees = mwcNative
     .lookup<NativeFunction<TransactionFeesFFI>>("rust_get_tx_fees")
     .asFunction();
 
@@ -244,7 +244,7 @@ Future<String> getTransactionFees(
       .toDartString();
 }
 
-final DeleteWallet _deleteWallet = epicCashNative
+final DeleteWallet _deleteWallet = mwcNative
     .lookup<NativeFunction<DeleteWalletFFI>>("rust_delete_wallet")
     .asFunction();
 
@@ -253,7 +253,7 @@ Future<String> deleteWallet(String wallet, String config) async {
       .toDartString();
 }
 
-final OpenWallet _openWallet = epicCashNative
+final OpenWallet _openWallet = mwcNative
     .lookup<NativeFunction<OpenWalletFFI>>("rust_open_wallet")
     .asFunction();
 
@@ -262,7 +262,7 @@ String openWallet(String config, String password) {
       .toDartString();
 }
 
-final TxHttpSend _txHttpSend = epicCashNative
+final TxHttpSend _txHttpSend = mwcNative
     .lookup<NativeFunction<TxHttpSendFFI>>("rust_tx_send_http")
     .asFunction();
 

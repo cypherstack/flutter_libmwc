@@ -1,4 +1,4 @@
-#include "include/flutter_libepiccash/flutter_libepiccash_plugin.h"
+#include "include/flutter_libmwc/flutter_libmwc_plugin.h"
 
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
@@ -6,19 +6,19 @@
 
 #include <cstring>
 
-#define FLUTTER_LIBEPICCASH_PLUGIN(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), flutter_libepiccash_plugin_get_type(), \
-                              FlutterLibepiccashPlugin))
+#define FLUTTER_LIBmwc_PLUGIN(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), flutter_libmwc_plugin_get_type(), \
+                              FlutterLibmwcPlugin))
 
-struct _FlutterLibepiccashPlugin {
+struct _FlutterLibmwcPlugin {
   GObject parent_instance;
 };
 
-G_DEFINE_TYPE(FlutterLibepiccashPlugin, flutter_libepiccash_plugin, g_object_get_type())
+G_DEFINE_TYPE(FlutterLibmwcPlugin, flutter_libmwc_plugin, g_object_get_type())
 
 // Called when a method call is received from Flutter.
-static void flutter_libepiccash_plugin_handle_method_call(
-    FlutterLibepiccashPlugin* self,
+static void flutter_libmwc_plugin_handle_method_call(
+    FlutterLibmwcPlugin* self,
     FlMethodCall* method_call) {
   g_autoptr(FlMethodResponse) response = nullptr;
 
@@ -37,30 +37,30 @@ static void flutter_libepiccash_plugin_handle_method_call(
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-static void flutter_libepiccash_plugin_dispose(GObject* object) {
-  G_OBJECT_CLASS(flutter_libepiccash_plugin_parent_class)->dispose(object);
+static void flutter_libmwc_plugin_dispose(GObject* object) {
+  G_OBJECT_CLASS(flutter_libmwc_plugin_parent_class)->dispose(object);
 }
 
-static void flutter_libepiccash_plugin_class_init(FlutterLibepiccashPluginClass* klass) {
-  G_OBJECT_CLASS(klass)->dispose = flutter_libepiccash_plugin_dispose;
+static void flutter_libmwc_plugin_class_init(FlutterLibmwcPluginClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = flutter_libmwc_plugin_dispose;
 }
 
-static void flutter_libepiccash_plugin_init(FlutterLibepiccashPlugin* self) {}
+static void flutter_libmwc_plugin_init(FlutterLibmwcPlugin* self) {}
 
 static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call,
                            gpointer user_data) {
-  FlutterLibepiccashPlugin* plugin = FLUTTER_LIBEPICCASH_PLUGIN(user_data);
-  flutter_libepiccash_plugin_handle_method_call(plugin, method_call);
+  FlutterLibmwcPlugin* plugin = FLUTTER_LIBmwc_PLUGIN(user_data);
+  flutter_libmwc_plugin_handle_method_call(plugin, method_call);
 }
 
-void flutter_libepiccash_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
-  FlutterLibepiccashPlugin* plugin = FLUTTER_LIBEPICCASH_PLUGIN(
-      g_object_new(flutter_libepiccash_plugin_get_type(), nullptr));
+void flutter_libmwc_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
+  FlutterLibmwcPlugin* plugin = FLUTTER_LIBmwc_PLUGIN(
+      g_object_new(flutter_libmwc_plugin_get_type(), nullptr));
 
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   g_autoptr(FlMethodChannel) channel =
       fl_method_channel_new(fl_plugin_registrar_get_messenger(registrar),
-                            "flutter_libepiccash",
+                            "flutter_libmwc",
                             FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(channel, method_call_cb,
                                             g_object_ref(plugin),

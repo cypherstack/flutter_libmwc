@@ -1,6 +1,6 @@
-# flutter_libepiccash_example
+# flutter_libmwc_example
 
-Demonstrates how to use the flutter_libepiccash plugin.
+Demonstrates how to use the flutter_libmwc plugin.
 
 ## Getting Started
 

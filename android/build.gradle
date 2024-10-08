@@ -1,4 +1,4 @@
-group 'com.example.flutter_libepiccash'
+group 'com.example.flutter_libmwc'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -26,7 +26,7 @@ apply plugin: 'kotlin-android'
 
 android {
     if (project.android.hasProperty("namespace")) {
-        namespace = "com.example.flutter_libepiccash"
+        namespace = "com.example.flutter_libmwc"
     }
 
     compileSdk = 34

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 
-@interface FlutterLibepiccashPlugin : NSObject<FlutterPlugin>
+@interface FlutterLibmwcPlugin : NSObject<FlutterPlugin>
 @end
 
 // NOTE: put the lines from the include here whenever new api functions are added.
@@ -37,7 +37,7 @@ const char *rust_create_tx(const char *wallet,
                            const char *amount,
                            const char *to_address,
                            const char *secret_key_index,
-                           const char *epicbox_config,
+                           const char *mwcmqs_config,
                            const char *minimum_confirmations,
                            const char *note);
 
@@ -48,11 +48,11 @@ const char *rust_tx_cancel(const char *wallet, const char *tx_id);
 const char *rust_get_chain_height(const char *config);
 
 const char *rust_delete_wallet(const char *wallet,
-                               const char *epicbox_config);
+                               const char *mwcmqs_config);
 
 const char *rust_get_wallet_address(const char *wallet,
                                     const char *index,
-                                    const char *epicbox_config);
+                                    const char *mwcmqs_config);
 
 const char *rust_validate_address(const char *address);
 
@@ -67,7 +67,7 @@ const char *rust_tx_send_http(const char *wallet,
                               const char *amount,
                               const char *address);
 
-const char *rust_epicbox_listener_start(const char *wallet,
-                                        const char *epicbox_config);
+const char *rust_mwcmqs_listener_start(const char *wallet,
+                                        const char *mwcmqs_config);
 
 const char *_listener_cancel(const char *handler);

@@ -3,18 +3,18 @@ import 'dart:ffi';
 
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_libepiccash/epic_cash.dart' as lib_epiccash;
-import 'package:flutter_libepiccash/models/transaction.dart';
+import 'package:flutter_libmwc/mwc.dart' as lib_mwc;
+import 'package:flutter_libmwc/models/transaction.dart';
 import 'package:mutex/mutex.dart';
 
-class BadEpicHttpAddressException implements Exception {
+class BadMWCHTTPAddressException implements Exception {
   final String? message;
 
-  BadEpicHttpAddressException({this.message});
+  BadMWCHTTPAddressException({this.message});
 
   @override
   String toString() {
-    return "BadEpicHttpAddressException: $message";
+    return "BadMWCHTTPAddressException: $message";
   }
 }
 
@@ -23,18 +23,18 @@ abstract class ListenerManager {
 }
 
 ///
-/// Wrapped up calls to flutter_libepiccash.
+/// Wrapped up calls to flutter_libmwc.
 ///
 /// Should all be static calls (no state stored in this class)
 ///
-abstract class LibEpiccash {
+abstract class Libmwc {
   static final Mutex m = Mutex();
 
   ///
-  /// Check if [address] is a valid epiccash address according to libepiccash
+  /// Check if [address] is a valid mwc address according to libmwc
   ///
   static bool validateSendAddress({required String address}) {
-    final String validate = lib_epiccash.validateSendAddress(address);
+    final String validate = lib_mwc.validateSendAddress(address);
     if (int.parse(validate) == 1) {
       // Check if address contains a domain
       if (address.contains("@")) {
@@ -55,7 +55,7 @@ abstract class LibEpiccash {
   // wrap in mutex? -> would need to be Future<String>
   static String getMnemonic() {
     try {
-      String mnemonic = lib_epiccash.walletMnemonic();
+      String mnemonic = lib_mwc.walletMnemonic();
       if (mnemonic.isEmpty) {
         throw Exception("Error getting mnemonic, returned empty string");
       }
@@ -74,7 +74,7 @@ abstract class LibEpiccash {
       String name,
     }) data,
   ) async {
-    final String initWalletStr = lib_epiccash.initWallet(
+    final String initWalletStr = lib_mwc.initWallet(
       data.config,
       data.mnemonic,
       data.password,
@@ -84,7 +84,7 @@ abstract class LibEpiccash {
   }
 
   ///
-  /// Create a new epiccash wallet.
+  /// Create a new mwc wallet.
   ///
   // TODO: Complete/modify the documentation comment above
   // TODO: Should return a void future. On error this function should throw and exception
@@ -117,7 +117,7 @@ abstract class LibEpiccash {
   static Future<String> _walletBalancesWrapper(
     ({String wallet, int refreshFromNode, int minimumConfirmations}) data,
   ) async {
-    return lib_epiccash.getWalletInfo(
+    return lib_mwc.getWalletInfo(
         data.wallet, data.refreshFromNode, data.minimumConfirmations);
   }
 
@@ -173,7 +173,7 @@ abstract class LibEpiccash {
   static Future<String> _scanOutputsWrapper(
     ({String wallet, int startHeight, int numberOfBlocks}) data,
   ) async {
-    return lib_epiccash.scanOutPuts(
+    return lib_mwc.scanOutPuts(
       data.wallet,
       data.startHeight,
       data.numberOfBlocks,
@@ -181,7 +181,7 @@ abstract class LibEpiccash {
   }
 
   ///
-  /// Scan Epic outputs
+  /// Scan MWC outputs
   ///
   static Future<int> scanOutputs({
     required String wallet,
@@ -205,7 +205,7 @@ abstract class LibEpiccash {
       }
       return response;
     } catch (e) {
-      throw ("LibEpiccash.scanOutputs failed: ${e.toString()}");
+      throw ("Libmwc.scanOutputs failed: ${e.toString()}");
     }
   }
 
@@ -218,30 +218,30 @@ abstract class LibEpiccash {
       int amount,
       String address,
       int secretKeyIndex,
-      String epicboxConfig,
+      String mwcmqsConfig,
       int minimumConfirmations,
       String note,
     }) data,
   ) async {
-    return lib_epiccash.createTransaction(
+    return lib_mwc.createTransaction(
         data.wallet,
         data.amount,
         data.address,
         data.secretKeyIndex,
-        data.epicboxConfig,
+        data.mwcmqsConfig,
         data.minimumConfirmations,
         data.note);
   }
 
   ///
-  /// Create an Epic transaction
+  /// Create an MWC transaction
   ///
   static Future<({String slateId, String commitId})> createTransaction({
     required String wallet,
     required int amount,
     required String address,
     required int secretKeyIndex,
-    required String epicboxConfig,
+    required String mwcmqsConfig,
     required int minimumConfirmations,
     required String note,
   }) async {
@@ -252,7 +252,7 @@ abstract class LibEpiccash {
           amount: amount,
           address: address,
           secretKeyIndex: secretKeyIndex,
-          epicboxConfig: epicboxConfig,
+          mwcmqsConfig: mwcmqsConfig,
           minimumConfirmations: minimumConfirmations,
           note: note,
         ));
@@ -278,7 +278,7 @@ abstract class LibEpiccash {
 
         return data;
       } catch (e) {
-        throw ("Error creating epic transaction : ${e.toString()}");
+        throw ("Error creating mwc transaction : ${e.toString()}");
       }
     });
   }
@@ -292,7 +292,7 @@ abstract class LibEpiccash {
       int refreshFromNode,
     }) data,
   ) async {
-    return lib_epiccash.getTransactions(
+    return lib_mwc.getTransactions(
       data.wallet,
       data.refreshFromNode,
     );
@@ -314,10 +314,10 @@ abstract class LibEpiccash {
 
         if (result.toUpperCase().contains("ERROR")) {
           throw Exception(
-              "Error getting epic transactions ${result.toString()}");
+              "Error getting mwc transactions ${result.toString()}");
         }
 
-//Parse the returned data as an EpicTransaction
+//Parse the returned data as an mwcTransaction
         List<Transaction> finalResult = [];
         var jsonResult = json.decode(result) as List;
 
@@ -327,7 +327,7 @@ abstract class LibEpiccash {
         }
         return finalResult;
       } catch (e) {
-        throw ("Error getting epic transactions : ${e.toString()}");
+        throw ("Error getting mwc transactions : ${e.toString()}");
       }
     });
   }
@@ -341,14 +341,14 @@ abstract class LibEpiccash {
       String transactionId,
     }) data,
   ) async {
-    return lib_epiccash.cancelTransaction(
+    return lib_mwc.cancelTransaction(
       data.wallet,
       data.transactionId,
     );
   }
 
   ///
-  /// Cancel current Epic transaction
+  /// Cancel current mwc transaction
   ///
   /// returns an empty String on success, error message on failure
   static Future<String> cancelTransaction({
@@ -362,7 +362,7 @@ abstract class LibEpiccash {
           transactionId: transactionId,
         ));
       } catch (e) {
-        throw ("Error canceling epic transaction : ${e.toString()}");
+        throw ("Error canceling mwc transaction : ${e.toString()}");
       }
     });
   }
@@ -372,7 +372,7 @@ abstract class LibEpiccash {
       String config,
     }) data,
   ) async {
-    return lib_epiccash.getChainHeight(data.config);
+    return lib_mwc.getChainHeight(data.config);
   }
 
   static Future<int> getChainHeight({
@@ -394,30 +394,30 @@ abstract class LibEpiccash {
     ({
       String wallet,
       int index,
-      String epicboxConfig,
+      String mwcmqsConfig,
     }) data,
   ) async {
-    return lib_epiccash.getAddressInfo(
+    return lib_mwc.getAddressInfo(
       data.wallet,
       data.index,
-      data.epicboxConfig,
+      data.mwcmqsConfig,
     );
   }
 
   ///
-  /// get Epic address info
+  /// get mwc address info
   ///
   static Future<String> getAddressInfo({
     required String wallet,
     required int index,
-    required String epicboxConfig,
+    required String mwcmqsConfig,
   }) async {
     return await m.protect(() async {
       try {
         return await compute(_addressInfoWrapper, (
           wallet: wallet,
           index: index,
-          epicboxConfig: epicboxConfig,
+          mwcmqsConfig: mwcmqsConfig,
         ));
       } catch (e) {
         throw ("Error getting address info : ${e.toString()}");
@@ -435,7 +435,7 @@ abstract class LibEpiccash {
       int minimumConfirmations,
     }) data,
   ) async {
-    return lib_epiccash.getTransactionFees(
+    return lib_mwc.getTransactionFees(
       data.wallet,
       data.amount,
       data.minimumConfirmations,
@@ -443,7 +443,7 @@ abstract class LibEpiccash {
   }
 
   ///
-  /// get transaction fees for Epic
+  /// get transaction fees for mwc
   ///
   static Future<({int fee, bool strategyUseAll, int total})>
       getTransactionFees({
@@ -521,7 +521,7 @@ abstract class LibEpiccash {
       String name,
     }) data,
   ) async {
-    return lib_epiccash.recoverWallet(
+    return lib_mwc.recoverWallet(
       data.config,
       data.password,
       data.mnemonic,
@@ -530,7 +530,7 @@ abstract class LibEpiccash {
   }
 
   ///
-  /// Recover an Epic wallet using a mnemonic
+  /// Recover an mwc wallet using a mnemonic
   ///
   static Future<void> recoverWallet(
       {required String config,
@@ -558,14 +558,14 @@ abstract class LibEpiccash {
       String config,
     }) data,
   ) async {
-    return lib_epiccash.deleteWallet(
+    return lib_mwc.deleteWallet(
       data.wallet,
       data.config,
     );
   }
 
   ///
-  /// Delete an Epic wallet
+  /// Delete an mwc wallet
   ///
   static Future<String> deleteWallet({
     required String wallet,
@@ -590,14 +590,14 @@ abstract class LibEpiccash {
       String password,
     }) data,
   ) async {
-    return lib_epiccash.openWallet(
+    return lib_mwc.openWallet(
       data.config,
       data.password,
     );
   }
 
   ///
-  /// Open an Epic wallet
+  /// Open an mwc wallet
   ///
   static Future<String> openWallet({
     required String config,
@@ -626,7 +626,7 @@ abstract class LibEpiccash {
       String address,
     }) data,
   ) async {
-    return lib_epiccash.txHttpSend(
+    return lib_mwc.txHttpSend(
       data.wallet,
       data.selectionStrategyIsAll,
       data.minimumConfirmations,
@@ -677,21 +677,21 @@ abstract class LibEpiccash {
     }
   }
 
-  static void startEpicboxListener({
+  static void startmwcmqsListener({
     required String wallet,
-    required String epicboxConfig,
+    required String mwcmqsConfig,
   }) {
     try {
       ListenerManager.pointer =
-          lib_epiccash.epicboxListenerStart(wallet, epicboxConfig);
+          lib_mwc.mwcmqsListenerStart(wallet, mwcmqsConfig);
     } catch (e) {
       throw ("Error starting wallet listener ${e.toString()}");
     }
   }
 
-  static void stopEpicboxListener() {
+  static void stopmwcmqsListener() {
     if (ListenerManager.pointer != null) {
-      lib_epiccash.epicboxListenerStop(ListenerManager.pointer!);
+      lib_mwc.mwcmqsListenerStop(ListenerManager.pointer!);
     }
   }
 }

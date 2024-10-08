@@ -1,10 +1,10 @@
 import Cocoa
 import FlutterMacOS
 
-public class FlutterLibepiccashPlugin: NSObject, FlutterPlugin {
+public class FlutterLibmwcPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "flutter_libepiccash", binaryMessenger: registrar.messenger)
-    let instance = FlutterLibepiccashPlugin()
+    let channel = FlutterMethodChannel(name: "flutter_libmwc", binaryMessenger: registrar.messenger)
+    let instance = FlutterLibmwcPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
 
@@ -37,7 +37,7 @@ public class FlutterLibepiccashPlugin: NSObject, FlutterPlugin {
            rust_create_tx("const char *wallet",
                           "const char *amount",
                           "const char *to_address",
-                          "const char *secret_key_index", "const char *epicbox_config",
+                          "const char *secret_key_index", "const char *mwcmqs_config",
                           "const char *minimum_confirmations", "const char *note");
            rust_txs_get("const char *wallet",
                         "const char *refresh_from_node");
@@ -45,8 +45,8 @@ public class FlutterLibepiccashPlugin: NSObject, FlutterPlugin {
 
            rust_get_chain_height("const char *config");
            rust_delete_wallet("const char *wallet",
-                              "const char *epicbox_config");
-           rust_get_wallet_address("const char *wallet", "const char *index", "const char *epicbox_config");
+                              "const char *mwcmqs_config");
+           rust_get_wallet_address("const char *wallet", "const char *index", "const char *mwcmqs_config");
            rust_validate_address("const char *address");
            rust_get_tx_fees("const char *wallet", "const char *c_amount", "const char *min_confirmations");
 
@@ -54,8 +54,8 @@ public class FlutterLibepiccashPlugin: NSObject, FlutterPlugin {
                              "const char *message",
                              "const char *amount",
                              "const char *address");
-      rust_epicbox_listener_start("const char *wallet",
-                                           "const char *epicbox_config");
+      rust_mwcmqs_listener_start("const char *wallet",
+                                           "const char *mwcmqs_config");
 
        let handler  = UnsafeMutablePointer<Int>.allocate(capacity: 1);
       _listener_cancel(handler);

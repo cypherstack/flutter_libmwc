@@ -9,17 +9,17 @@ IOS_INCL_DIR=$LIB_ROOT/$OS/include
 
 TAG_COMMIT=$(git log -1 --pretty=format:"%H")
 
-rm -rf flutter_libepiccash_bins
-git clone https://git.cypherstack.com/stackwallet/flutter_libepiccash_bins
-if [ -d flutter_libepiccash_bins ]; then
-  cd flutter_libepiccash_bins
+rm -rf flutter_libmwc_bins
+git clone https://git.cypherstack.com/stackwallet/flutter_libmwc_bins
+if [ -d flutter_libmwc_bins ]; then
+  cd flutter_libmwc_bins
 else
-  echo "Failed to clone flutter_libepiccash_bins"
+  echo "Failed to clone flutter_libmwc_bins"
   exit 1
 fi
 
-HEADER=libepic_cash_wallet.h
-BIN=libepic_cash_wallet.a
+HEADER=libmwc_wallet.h
+BIN=libmwc_wallet.a
 
 for TARGET in aarch64-apple-ios
 do

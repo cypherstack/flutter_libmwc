@@ -1,5 +1,5 @@
 PODS:
-  - flutter_libepiccash (0.0.1):
+  - flutter_libmwc (0.0.1):
     - FlutterMacOS
   - flutter_secure_storage_macos (6.1.1):
     - FlutterMacOS
@@ -9,14 +9,14 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
-  - flutter_libepiccash (from `Flutter/ephemeral/.symlinks/plugins/flutter_libepiccash/macos`)
+  - flutter_libmwc (from `Flutter/ephemeral/.symlinks/plugins/flutter_libmwc/macos`)
   - flutter_secure_storage_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
 
 EXTERNAL SOURCES:
-  flutter_libepiccash:
-    :path: Flutter/ephemeral/.symlinks/plugins/flutter_libepiccash/macos
+  flutter_libmwc:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_libmwc/macos
   flutter_secure_storage_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos
   FlutterMacOS:
@@ -25,7 +25,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
 
 SPEC CHECKSUMS:
-  flutter_libepiccash: 9113ac75dd325f8bcf00bc3ab583c7fc2780cf3c
+  flutter_libmwc: 9113ac75dd325f8bcf00bc3ab583c7fc2780cf3c
   flutter_secure_storage_macos: d56e2d218c1130b262bef8b4a7d64f88d7f9c9ea
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   path_provider_foundation: 29f094ae23ebbca9d3d0cec13889cd9060c0e943

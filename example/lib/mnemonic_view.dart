@@ -1,14 +1,14 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:flutter_libepiccash_example/main.dart';
-import 'package:flutter_libepiccash_example/password_view.dart';
+import 'package:flutter_libmwc_example/main.dart';
+import 'package:flutter_libmwc_example/password_view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_libepiccash/flutter_libepiccash.dart';
+import 'package:flutter_libmwc/flutter_libmwc.dart';
 import 'dart:convert';
 import 'package:ffi/ffi.dart';
-import 'package:flutter_libepiccash/epic_cash.dart';
-import 'package:flutter_libepiccash_example/transaction_view.dart';
+import 'package:flutter_libmwc/mwc.dart';
+import 'package:flutter_libmwc_example/transaction_view.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -36,7 +36,7 @@ class MnemonicView extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: EpicMnemonicView(
+      home: MwcMnemonicView(
         title: 'Wallet Recovery phrase',
         name: name,
         password: password,
@@ -45,11 +45,11 @@ class MnemonicView extends StatelessWidget {
   }
 }
 
-class EpicMnemonicView extends StatefulWidget {
+class MwcMnemonicView extends StatefulWidget {
   final String name;
   final String password;
 
-  const EpicMnemonicView(
+  const MwcMnemonicView(
       {Key? key,
       required this.title,
       required this.name,
@@ -68,10 +68,10 @@ class EpicMnemonicView extends StatefulWidget {
   final String title;
 
   @override
-  State<EpicMnemonicView> createState() => _EpicMnemonicView();
+  State<MwcMnemonicView> createState() => _MwcMnemonicView();
 }
 
-class _EpicMnemonicView extends State<EpicMnemonicView> {
+class _MwcMnemonicView extends State<MwcMnemonicView> {
   var mnemonic = "";
   var walletConfig = "";
   final storage = new FlutterSecureStorage();
@@ -118,11 +118,11 @@ class _EpicMnemonicView extends State<EpicMnemonicView> {
     // although getApplicationDocumentsDirectory should be enough for both.
     if (Platform.isIOS) {
       config["wallet_dir"] =
-          "${(await getLibraryDirectory()).path}/epiccash/$name/";
+          "${(await getLibraryDirectory()).path}/mwc/$name/";
       print("wallet dir ${config["wallet_dir"]}");
     } else {
       config["wallet_dir"] =
-          "/data/user/0/com.example.flutter_libepiccash_example/app_flutter/$name/";
+          "/data/user/0/com.example.flutter_libmwc_example/app_flutter/$name/";
     }
     config["check_node_api_http_addr"] = "http://95.216.215.107:3413";
     config["chain"] = "mainnet";

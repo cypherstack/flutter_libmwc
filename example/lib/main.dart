@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_libepiccash_example/recover_view.dart';
+// import 'package:flutter_libmwc_example/recover_view.dart';
 import 'dart:async';
 
 // import 'package:path_provider/path_provider.dart';
@@ -7,11 +7,11 @@ import 'dart:io' as io;
 import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
-import 'package:flutter_libepiccash/flutter_libepiccash.dart';
+import 'package:flutter_libmwc/flutter_libmwc.dart';
 import 'dart:convert';
 import 'package:ffi/ffi.dart';
-import 'package:flutter_libepiccash/epic_cash.dart';
-// import 'package:flutter_libepiccash_example/wallet_name.dart';
+import 'package:flutter_libmwc/mwc.dart';
+// import 'package:flutter_libmwc_example/wallet_name.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Epic Mobile Wallet'),
+      home: const MyHomePage(title: 'MWC Mobile Wallet'),
     );
   }
 }
@@ -102,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // var config = {};
     // config["wallet_dir"] =
-    //     "/data/user/0/com.example.flutter_libepiccash_example/app_flutter/test/";
+    //     "/data/user/0/com.example.flutter_libmwc_example/app_flutter/test/";
     // config["check_node_api_http_addr"] = "http://95.216.215.107:3413";
     // config["chain"] = "mainnet";
     // config["account"] = "default";

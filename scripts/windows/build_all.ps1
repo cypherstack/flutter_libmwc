@@ -29,7 +29,7 @@ if (Test-Path 'env:IS_ARM ') {
     cargo build --target aarch64-pc-windows-msvc --release --lib
 
     New-Item -ItemType Directory -Force -Path target\aarch64-pc-windows-msvc\release
-    Copy-Item "target\aarch64-pc-windows-msvc\release\libepic_cash_wallet.so" -Destination "target\aarch64-pc-windows-gnu\release\" -Force
+    Copy-Item "target\aarch64-pc-windows-msvc\release\libmwc_wallet.so" -Destination "target\aarch64-pc-windows-gnu\release\" -Force
 } else {
     Write-Output "Building x86_64 version"
     New-Item -ItemType Directory -Force -Path target\x86_64-pc-windows-msvc\release
