@@ -1,8 +1,8 @@
 use std::cmp::Ordering;
-use std::os::raw::{c_char};
+use std::os::raw::c_char;
 use std::ffi::{CString, CStr, c_void};
+use std::path::Path;
 use std::sync::Arc;
-use std::path::{Path};
 use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -11,22 +11,22 @@ use grin_wallet_api::{self, Owner};
 use grin_wallet_config::{WalletConfig, MQSConfig};
 use grin_wallet_libwallet::api_impl::types::{InitTxArgs, InitTxSendArgs};
 use grin_wallet_libwallet::api_impl::owner;
-use grin_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, MwcMqsChannel, MWCMQSAddress, Address, AddressType, HTTPNodeClient};
+use grin_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, MWCMQSAddress, Address, AddressType, HTTPNodeClient};
 
 use grin_keychain::mnemonic;
 use grin_wallet_util::grin_core::global::ChainTypes;
 use grin_util::file::get_first_line;
 use grin_wallet_util::grin_util::ZeroingString;
 use grin_util::Mutex;
-use grin_wallet_libwallet::{address, scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress};
+use grin_wallet_libwallet::{scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress};
 use grin_wallet_controller::{controller, Error as MWCWalletControllerError};
 
 use grin_wallet_util::grin_keychain::{Keychain, ExtKeychain};
 
 use grin_util::secp::rand::Rng;
 
-use grin_util::secp::key::{SecretKey, PublicKey};
-use grin_util::secp::{Secp256k1};
+use grin_util::secp::key::SecretKey;
+//use grin_util::secp::{Secp256k1};
 use ed25519_dalek::{PublicKey as DalekPublicKey, SecretKey as DalekSecretKey};
 use android_logger::FilterBuilder;
 
@@ -283,7 +283,7 @@ fn _open_wallet(
     let str_password = c_password.to_str().unwrap();
 
     let mut result = String::from("");
-    match open_wallet(&str_config.clone(), str_password) {
+    match open_wallet(&str_config, str_password) {
         Ok(res) => {
             let wlt = res.0;
             let sek_key = res.1;
@@ -954,7 +954,7 @@ fn _get_wallet_address(
 pub fn get_wallet_address(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
-    index: u32,
+    _index: u32,
     mwcmqs_config: &str,
 ) -> String {
 
@@ -1072,7 +1072,7 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
             return  Err(e);
         }
     };
-    let rec_phrase = ZeroingString::from(phrase.clone());
+    let rec_phrase = ZeroingString::from(phrase);
     let result = match lc.create_wallet(
         Some(name),
         Some(rec_phrase),
@@ -1094,7 +1094,7 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
 pub fn get_wallet_secret_key_pair(
     wallet: &Wallet, keychain_mask: Option<SecretKey>, index: u32
 ) -> Result<(DalekSecretKey, DalekPublicKey), Error>{
-    let parent_key_id = {
+    let _parent_key_id = {
         wallet_lock!(wallet, w);
         w.parent_key_id().clone()
     };
@@ -1521,7 +1521,7 @@ pub fn tx_create(
     amount: u64,
     minimum_confirmations: u64,
     selection_strategy_is_use_all: bool,
-    mwcmqs_config: &str,
+    _mwcmqs_config: &str,
     address: &str,
     note: &str,
 ) -> Result<String, Error> {

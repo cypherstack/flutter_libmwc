@@ -1,29 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_limwc/flutter_limwc.dart';
-import 'package:flutter_limwc/flutter_limwc_platform_interface.dart';
-import 'package:flutter_limwc/flutter_limwc_method_channel.dart';
+import 'package:flutter_libmwc/flutter_libmwc.dart';
+import 'package:flutter_libmwc/flutter_libmwc_platform_interface.dart';
+import 'package:flutter_libmwc/flutter_libmwc_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-class MockFlutterLimwcPlatform
+class MockFlutterLibmwcPlatform
     with MockPlatformInterfaceMixin
-    implements FlutterLimwcPlatform {
+    implements FlutterLibmwcPlatform {
 
   @override
   Future<String?> getPlatformVersion() => Future.value('42');
 }
 
 void main() {
-  final FlutterLimwcPlatform initialPlatform = FlutterLimwcPlatform.instance;
+  final FlutterLibmwcPlatform initialPlatform = FlutterLibmwcPlatform.instance;
 
-  test('$MethodChannelFlutterLimwc is the default instance', () {
-    expect(initialPlatform, isInstanceOf<MethodChannelFlutterLimwc>());
+  test('$MethodChannelFlutterLibmwc is the default instance', () {
+    expect(initialPlatform, isInstanceOf<MethodChannelFlutterLibmwc>());
   });
 
   test('getPlatformVersion', () async {
-    FlutterLimwc flutterLimwcPlugin = FlutterLimwc();
-    MockFlutterLimwcPlatform fakePlatform = MockFlutterLimwcPlatform();
-    FlutterLimwcPlatform.instance = fakePlatform;
+    FlutterLibmwc flutterLibmwcPlugin = FlutterLibmwc();
+    MockFlutterLibmwcPlatform fakePlatform = MockFlutterLibmwcPlatform();
+    FlutterLibmwcPlatform.instance = fakePlatform;
 
-    expect(await flutterLimwcPlugin.getPlatformVersion(), '42');
+    expect(await flutterLibmwcPlugin.getPlatformVersion(), '42');
   });
 }

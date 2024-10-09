@@ -677,21 +677,21 @@ abstract class Libmwc {
     }
   }
 
-  static void startmwcmqsListener({
+  static void startMwcMqsListener({
     required String wallet,
     required String mwcmqsConfig,
   }) {
     try {
       ListenerManager.pointer =
-          lib_mwc.mwcmqsListenerStart(wallet, mwcmqsConfig);
+          lib_mwc.mwcMqsListenerStart(wallet, mwcmqsConfig);
     } catch (e) {
       throw ("Error starting wallet listener ${e.toString()}");
     }
   }
 
-  static void stopmwcmqsListener() {
+  static void stopMwcMqsListener() {
     if (ListenerManager.pointer != null) {
-      lib_mwc.mwcmqsListenerStop(ListenerManager.pointer!);
+      lib_mwc.mwcMqsListenerStop(ListenerManager.pointer!);
     }
   }
 }

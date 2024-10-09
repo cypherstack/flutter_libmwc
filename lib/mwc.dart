@@ -44,13 +44,13 @@ typedef CreateTransactionFFI = Pointer<Utf8> Function(Pointer<Utf8>,
     Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>,
     Pointer<Utf8>);
 
-typedef MWCMQSListenerStart = Pointer<Void> Function(
+typedef MwcMqsListenerStart = Pointer<Void> Function(
     Pointer<Utf8>, Pointer<Utf8>);
-typedef MWCMQSListenerStartFFI = Pointer<Void> Function(
+typedef MwcMqsListenerStartFFI = Pointer<Void> Function(
     Pointer<Utf8>, Pointer<Utf8>);
 
-typedef MWCMQSListenerStop = Pointer<Utf8> Function(Pointer<Void>);
-typedef MWCMQSListenerStopFFI = Pointer<Utf8> Function(Pointer<Void>);
+typedef MwcMqsListenerStop = Pointer<Utf8> Function(Pointer<Void>);
+typedef MwcMqsListenerStopFFI = Pointer<Utf8> Function(Pointer<Void>);
 
 typedef GetTransactions = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>);
 typedef GetTransactionsFFI = Pointer<Utf8> Function(
@@ -144,24 +144,24 @@ Future<String> scanOutPuts(
   ).toDartString();
 }
 
-final MWCMQSListenerStart _MWCMQSListenerStart = mwcNative
-    .lookup<NativeFunction<MWCMQSListenerStartFFI>>(
-    "rust_MWCMQS_listener_start")
+final MwcMqsListenerStart _MwcMqsListenerStart = mwcNative
+    .lookup<NativeFunction<MwcMqsListenerStartFFI>>(
+    "rust_mwcmqs_listener_start")
     .asFunction();
 
-Pointer<Void> MWCMQSListenerStart(String wallet, String MWCMQSConfig) {
-  return _MWCMQSListenerStart(
+Pointer<Void> mwcMqsListenerStart(String wallet, String MWCMQSConfig) {
+  return _MwcMqsListenerStart(
     wallet.toNativeUtf8(),
     MWCMQSConfig.toNativeUtf8(),
   );
 }
 
-final MWCMQSListenerStop _MWCMQSListenerStop = mwcNative
-    .lookup<NativeFunction<MWCMQSListenerStopFFI>>("_listener_cancel")
+final MwcMqsListenerStop _MwcMqsListenerStop = mwcNative
+    .lookup<NativeFunction<MwcMqsListenerStopFFI>>("_listener_cancel")
     .asFunction();
 
-String MWCMQSListenerStop(Pointer<Void> handler) {
-  return _MWCMQSListenerStop(
+String mwcMqsListenerStop(Pointer<Void> handler) {
+  return _MwcMqsListenerStop(
     handler,
   ).toDartString();
 }
