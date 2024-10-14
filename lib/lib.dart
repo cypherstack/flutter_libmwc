@@ -400,7 +400,6 @@ abstract class Libmwc {
     return lib_mwc.getAddressInfo(
       data.wallet,
       data.index,
-      data.mwcmqsConfig,
     );
   }
 
@@ -410,14 +409,12 @@ abstract class Libmwc {
   static Future<String> getAddressInfo({
     required String wallet,
     required int index,
-    required String mwcmqsConfig,
   }) async {
     return await m.protect(() async {
       try {
         return await compute(_addressInfoWrapper, (
           wallet: wallet,
-          index: index,
-          mwcmqsConfig: mwcmqsConfig,
+          index: index
         ));
       } catch (e) {
         throw ("Error getting address info : ${e.toString()}");

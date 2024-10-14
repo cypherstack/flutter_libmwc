@@ -215,11 +215,10 @@ final AddressInfo _addressInfo = mwcNative
     .lookup<NativeFunction<AddressInfoFFI>>("rust_get_wallet_address")
     .asFunction();
 
-String getAddressInfo(String wallet, int index, String MWCMQSConfig) {
+String getAddressInfo(String wallet, int index) {
   return _addressInfo(
       wallet.toNativeUtf8(),
-      index.toString().toNativeUtf8().cast<Int8>(),
-      MWCMQSConfig.toNativeUtf8())
+      index.toString().toNativeUtf8().cast<Int8>())
       .toDartString();
 }
 

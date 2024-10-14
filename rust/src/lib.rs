@@ -897,12 +897,9 @@ fn _tx_send_http(
 pub unsafe extern "C" fn rust_get_wallet_address(
     wallet: *const c_char,
     index: *const c_char,
-    mwcmqs_config: *const c_char,
 ) -> *const c_char {
     let wallet_ptr = CStr::from_ptr(wallet);
     let index = CStr::from_ptr(index);
-    let mwcmqs_config = CStr::from_ptr(mwcmqs_config);
-    let mwcmqs_config = mwcmqs_config.to_str().unwrap();
     let index: u32 = index.to_str().unwrap().to_string().parse().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
@@ -915,7 +912,6 @@ pub unsafe extern "C" fn rust_get_wallet_address(
         wallet,
         sek_key,
         index,
-        mwcmqs_config
     ) {
         Ok(address) => {
             address
@@ -934,9 +930,8 @@ fn _get_wallet_address(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
     index: u32,
-    mwcmqs_config: &str
 ) -> Result<*const c_char, Error> {
-    let address = get_wallet_address(&wallet, keychain_mask, index, mwcmqs_config);
+    let address = get_wallet_address(&wallet, keychain_mask, index);
     let s = CString::new(address).unwrap();
     let p = s.as_ptr(); // Get a pointer to the underlaying memory for s
     std::mem::forget(s); // Give up the responsibility of cleaning up/freeing s
@@ -947,9 +942,7 @@ pub fn get_wallet_address(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
     _index: u32,
-    _mwcmqs_config: &str,
 ) -> String {
-
     let api = Owner::new(wallet.clone(), None, None);
     let address = api.get_mqs_address(keychain_mask.as_ref()).unwrap();
     format!("mwcmqs://{:?}", address)
