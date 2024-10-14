@@ -393,8 +393,7 @@ abstract class Libmwc {
   static Future<String> _addressInfoWrapper(
     ({
       String wallet,
-      int index,
-      String mwcmqsConfig,
+      int index
     }) data,
   ) async {
     return lib_mwc.getAddressInfo(
