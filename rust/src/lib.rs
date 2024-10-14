@@ -119,15 +119,7 @@ fn create_wallet_config(config: Config) -> Result<WalletConfig, Error> {
         no_commit_cache: Some(false),
         owner_api_include_foreign: Some(false),
         owner_api_listen_port: Some(WalletConfig::default_owner_api_listen_port()),
-        libp2p_listen_port: todo!(),
-        owner_api_include_mqs_listener: todo!(),
-        grinbox_address_index: todo!(),
-        wallet_data_dir: todo!(),
-        accept_fee_base: todo!(),
-        eth_swap_contract_address: todo!(),
-        erc20_swap_contract_address: todo!(),
-        eth_infura_project_id: todo!(),
-        swap_electrumx_addr: todo!(),
+        ..WalletConfig::default()
     })
 }
 
