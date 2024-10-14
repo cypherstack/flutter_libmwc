@@ -947,13 +947,12 @@ pub fn get_wallet_address(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
     _index: u32,
-    mwcmqs_config: &str,
+    _mwcmqs_config: &str,
 ) -> String {
 
-    let mwcmqs_conf = serde_json::from_str::<MQSConfig>(mwcmqs_config).unwrap();
     let api = Owner::new(wallet.clone(), None, None);
     let address = api.get_mqs_address(keychain_mask.as_ref()).unwrap();
-    format!("{:?}@{}", address, mwcmqs_conf.mwcmqs_domain)
+    format!("mwcmqs://{:?}", address)
 }
 
 #[no_mangle]
