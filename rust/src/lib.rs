@@ -7,26 +7,27 @@ use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use grin_wallet_api::{self, Owner};
-use grin_wallet_config::{WalletConfig, MQSConfig};
-use grin_wallet_libwallet::api_impl::types::{InitTxArgs, InitTxSendArgs};
-use grin_wallet_libwallet::api_impl::owner;
-use grin_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, MWCMQSAddress, Address, AddressType, HTTPNodeClient};
+use mwc_wallet_api::{self, Owner};
+use mwc_wallet_config::{WalletConfig, MQSConfig};
+use mwc_wallet_libwallet::api_impl::types::{InitTxArgs, InitTxSendArgs};
+use mwc_wallet_libwallet::api_impl::owner;
+use mwc_wallet_impls::{DefaultLCProvider, DefaultWalletImpl, MWCMQSAddress, Address, AddressType, HTTPNodeClient};
 
-use grin_keychain::mnemonic;
-use grin_wallet_util::grin_core::global::ChainTypes;
-use grin_util::file::get_first_line;
-use grin_wallet_util::grin_util::ZeroingString;
-use grin_util::Mutex;
-use grin_wallet_libwallet::{scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress};
-use grin_wallet_controller::{controller, Error as MWCWalletControllerError};
+use mwc_keychain::mnemonic;
+use mwc_wallet_util::mwc_core::global::ChainTypes;
+use mwc_wallet_util::mwc_core::global;
+use mwc_util::file::get_first_line;
+use mwc_wallet_util::mwc_util::ZeroingString;
+use mwc_util::Mutex;
+use mwc_wallet_libwallet::{scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress};
+use mwc_wallet_controller::{controller, Error as MWCWalletControllerError};
 
-use grin_wallet_util::grin_keychain::{Keychain, ExtKeychain};
+use mwc_wallet_util::mwc_keychain::{Keychain, ExtKeychain};
 
-use grin_util::secp::rand::Rng;
-
-use grin_util::secp::key::SecretKey;
-//use grin_util::secp::{Secp256k1};
+use mwc_util::secp::rand::Rng;
+use mwc_util::init_logger as mwc_wallet_init_logger;
+use mwc_util::logger::LoggingConfig;
+use mwc_util::secp::key::SecretKey;
 use ed25519_dalek::{PublicKey as DalekPublicKey, SecretKey as DalekSecretKey};
 use android_logger::FilterBuilder;
 
@@ -35,9 +36,7 @@ pub struct Config {
     pub wallet_dir: String,
     pub check_node_api_http_addr: String,
     pub chain: String,
-    pub account: Option<String>,
-    pub api_listen_port: u16,
-    pub api_listen_interface: String
+    pub account: Option<String>
 }
 
 
@@ -91,20 +90,18 @@ impl Config {
 */
 fn create_wallet_config(config: Config) -> Result<WalletConfig, Error> {
     let chain_type = match config.chain.as_ref() {
-        "mainnet" => ChainTypes::Mainnet,
-        "floonet" => ChainTypes::Floonet,
-        "usertesting" => ChainTypes::UserTesting,
-        "automatedtesting" => ChainTypes::AutomatedTesting,
-        _ => ChainTypes::Floonet,
+        "mainnet" => global::ChainTypes::Mainnet,
+        "floonet" => global::ChainTypes::Floonet,
+        "usertesting" => global::ChainTypes::UserTesting,
+        "automatedtesting" => global::ChainTypes::AutomatedTesting,
+        _ => global::ChainTypes::Floonet,
     };
 
     let api_secret_path = config.wallet_dir.clone() + "/.api_secret";
-    let api_listen_port = config.api_listen_port;
-
     Ok(WalletConfig {
+        data_file_dir: config.wallet_dir,
         chain_type: Some(chain_type),
-        api_listen_interface: config.api_listen_interface,
-        api_listen_port,
+        api_listen_port: 3415,
         api_secret_path: None,
         node_api_secret_path: if Path::new(&api_secret_path).exists() {
             Some(api_secret_path)
@@ -112,13 +109,6 @@ fn create_wallet_config(config: Config) -> Result<WalletConfig, Error> {
             None
         },
         check_node_api_http_addr: config.check_node_api_http_addr,
-        data_file_dir: config.wallet_dir,
-        tls_certificate_file: None,
-        tls_certificate_key: None,
-        dark_background_color_scheme: Some(true),
-        no_commit_cache: Some(false),
-        owner_api_include_foreign: Some(false),
-        owner_api_listen_port: Some(WalletConfig::default_owner_api_listen_port()),
         ..WalletConfig::default()
     })
 }
@@ -762,6 +752,43 @@ fn _get_chain_height(config: *const c_char) -> Result<*const c_char, Error> {
     Ok(p)
 }
 
+pub fn _init_logs(config: &str) -> Result<*const c_char, Error> {
+    let config = match Config::from_str(&config.to_string()) {
+        Ok(config) => config,
+        Err(_e) => {
+            return Err(Error::GenericError(format!(
+                "{}",
+                "Unable to get mwc wallet config"
+            )))
+        }
+    };
+
+    let log = LoggingConfig {
+        file_log_level: Level::Trace,
+        log_file_path: format!("{}/mwc-wallet.log", config.wallet_dir),
+        ..LoggingConfig::default()
+    };
+    let _ = mwc_wallet_init_logger(Some(log), None);
+    let success_msg = CString::new("Logger initialized successfully").unwrap();
+    Ok(success_msg.into_raw())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_init_logs(config: *const c_char) -> *const c_char {
+    // Convert C string to Rust string
+    let c_conf = CStr::from_ptr(config);
+    let wallet_dir_str = match c_conf.to_str() {
+        Ok(s) => s,
+        Err(_) => {
+            let err_msg = CString::new("Failed to parse config string").unwrap();
+            return err_msg.into_raw();
+        }
+    };
+    let _ =_init_logs(wallet_dir_str);
+    let success_msg = CString::new("Logger initialized successfully").unwrap();
+    success_msg.into_raw()
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn rust_delete_wallet(
     _wallet: *const c_char,
@@ -945,7 +972,8 @@ pub fn get_wallet_address(
 ) -> String {
     let api = Owner::new(wallet.clone(), None, None);
     let address = api.get_mqs_address(keychain_mask.as_ref()).unwrap();
-    format!("mwcmqs://{:?}", address)
+    let public_proof_address = proofaddress::ProvableAddress::from_pub_key(&address);
+    format!("mwcmqs://{}", public_proof_address.public_key)
 }
 
 #[no_mangle]
@@ -972,7 +1000,6 @@ pub unsafe extern "C" fn rust_get_tx_fees(
     c_amount: *const c_char,
     min_confirmations: *const c_char,
 ) -> *const c_char {
-
     let minimum_confirmations = CStr::from_ptr(min_confirmations);
     let minimum_confirmations: u64 = minimum_confirmations.to_str().unwrap().to_string().parse().unwrap();
     let wallet_ptr = CStr::from_ptr(wallet);
@@ -1239,6 +1266,13 @@ fn get_wallet(config: &Config) -> Result<Wallet, Error> {
         } Err(e) => {
             return Err(e);
         }
+    };
+    let target_chaintype = wallet_config.chain_type.unwrap_or(ChainTypes::Mainnet);
+    if !global::GLOBAL_CHAIN_TYPE.is_init() {
+        global::init_global_chain_type(target_chaintype)
+    };
+    if global::get_chain_type() != target_chaintype {
+        global::set_local_chain_type(target_chaintype);
     };
     let node_api_secret = get_first_line(wallet_config.node_api_secret_path.clone());
     let node_client = HTTPNodeClient::new(vec![wallet_config.check_node_api_http_addr.clone()], node_api_secret).unwrap();
@@ -1516,9 +1550,9 @@ pub fn tx_create(
         method: "mwcmqs".to_string(),
         dest: address.to_string(),
         apisecret: None,
-        finalize: false,
-        post_tx: false,
-        fluff: false
+        finalize: true,
+        post_tx: true,
+        fluff: true
     };
 
     let args = InitTxArgs {
@@ -1589,13 +1623,13 @@ pub fn tx_get(wallet: &Wallet, refresh_from_node: bool, tx_slate_id: &str) -> Re
 }
 
 pub fn convert_deci_to_nano(amount: f64) -> u64 {
-    let base_nano = 100000000;
+    let base_nano = 1000000000;
     let nano = amount * base_nano as f64;
     nano as u64
 }
 
 pub fn nano_to_deci(amount: u64) -> f64 {
-    let base_nano = 100000000;
+    let base_nano = 1000000000;
     let decimal = amount as f64 / base_nano as f64;
     decimal
 }
@@ -1626,22 +1660,15 @@ pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<
     let mut opened = false;
     {
         let mut wallet_lock = wallet.lock();
-        let lc = match wallet_lock.lc_provider() {
-            Ok(lc_provider) => {
-                lc_provider
-            }
-            Err(err) => {
-                return  Err(err);
-            }
-        };
+        let lc = wallet_lock.lc_provider()?;
         if let Ok(exists_wallet) = lc.wallet_exists(None, None) {
             if exists_wallet {
                 let temp = match lc.open_wallet(
                     None,
                     ZeroingString::from(password),
-                    true,
                     false,
-                None) {
+                    false,
+                    None) {
                     Ok(tmp_key) => {
                         tmp_key
                     }
@@ -1821,25 +1848,21 @@ impl Task for Listener {
         let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data_str).unwrap();
         let wlt = tuple_wallet_data.0;
         let sek_key = tuple_wallet_data.1;
-
-        // let wallet_data = &self.wallet_data;
-        // let wlt = wallet_data.clone().0;
         unsafe {
             let mwcmqs_conf = serde_json::from_str::<MQSConfig>(&self.mwcmqs_config.as_str()).unwrap();
-            // let wallet_data = &self.wallet_data;
-            // let wlt = wallet_data.0;
-            // let sek_key = wallet_data.clone().1;
             ensure_wallet!(wlt, wallet);
             while !cancel_tok.cancelled() {
-                let _ = controller::init_start_mwcmqs_listener(
-                    wallet.clone(),
-                    mwcmqs_conf.clone(),
-                    Arc::new(Mutex::new(sek_key.clone())),
-                    false,
-                )
-                .map_err(|e| MWCWalletControllerError::GenericError(e.to_string()));
-                };
-                spins += 1;
+                if mwc_wallet_impls::adapters::get_mwcmqs_brocker().is_none() {
+                    let _ = controller::init_start_mwcmqs_listener(
+                        wallet.clone(),
+                        mwcmqs_conf.clone(),
+                        Arc::new(Mutex::new(sek_key.clone())),
+                        true,
+                    )
+                    .map_err(|e| MWCWalletControllerError::GenericError(e.to_string()));
+                    };
+                    spins += 1;
+                }
         }
         Ok(spins)
     }

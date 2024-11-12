@@ -477,27 +477,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
-name = "bch"
-version = "0.2.0"
-source = "git+https://github.com/mwcproject/rust-bch?branch=master#cc08eaf8804c79afb1e51d7750ed2665c13a8de3"
-dependencies = [
- "byteorder",
- "digest 0.7.6",
- "dns-lookup",
- "hex 0.3.2",
- "linked-hash-map",
- "log 0.4.20",
- "murmur3",
- "rand 0.5.6",
- "ring 0.16.20",
- "ripemd160 0.7.0",
- "rust-base58",
- "rust-crypto",
- "secp256k1 0.19.0",
- "snowflake",
-]
-
-[[package]]
 name = "bech32"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -527,17 +506,6 @@ name = "bit-vec"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
-
-[[package]]
-name = "bitcoin"
-version = "0.27.0"
-source = "git+https://github.com/mwcproject/rust-bitcoin?branch=zkp#54b050ed26a2d0bf45ca068b5e39579bb90c9d78"
-dependencies = [
- "bech32 0.7.3",
- "bitcoin_hashes",
- "bitcoinconsensus",
- "grin_secp256k1zkp",
-]
 
 [[package]]
 name = "bitcoin_hashes"
@@ -1561,9 +1529,10 @@ dependencies = [
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/mwcproject/librustzcash?branch=master#1be9cf71fedca4d1f233ef1e11780e93edef16f2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4127688f6177e3f57521881cb1cfd90d1228214f9dc43b8efe6f6c6948cd8280"
 dependencies = [
- "blake2b_simd 1.0.2",
+ "blake2b_simd 0.5.11",
  "byteorder",
 ]
 
@@ -2091,478 +2060,6 @@ dependencies = [
  "futures-core",
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "grin_api"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "bytes 0.5.6",
- "chrono",
- "easy-jsonrpc-mw",
- "futures 0.3.30",
- "grin_chain",
- "grin_core 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_p2p",
- "grin_pool",
- "grin_store",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "http 0.2.11",
- "hyper 0.13.10",
- "hyper-rustls 0.20.0",
- "hyper-rustls 0.21.0",
- "hyper-timeout",
- "lazy_static",
- "log 0.4.20",
- "regex",
- "ring 0.16.20",
- "rustls 0.17.0",
- "serde",
- "serde_derive",
- "serde_json",
- "thiserror",
- "tokio 0.2.25",
- "tokio-rustls 0.13.1",
- "url 2.5.0",
-]
-
-[[package]]
-name = "grin_chain"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "bit-vec",
- "bitflags 1.3.2",
- "byteorder",
- "chrono",
- "croaring",
- "enum_primitive",
- "grin_core 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_keychain 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_store",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "lazy_static",
- "log 0.4.20",
- "lru-cache",
- "serde",
- "serde_derive",
- "thiserror",
-]
-
-[[package]]
-name = "grin_core"
-version = "5.3.2"
-dependencies = [
- "blake2-rfc",
- "byteorder",
- "bytes 0.5.6",
- "chrono",
- "croaring",
- "enum_primitive",
- "grin_keychain 5.3.2",
- "grin_util 5.3.2",
- "lazy_static",
- "log 0.4.20",
- "lru-cache",
- "num",
- "num-bigint 0.2.6",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "siphasher",
- "thiserror",
- "zeroize",
-]
-
-[[package]]
-name = "grin_core"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "blake2-rfc",
- "byteorder",
- "bytes 0.5.6",
- "chrono",
- "croaring",
- "enum_primitive",
- "grin_keychain 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "lazy_static",
- "log 0.4.20",
- "lru-cache",
- "num",
- "num-bigint 0.2.6",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "siphasher",
- "thiserror",
- "zeroize",
-]
-
-[[package]]
-name = "grin_keychain"
-version = "5.3.2"
-dependencies = [
- "blake2-rfc",
- "byteorder",
- "digest 0.9.0",
- "grin_util 5.3.2",
- "hmac 0.11.0",
- "lazy_static",
- "log 0.4.20",
- "pbkdf2 0.8.0",
- "rand 0.6.5",
- "ripemd160 0.9.1",
- "serde",
- "serde_derive",
- "serde_json",
- "sha2 0.9.9",
- "thiserror",
- "zeroize",
-]
-
-[[package]]
-name = "grin_keychain"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "blake2-rfc",
- "byteorder",
- "digest 0.9.0",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "hmac 0.11.0",
- "lazy_static",
- "log 0.4.20",
- "pbkdf2 0.8.0",
- "rand 0.6.5",
- "ripemd160 0.9.1",
- "serde",
- "serde_derive",
- "serde_json",
- "sha2 0.9.9",
- "thiserror",
- "zeroize",
-]
-
-[[package]]
-name = "grin_p2p"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "async-std",
- "bitflags 1.3.2",
- "bytes 0.5.6",
- "chrono",
- "ed25519-dalek",
- "enum_primitive",
- "futures 0.3.30",
- "grin_chain",
- "grin_core 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_store",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "lazy_static",
- "libp2p",
- "libp2p-tokio-socks5",
- "log 0.4.20",
- "lru-cache",
- "net2",
- "num",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "serde_json",
- "socks",
- "tempfile",
- "thiserror",
- "tokio 0.2.25",
- "tor-stream",
-]
-
-[[package]]
-name = "grin_pool"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "blake2-rfc",
- "chrono",
- "grin_core 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_keychain 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "log 0.4.20",
- "lru-cache",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "thiserror",
-]
-
-[[package]]
-name = "grin_secp256k1zkp"
-version = "0.7.14"
-source = "git+https://github.com/mwcproject/rust-secp256k1-zkp?tag=0.7.14#98726a4b3926ef24201f3c83e3e189e8db67f58b"
-dependencies = [
- "arrayvec 0.7.6",
- "cc",
- "libc",
- "rand 0.5.6",
- "serde",
- "serde_json",
- "zeroize",
-]
-
-[[package]]
-name = "grin_store"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "byteorder",
- "croaring",
- "grin_core 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "libc",
- "lmdb-zero",
- "log 0.4.20",
- "memmap",
- "serde",
- "serde_derive",
- "tempfile",
- "thiserror",
-]
-
-[[package]]
-name = "grin_util"
-version = "5.3.2"
-dependencies = [
- "backtrace",
- "base64 0.12.3",
- "byteorder",
- "data-encoding",
- "ed25519-dalek",
- "grin_secp256k1zkp",
- "lazy_static",
- "log 0.4.20",
- "log4rs",
- "parking_lot 0.10.2",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "sha3 0.8.2",
- "thiserror",
- "walkdir",
- "zeroize",
- "zip",
-]
-
-[[package]]
-name = "grin_util"
-version = "5.3.2"
-source = "git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2#bc491d0da86a323641482c155cf01b537235ce92"
-dependencies = [
- "backtrace",
- "base64 0.12.3",
- "byteorder",
- "data-encoding",
- "ed25519-dalek",
- "grin_secp256k1zkp",
- "lazy_static",
- "log 0.4.20",
- "log4rs",
- "parking_lot 0.10.2",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "sha3 0.8.2",
- "thiserror",
- "walkdir",
- "zeroize",
- "zip",
-]
-
-[[package]]
-name = "grin_wallet_api"
-version = "5.3.3"
-dependencies = [
- "base64 0.12.3",
- "chrono",
- "colored",
- "easy-jsonrpc-mw",
- "ed25519-dalek",
- "grin_wallet_config",
- "grin_wallet_impls",
- "grin_wallet_libwallet",
- "grin_wallet_util",
- "log 0.4.20",
- "rand 0.6.5",
- "ring 0.16.20",
- "serde",
- "serde_derive",
- "serde_json",
- "uuid",
- "x25519-dalek 0.6.0",
-]
-
-[[package]]
-name = "grin_wallet_config"
-version = "5.3.3"
-dependencies = [
- "dirs 2.0.2",
- "grin_wallet_util",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "grin_wallet_controller"
-version = "5.3.3"
-dependencies = [
- "chrono",
- "colored",
- "easy-jsonrpc-mw",
- "ed25519-dalek",
- "futures 0.3.30",
- "grin_wallet_api",
- "grin_wallet_config",
- "grin_wallet_impls",
- "grin_wallet_libwallet",
- "grin_wallet_util",
- "hyper 0.13.10",
- "lazy_static",
- "libp2p",
- "log 0.4.20",
- "prettytable-rs 0.10.0",
- "qr_code",
- "rand 0.7.3",
- "ring 0.16.20",
- "serde",
- "serde_derive",
- "serde_json",
- "term 0.6.1",
- "thiserror",
- "tokio 0.2.25",
- "url 2.5.0",
- "uuid",
- "wagyu-ethereum",
- "x25519-dalek 0.6.0",
-]
-
-[[package]]
-name = "grin_wallet_impls"
-version = "5.3.3"
-dependencies = [
- "base64 0.12.3",
- "blake2-rfc",
- "byteorder",
- "chrono",
- "data-encoding",
- "ed25519-dalek",
- "futures 0.3.30",
- "grin_wallet_config",
- "grin_wallet_libwallet",
- "grin_wallet_util",
- "lazy_static",
- "libp2p",
- "log 0.4.20",
- "nanoid",
- "rand 0.6.5",
- "regex",
- "reqwest 0.10.10",
- "ring 0.16.20",
- "serde",
- "serde_derive",
- "serde_json",
- "sysinfo",
- "thiserror",
- "timer",
- "tokio 0.2.25",
- "url 2.5.0",
- "uuid",
- "x25519-dalek 0.6.0",
-]
-
-[[package]]
-name = "grin_wallet_libwallet"
-version = "5.3.3"
-dependencies = [
- "base64 0.12.3",
- "bch",
- "bigdecimal",
- "bitcoin",
- "bitcoin_hashes",
- "bitstream-io",
- "blake2-rfc",
- "bs58 0.3.1",
- "byteorder",
- "chrono",
- "colored",
- "crc",
- "crossbeam-utils 0.7.2",
- "crypto_box",
- "curve25519-dalek 2.1.3",
- "data-encoding",
- "digest 0.9.0",
- "ed25519-dalek",
- "futures-timer",
- "grin_wallet_config",
- "grin_wallet_util",
- "hex 0.3.2",
- "hmac 0.11.0",
- "lazy_static",
- "libc",
- "libp2p",
- "log 0.4.20",
- "maplit",
- "native-tls",
- "num-bigint 0.2.6",
- "rand 0.6.5",
- "regex",
- "ring 0.16.20",
- "ripemd160 0.9.1",
- "secp256k1 0.20.3",
- "serde",
- "serde_derive",
- "serde_json",
- "serial_test",
- "sha2 0.9.9",
- "sha3 0.8.2",
- "signature",
- "smaz",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio 0.2.25",
- "uuid",
- "wagyu-ethereum",
- "wagyu-model",
- "web3",
- "x25519-dalek 0.6.0",
- "zcash_primitives",
-]
-
-[[package]]
-name = "grin_wallet_util"
-version = "5.3.3"
-dependencies = [
- "data-encoding",
- "ed25519-dalek",
- "grin_api",
- "grin_chain",
- "grin_core 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_keychain 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "grin_p2p",
- "grin_store",
- "grin_util 5.3.2 (git+https://github.com/mwcproject/mwc-node?tag=5.3.2.2)",
- "lazy_static",
- "rand 0.6.5",
- "serde",
- "serde_derive",
- "sha3 0.8.2",
- "thiserror",
- "tokio 0.2.25",
 ]
 
 [[package]]
@@ -3279,225 +2776,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
 
 [[package]]
-name = "libp2p"
-version = "0.35.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "atomic",
- "bytes 1.5.0",
- "futures 0.3.30",
- "lazy_static",
- "libp2p-core",
- "libp2p-dns",
- "libp2p-gossipsub",
- "libp2p-mplex",
- "libp2p-noise",
- "libp2p-ping",
- "libp2p-swarm",
- "libp2p-swarm-derive",
- "libp2p-tcp",
- "libp2p-yamux",
- "parity-multiaddr",
- "parking_lot 0.11.2",
- "pin-project 1.1.4",
- "smallvec 1.13.1",
- "wasm-timer",
-]
-
-[[package]]
-name = "libp2p-core"
-version = "0.27.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "asn1_der",
- "bs58 0.4.0",
- "data-encoding",
- "ed25519-dalek",
- "either",
- "fnv",
- "futures 0.3.30",
- "futures-timer",
- "lazy_static",
- "libsecp256k1",
- "log 0.4.20",
- "multihash",
- "multistream-select",
- "parity-multiaddr",
- "parking_lot 0.11.2",
- "pin-project 1.1.4",
- "prost",
- "prost-build",
- "rand 0.7.3",
- "ring 0.16.20",
- "rw-stream-sink",
- "sha2 0.9.9",
- "sha3 0.8.2",
- "smallvec 1.13.1",
- "thiserror",
- "unsigned-varint 0.7.2",
- "void",
- "zeroize",
-]
-
-[[package]]
-name = "libp2p-dns"
-version = "0.27.0"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "futures 0.3.30",
- "libp2p-core",
- "log 0.4.20",
-]
-
-[[package]]
-name = "libp2p-gossipsub"
-version = "0.28.0"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "asynchronous-codec",
- "base64 0.13.1",
- "byteorder",
- "bytes 1.5.0",
- "fnv",
- "futures 0.3.30",
- "hex_fmt",
- "libp2p-core",
- "libp2p-swarm",
- "log 0.4.20",
- "prost",
- "prost-build",
- "rand 0.7.3",
- "regex",
- "sha2 0.9.9",
- "smallvec 1.13.1",
- "unsigned-varint 0.7.2",
- "wasm-timer",
-]
-
-[[package]]
-name = "libp2p-mplex"
-version = "0.27.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "asynchronous-codec",
- "bytes 1.5.0",
- "futures 0.3.30",
- "libp2p-core",
- "log 0.4.20",
- "nohash-hasher",
- "parking_lot 0.11.2",
- "rand 0.7.3",
- "smallvec 1.13.1",
- "unsigned-varint 0.7.2",
-]
-
-[[package]]
-name = "libp2p-noise"
-version = "0.29.0"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "bytes 1.5.0",
- "curve25519-dalek 3.2.0",
- "futures 0.3.30",
- "lazy_static",
- "libp2p-core",
- "log 0.4.20",
- "prost",
- "prost-build",
- "rand 0.8.5",
- "sha2 0.9.9",
- "snow",
- "static_assertions",
- "x25519-dalek 1.1.1",
- "zeroize",
-]
-
-[[package]]
-name = "libp2p-ping"
-version = "0.27.0"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "futures 0.3.30",
- "libp2p-core",
- "libp2p-swarm",
- "log 0.4.20",
- "rand 0.7.3",
- "void",
- "wasm-timer",
-]
-
-[[package]]
-name = "libp2p-swarm"
-version = "0.27.2"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "either",
- "futures 0.3.30",
- "libp2p-core",
- "log 0.4.20",
- "rand 0.7.3",
- "smallvec 1.13.1",
- "void",
- "wasm-timer",
-]
-
-[[package]]
-name = "libp2p-swarm-derive"
-version = "0.22.0"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "quote 1.0.35",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "libp2p-tcp"
-version = "0.27.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "async-io 1.13.0",
- "futures 0.3.30",
- "futures-timer",
- "if-addrs",
- "if-watch",
- "ipnet",
- "libc",
- "libp2p-core",
- "log 0.4.20",
- "socket2 0.3.19",
- "tokio 1.36.0",
-]
-
-[[package]]
-name = "libp2p-tokio-socks5"
-version = "0.7.1"
-source = "git+https://github.com/mwcproject/rust-libp2p-tokio-socks5?branch=master#69bd822cc0bd1021244e4eb4c8fd59df3e80214a"
-dependencies = [
- "data-encoding",
- "futures 0.3.30",
- "futures-timer",
- "if-addrs",
- "ipnet",
- "libp2p",
- "log 0.4.20",
- "socket2 0.3.19",
- "tokio 0.2.25",
- "tokio-socks 0.2.2",
-]
-
-[[package]]
-name = "libp2p-yamux"
-version = "0.30.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
-dependencies = [
- "futures 0.3.30",
- "libp2p-core",
- "parking_lot 0.11.2",
- "thiserror",
- "yamux",
-]
-
-[[package]]
 name = "libredox"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3839,8 +3117,9 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 
 [[package]]
 name = "multistream-select"
-version = "0.10.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56a336acba8bc87c8876f6425407dbbe6c417bf478b22015f8fb0994ef3bc0ab"
 dependencies = [
  "bytes 1.5.0",
  "futures 0.3.30",
@@ -3860,6 +3139,320 @@ dependencies = [
 ]
 
 [[package]]
+name = "mwc-bch"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c14d242e5e26250db23d43e62ef0a426ff7bd5ff32a929cf3ba4032f6575d3b"
+dependencies = [
+ "byteorder",
+ "digest 0.7.6",
+ "dns-lookup",
+ "hex 0.3.2",
+ "linked-hash-map",
+ "log 0.4.20",
+ "murmur3",
+ "rand 0.5.6",
+ "ring 0.16.20",
+ "ripemd160 0.7.0",
+ "rust-base58",
+ "rust-crypto",
+ "secp256k1 0.19.0",
+ "snowflake",
+]
+
+[[package]]
+name = "mwc-bitcoin"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c49096188273ee7cfc50c8320df9c4e8ad6fa52ed4625e67d61dd76f69d0258b"
+dependencies = [
+ "bech32 0.7.3",
+ "bitcoin_hashes",
+ "bitcoinconsensus",
+ "mwc_secp256k1zkp",
+]
+
+[[package]]
+name = "mwc-libp2p"
+version = "0.35.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e49eb48a7d6c1075a20ab755d17dde37522594ad19a966029aacab022a6bf903"
+dependencies = [
+ "atomic",
+ "bytes 1.5.0",
+ "futures 0.3.30",
+ "lazy_static",
+ "mwc-libp2p-core",
+ "mwc-libp2p-dns",
+ "mwc-libp2p-gossipsub",
+ "mwc-libp2p-mplex",
+ "mwc-libp2p-noise",
+ "mwc-libp2p-ping",
+ "mwc-libp2p-swarm",
+ "mwc-libp2p-swarm-derivee",
+ "mwc-libp2p-tcp",
+ "mwc-libp2p-yamux",
+ "parity-multiaddr",
+ "parking_lot 0.11.2",
+ "pin-project 1.1.4",
+ "smallvec 1.13.1",
+ "wasm-timer",
+]
+
+[[package]]
+name = "mwc-libp2p-core"
+version = "0.27.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8acd5fc9e8f7c048295047d86e39e88495c2350475eacebb6e31ac0330e2cb0f"
+dependencies = [
+ "asn1_der",
+ "bs58 0.4.0",
+ "data-encoding",
+ "ed25519-dalek",
+ "either",
+ "fnv",
+ "futures 0.3.30",
+ "futures-timer",
+ "lazy_static",
+ "libsecp256k1",
+ "log 0.4.20",
+ "multihash",
+ "multistream-select",
+ "parity-multiaddr",
+ "parking_lot 0.11.2",
+ "pin-project 1.1.4",
+ "prost",
+ "prost-build",
+ "rand 0.7.3",
+ "ring 0.16.20",
+ "rw-stream-sink",
+ "sha2 0.9.9",
+ "sha3 0.8.2",
+ "smallvec 1.13.1",
+ "thiserror",
+ "unsigned-varint 0.7.2",
+ "void",
+ "zeroize",
+]
+
+[[package]]
+name = "mwc-libp2p-dns"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfe8ae4e79530d38517cdda2d3b04fc902e2cadcd77b85d9e72db929bb942ffd"
+dependencies = [
+ "futures 0.3.30",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+]
+
+[[package]]
+name = "mwc-libp2p-gossipsub"
+version = "0.28.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94e575fb574e31f3fa27000a5e50202c3b9cb0af262f57ed0b42ff097d159411"
+dependencies = [
+ "asynchronous-codec",
+ "base64 0.13.1",
+ "byteorder",
+ "bytes 1.5.0",
+ "fnv",
+ "futures 0.3.30",
+ "hex_fmt",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+ "mwc-libp2p-swarm",
+ "prost",
+ "prost-build",
+ "rand 0.7.3",
+ "regex",
+ "sha2 0.9.9",
+ "smallvec 1.13.1",
+ "unsigned-varint 0.7.2",
+ "wasm-timer",
+]
+
+[[package]]
+name = "mwc-libp2p-mplex"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f3aa0b619ae0a35c3d50c1264716c0b8dccafd702ab1b7a7d67d4b410d6bbff"
+dependencies = [
+ "asynchronous-codec",
+ "bytes 1.5.0",
+ "futures 0.3.30",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+ "nohash-hasher",
+ "parking_lot 0.11.2",
+ "rand 0.7.3",
+ "smallvec 1.13.1",
+ "unsigned-varint 0.7.2",
+]
+
+[[package]]
+name = "mwc-libp2p-noise"
+version = "0.29.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "faf1330be03d47568510bb8e21d7aaa8a4288f8d04135c78c33d3b1d2ae4f309"
+dependencies = [
+ "bytes 1.5.0",
+ "curve25519-dalek 3.2.0",
+ "futures 0.3.30",
+ "lazy_static",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+ "prost",
+ "prost-build",
+ "rand 0.8.5",
+ "sha2 0.9.9",
+ "snow",
+ "static_assertions",
+ "x25519-dalek 1.1.1",
+ "zeroize",
+]
+
+[[package]]
+name = "mwc-libp2p-ping"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aedd52cb7edc56183d1ee652fc934dfdf953124bb068dd9a4b3dc2ed8fa13792"
+dependencies = [
+ "futures 0.3.30",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+ "mwc-libp2p-swarm",
+ "rand 0.7.3",
+ "void",
+ "wasm-timer",
+]
+
+[[package]]
+name = "mwc-libp2p-swarm"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f569bfe1292b60fe73c9a876c69850eaf9b4f233b8a4af6906d09437fbbf14ec"
+dependencies = [
+ "either",
+ "futures 0.3.30",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+ "rand 0.7.3",
+ "smallvec 1.13.1",
+ "void",
+ "wasm-timer",
+]
+
+[[package]]
+name = "mwc-libp2p-swarm-derivee"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b6212feab5f9f05393bc2c349bb93bd6b09c308e248c76bc6f569756186531d"
+dependencies = [
+ "quote 1.0.35",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "mwc-libp2p-tcp"
+version = "0.27.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "193eea2262324e637439fa03bf21173eeffc26cd5c858c357b7ac7fac2bdf430"
+dependencies = [
+ "async-io 1.13.0",
+ "futures 0.3.30",
+ "futures-timer",
+ "if-addrs",
+ "if-watch",
+ "ipnet",
+ "libc",
+ "log 0.4.20",
+ "mwc-libp2p-core",
+ "socket2 0.3.19",
+ "tokio 1.36.0",
+]
+
+[[package]]
+name = "mwc-libp2p-tokio-socks5"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ceb591d39191d462b2d4596f9d706707221b07af4761bebb57ae83aa79dbf35"
+dependencies = [
+ "data-encoding",
+ "futures 0.3.30",
+ "futures-timer",
+ "if-addrs",
+ "ipnet",
+ "log 0.4.20",
+ "mwc-libp2p",
+ "socket2 0.3.19",
+ "tokio 0.2.25",
+ "tokio-socks 0.2.2",
+]
+
+[[package]]
+name = "mwc-libp2p-yamux"
+version = "0.30.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85ca7574e03da64569f849ca173d034e463a513d06bc181b3f5fed1fb0614c81"
+dependencies = [
+ "futures 0.3.30",
+ "mwc-libp2p-core",
+ "parking_lot 0.11.2",
+ "thiserror",
+ "yamux",
+]
+
+[[package]]
+name = "mwc-wagyu-ethereum"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "584ff24141fee1d3ac910179a712fce46bf0ad905f703c8e3747584f0f468662"
+dependencies = [
+ "base58",
+ "bitvec 0.17.4",
+ "ethereum-types 0.9.2",
+ "hex 0.4.3",
+ "hmac 0.7.1",
+ "libsecp256k1",
+ "mwc-wagyu-model",
+ "pbkdf2 0.3.0",
+ "rand 0.6.5",
+ "rand_xorshift 0.2.0",
+ "regex",
+ "rlp 0.4.6",
+ "serde",
+ "serde_json",
+ "sha2 0.8.2",
+ "tiny-keccak 1.5.0",
+]
+
+[[package]]
+name = "mwc-wagyu-model"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef55366d8cc0a89a7a45e1cb195b79989a2abfa4f6c08f4fb9dc332bec79d89b"
+dependencies = [
+ "base58",
+ "base58-monero",
+ "bech32 0.6.0",
+ "byteorder",
+ "crypto-mac 0.7.0",
+ "ethereum-types 0.9.2",
+ "failure",
+ "ff 0.6.0",
+ "hex 0.4.3",
+ "libsecp256k1",
+ "rand 0.6.5",
+ "rand_core 0.5.1",
+ "ripemd160 0.8.0",
+ "rlp 0.4.6",
+ "serde_json",
+ "sha2 0.8.2",
+ "uint 0.8.5",
+]
+
+[[package]]
 name = "mwc-wallet"
 version = "0.1.0"
 dependencies = [
@@ -3873,17 +3466,17 @@ dependencies = [
  "failure_derive",
  "ffi_helpers",
  "futures 0.3.30",
- "grin_core 5.3.2",
- "grin_keychain 5.3.2",
- "grin_util 5.3.2",
- "grin_wallet_api",
- "grin_wallet_config",
- "grin_wallet_controller",
- "grin_wallet_impls",
- "grin_wallet_libwallet",
- "grin_wallet_util",
  "jni",
  "log 0.4.20",
+ "mwc_core",
+ "mwc_keychain",
+ "mwc_util",
+ "mwc_wallet_api",
+ "mwc_wallet_config",
+ "mwc_wallet_controller",
+ "mwc_wallet_impls",
+ "mwc_wallet_libwallet",
+ "mwc_wallet_util",
  "openssl",
  "prettytable-rs 0.7.0",
  "rand 0.6.5",
@@ -3902,6 +3495,485 @@ dependencies = [
  "websocket",
  "ws",
  "zeroize",
+]
+
+[[package]]
+name = "mwc-web3"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11b8fecebe6bdb13d96c97b40c30ed40213f36e9858038a1bddb02bea9022872"
+dependencies = [
+ "arrayvec 0.5.2",
+ "async-native-tls",
+ "async-std",
+ "derive_more",
+ "ethabi",
+ "ethereum-types 0.10.0",
+ "futures 0.3.30",
+ "futures-timer",
+ "hex 0.4.3",
+ "jsonrpc-core 17.1.0",
+ "log 0.4.20",
+ "parking_lot 0.11.2",
+ "pin-project 1.1.4",
+ "rlp 0.5.2",
+ "secp256k1 0.20.3",
+ "serde",
+ "serde_json",
+ "soketto",
+ "tiny-keccak 2.0.2",
+ "url 2.5.0",
+]
+
+[[package]]
+name = "mwc-zcash_primitives"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c16deba24d6de1787855a23584f5340d85cb761772a1510fcd6abca23d3e7fe"
+dependencies = [
+ "aes",
+ "bitvec 0.18.5",
+ "blake2b_simd 1.0.2",
+ "blake2s_simd",
+ "bls12_381",
+ "byteorder",
+ "crypto_api_chachapoly",
+ "equihash",
+ "ff 0.8.0",
+ "fpe",
+ "group",
+ "hex 0.4.3",
+ "jubjub",
+ "lazy_static",
+ "log 0.4.20",
+ "rand 0.7.3",
+ "rand_core 0.5.1",
+ "ripemd160 0.9.1",
+ "secp256k1 0.19.0",
+ "sha2 0.9.9",
+ "subtle 2.4.1",
+]
+
+[[package]]
+name = "mwc_api"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "214cea5afb707383f168213803f25e5b195b74e16ea2075f262b3efc91ec1d08"
+dependencies = [
+ "bytes 0.5.6",
+ "chrono",
+ "easy-jsonrpc-mw",
+ "futures 0.3.30",
+ "http 0.2.11",
+ "hyper 0.13.10",
+ "hyper-rustls 0.20.0",
+ "hyper-rustls 0.21.0",
+ "hyper-timeout",
+ "lazy_static",
+ "log 0.4.20",
+ "mwc_chain",
+ "mwc_core",
+ "mwc_p2p",
+ "mwc_pool",
+ "mwc_store",
+ "mwc_util",
+ "regex",
+ "ring 0.16.20",
+ "rustls 0.17.0",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "thiserror",
+ "tokio 0.2.25",
+ "tokio-rustls 0.13.1",
+ "url 2.5.0",
+]
+
+[[package]]
+name = "mwc_chain"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f55cd1a12a47281698383a172f48722329c44032aa4ac90ff1be8656a6c58cc"
+dependencies = [
+ "bit-vec",
+ "bitflags 1.3.2",
+ "byteorder",
+ "chrono",
+ "croaring",
+ "enum_primitive",
+ "lazy_static",
+ "log 0.4.20",
+ "lru-cache",
+ "mwc_core",
+ "mwc_keychain",
+ "mwc_store",
+ "mwc_util",
+ "serde",
+ "serde_derive",
+ "thiserror",
+]
+
+[[package]]
+name = "mwc_core"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "115f2c5ac98fb9d7f2ad20e3f6d3f72c256c803390c1cc1dde093ff031738204"
+dependencies = [
+ "blake2-rfc",
+ "byteorder",
+ "bytes 0.5.6",
+ "chrono",
+ "croaring",
+ "enum_primitive",
+ "lazy_static",
+ "log 0.4.20",
+ "lru-cache",
+ "mwc_keychain",
+ "mwc_util",
+ "num",
+ "num-bigint 0.2.6",
+ "rand 0.6.5",
+ "serde",
+ "serde_derive",
+ "siphasher",
+ "thiserror",
+ "zeroize",
+]
+
+[[package]]
+name = "mwc_keychain"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d643d043e6c5ab001217a79ee72b6822b2da4de60c61d96bace48fbfb135b41f"
+dependencies = [
+ "blake2-rfc",
+ "byteorder",
+ "digest 0.9.0",
+ "hmac 0.11.0",
+ "lazy_static",
+ "log 0.4.20",
+ "mwc_util",
+ "pbkdf2 0.8.0",
+ "rand 0.6.5",
+ "ripemd160 0.9.1",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sha2 0.9.9",
+ "thiserror",
+ "zeroize",
+]
+
+[[package]]
+name = "mwc_p2p"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d68985faf0b26b77b69ce12e061a5af0fa3d1b6b034b392554da96652aef6a1"
+dependencies = [
+ "async-std",
+ "bitflags 1.3.2",
+ "bytes 0.5.6",
+ "chrono",
+ "ed25519-dalek",
+ "enum_primitive",
+ "futures 0.3.30",
+ "lazy_static",
+ "log 0.4.20",
+ "lru-cache",
+ "mwc-libp2p",
+ "mwc-libp2p-tokio-socks5",
+ "mwc_chain",
+ "mwc_core",
+ "mwc_store",
+ "mwc_util",
+ "net2",
+ "num",
+ "rand 0.6.5",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "socks",
+ "tempfile",
+ "thiserror",
+ "tokio 0.2.25",
+ "tor-stream",
+]
+
+[[package]]
+name = "mwc_pool"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b7c9228128b06a7fef43a6849411e9349fa1b1ec41dc414de9fbe1125e1c6c0"
+dependencies = [
+ "blake2-rfc",
+ "chrono",
+ "log 0.4.20",
+ "lru-cache",
+ "mwc_core",
+ "mwc_keychain",
+ "mwc_util",
+ "rand 0.6.5",
+ "serde",
+ "serde_derive",
+ "thiserror",
+]
+
+[[package]]
+name = "mwc_secp256k1zkp"
+version = "0.7.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4d65883ae57d4312856c8ccf3636f6a9d8d2356bd5e83eaefb2014bddaa3c24"
+dependencies = [
+ "arrayvec 0.7.6",
+ "cc",
+ "libc",
+ "rand 0.5.6",
+ "serde",
+ "serde_json",
+ "zeroize",
+]
+
+[[package]]
+name = "mwc_store"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f8067b163adcd856a424221586504737ba486d729a6e0366fcf419f550a343b"
+dependencies = [
+ "byteorder",
+ "croaring",
+ "libc",
+ "lmdb-zero",
+ "log 0.4.20",
+ "memmap",
+ "mwc_core",
+ "mwc_util",
+ "serde",
+ "serde_derive",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
+name = "mwc_util"
+version = "5.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d25fc687fee9b3d18481da390fe108bf800662850739e851accb6678370d8e6"
+dependencies = [
+ "backtrace",
+ "base64 0.12.3",
+ "byteorder",
+ "data-encoding",
+ "ed25519-dalek",
+ "lazy_static",
+ "log 0.4.20",
+ "log4rs",
+ "mwc_secp256k1zkp",
+ "parking_lot 0.10.2",
+ "rand 0.6.5",
+ "serde",
+ "serde_derive",
+ "sha3 0.8.2",
+ "thiserror",
+ "walkdir",
+ "zeroize",
+ "zip",
+]
+
+[[package]]
+name = "mwc_wallet_api"
+version = "5.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22b2f7a2819edab410df2a0bab82da2600b26ed38e354d21c4e62f231b9cbd06"
+dependencies = [
+ "base64 0.12.3",
+ "chrono",
+ "colored",
+ "easy-jsonrpc-mw",
+ "ed25519-dalek",
+ "log 0.4.20",
+ "mwc_wallet_config",
+ "mwc_wallet_impls",
+ "mwc_wallet_libwallet",
+ "mwc_wallet_util",
+ "rand 0.6.5",
+ "ring 0.16.20",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "uuid",
+ "x25519-dalek 0.6.0",
+]
+
+[[package]]
+name = "mwc_wallet_config"
+version = "5.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c43bdd682aefb3cf551391778491c0b8a383939f4d848021e541358f7d830e66"
+dependencies = [
+ "dirs 2.0.2",
+ "mwc_wallet_util",
+ "rand 0.6.5",
+ "serde",
+ "serde_derive",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "mwc_wallet_controller"
+version = "5.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac9123ee991279cd12280a70246b09b66ea2b059b6473492025ba799c1184a2c"
+dependencies = [
+ "chrono",
+ "colored",
+ "easy-jsonrpc-mw",
+ "ed25519-dalek",
+ "futures 0.3.30",
+ "hyper 0.13.10",
+ "lazy_static",
+ "log 0.4.20",
+ "mwc-libp2p",
+ "mwc-wagyu-ethereum",
+ "mwc_wallet_api",
+ "mwc_wallet_config",
+ "mwc_wallet_impls",
+ "mwc_wallet_libwallet",
+ "mwc_wallet_util",
+ "prettytable-rs 0.10.0",
+ "qr_code",
+ "rand 0.7.3",
+ "ring 0.16.20",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "term 0.6.1",
+ "thiserror",
+ "tokio 0.2.25",
+ "url 2.5.0",
+ "uuid",
+ "x25519-dalek 0.6.0",
+]
+
+[[package]]
+name = "mwc_wallet_impls"
+version = "5.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "368aeaa8e61f3ee76851f26c356b977f29eac9e2d9e6648d8de3a33724d6531b"
+dependencies = [
+ "base64 0.12.3",
+ "blake2-rfc",
+ "byteorder",
+ "chrono",
+ "data-encoding",
+ "ed25519-dalek",
+ "futures 0.3.30",
+ "lazy_static",
+ "log 0.4.20",
+ "mwc-libp2p",
+ "mwc_wallet_config",
+ "mwc_wallet_libwallet",
+ "mwc_wallet_util",
+ "nanoid",
+ "rand 0.6.5",
+ "regex",
+ "reqwest 0.10.10",
+ "ring 0.16.20",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "sysinfo",
+ "thiserror",
+ "timer",
+ "tokio 0.2.25",
+ "url 2.5.0",
+ "uuid",
+ "x25519-dalek 0.6.0",
+]
+
+[[package]]
+name = "mwc_wallet_libwallet"
+version = "5.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f52d21b56cbbf60d305ad5d8d5def6d07319168c98491cbcc76b250626e8c7f1"
+dependencies = [
+ "base64 0.12.3",
+ "bigdecimal",
+ "bitcoin_hashes",
+ "bitstream-io",
+ "blake2-rfc",
+ "bs58 0.3.1",
+ "byteorder",
+ "chrono",
+ "colored",
+ "crc",
+ "crossbeam-utils 0.7.2",
+ "crypto_box",
+ "curve25519-dalek 2.1.3",
+ "data-encoding",
+ "digest 0.9.0",
+ "ed25519-dalek",
+ "futures-timer",
+ "hex 0.3.2",
+ "hmac 0.11.0",
+ "lazy_static",
+ "libc",
+ "log 0.4.20",
+ "maplit",
+ "mwc-bch",
+ "mwc-bitcoin",
+ "mwc-libp2p",
+ "mwc-wagyu-ethereum",
+ "mwc-wagyu-model",
+ "mwc-web3",
+ "mwc-zcash_primitives",
+ "mwc_wallet_config",
+ "mwc_wallet_util",
+ "native-tls",
+ "num-bigint 0.2.6",
+ "rand 0.6.5",
+ "regex",
+ "ring 0.16.20",
+ "ripemd160 0.9.1",
+ "secp256k1 0.20.3",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "serial_test",
+ "sha2 0.9.9",
+ "sha3 0.8.2",
+ "signature",
+ "smaz",
+ "strum",
+ "strum_macros",
+ "thiserror",
+ "tokio 0.2.25",
+ "uuid",
+ "x25519-dalek 0.6.0",
+]
+
+[[package]]
+name = "mwc_wallet_util"
+version = "5.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6adce8640cd7860a1b69eb719efe8a9832c9db28e1fd9f2d51a772e5e692e082"
+dependencies = [
+ "data-encoding",
+ "ed25519-dalek",
+ "lazy_static",
+ "mwc_api",
+ "mwc_chain",
+ "mwc_core",
+ "mwc_keychain",
+ "mwc_p2p",
+ "mwc_store",
+ "mwc_util",
+ "rand 0.6.5",
+ "serde",
+ "serde_derive",
+ "sha3 0.8.2",
+ "thiserror",
+ "tokio 0.2.25",
 ]
 
 [[package]]
@@ -4181,8 +4253,9 @@ dependencies = [
 
 [[package]]
 name = "parity-multiaddr"
-version = "0.11.1"
-source = "git+https://github.com/mwcproject/rust-libp2p?branch=master#c379113484a616345cff7043733c227bb71d9e74"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58341485071825827b7f03cf7efd1cb21e6a709bea778fb50227fd45d2f361b4"
 dependencies = [
  "arrayref",
  "bs58 0.4.0",
@@ -6871,53 +6944,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
-name = "wagyu-ethereum"
-version = "0.6.3"
-source = "git+https://github.com/mwcproject/wagyu-ethereum?branch=master#a779308b393e10b01f57dfbfb59e73a46ac0abcf"
-dependencies = [
- "base58",
- "bitvec 0.17.4",
- "ethereum-types 0.9.2",
- "hex 0.4.3",
- "hmac 0.7.1",
- "libsecp256k1",
- "pbkdf2 0.3.0",
- "rand 0.6.5",
- "rand_xorshift 0.2.0",
- "regex",
- "rlp 0.4.6",
- "serde",
- "serde_json",
- "sha2 0.8.2",
- "tiny-keccak 1.5.0",
- "wagyu-model",
-]
-
-[[package]]
-name = "wagyu-model"
-version = "0.6.3"
-source = "git+https://github.com/mwcproject/wagyu-model?branch=master#dde7c79c9dad4a0899fe9acb38e29f9aeec24bd1"
-dependencies = [
- "base58",
- "base58-monero",
- "bech32 0.6.0",
- "byteorder",
- "crypto-mac 0.7.0",
- "ethereum-types 0.9.2",
- "failure",
- "ff 0.6.0",
- "hex 0.4.3",
- "libsecp256k1",
- "rand 0.6.5",
- "rand_core 0.5.1",
- "ripemd160 0.8.0",
- "rlp 0.4.6",
- "serde_json",
- "sha2 0.8.2",
- "uint 0.8.5",
-]
-
-[[package]]
 name = "waker-fn"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7051,33 +7077,6 @@ checksum = "96565907687f7aceb35bc5fc03770a8a0471d82e479f25832f54a0e3f4b28446"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "web3"
-version = "0.15.0"
-source = "git+https://github.com/mwcproject/rust-web3?branch=master#c594bda3fee33b89cb4e36f5c31ab3c47a4515c8"
-dependencies = [
- "arrayvec 0.5.2",
- "async-native-tls",
- "async-std",
- "derive_more",
- "ethabi",
- "ethereum-types 0.10.0",
- "futures 0.3.30",
- "futures-timer",
- "hex 0.4.3",
- "jsonrpc-core 17.1.0",
- "log 0.4.20",
- "parking_lot 0.11.2",
- "pin-project 1.1.4",
- "rlp 0.5.2",
- "secp256k1 0.20.3",
- "serde",
- "serde_json",
- "soketto",
- "tiny-keccak 2.0.2",
- "url 2.5.0",
 ]
 
 [[package]]
@@ -7458,34 +7457,6 @@ dependencies = [
  "parking_lot 0.11.2",
  "rand 0.7.3",
  "static_assertions",
-]
-
-[[package]]
-name = "zcash_primitives"
-version = "0.4.0"
-source = "git+https://github.com/mwcproject/librustzcash?branch=master#1be9cf71fedca4d1f233ef1e11780e93edef16f2"
-dependencies = [
- "aes",
- "bitvec 0.18.5",
- "blake2b_simd 1.0.2",
- "blake2s_simd",
- "bls12_381",
- "byteorder",
- "crypto_api_chachapoly",
- "equihash",
- "ff 0.8.0",
- "fpe",
- "group",
- "hex 0.4.3",
- "jubjub",
- "lazy_static",
- "log 0.4.20",
- "rand 0.7.3",
- "rand_core 0.5.1",
- "ripemd160 0.9.1",
- "secp256k1 0.19.0",
- "sha2 0.9.9",
- "subtle 2.4.1",
 ]
 
 [[package]]

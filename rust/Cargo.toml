@@ -26,16 +26,16 @@ android_logger = "0.11.0"
 chrono = "0.4.24"
 ed25519-dalek = "1.0.0-pre.4"
 
-grin_keychain = { path = "mwc-node/keychain" }
-grin_util = { path = "mwc-node/util" }
-grin_core = { path = "mwc-node/core" }
+mwc_keychain = "5.3.5"
+mwc_util = "5.3.5"
+mwc_core = "5.3.5"
 
-grin_wallet_api = { path = "mwc-wallet/api" }
-grin_wallet_impls = { path = "mwc-wallet/impls" }
-grin_wallet_libwallet = { path = "mwc-wallet/libwallet" }
-grin_wallet_config = { path = "mwc-wallet/config" }
-grin_wallet_util = { path = "mwc-wallet/util" }
-grin_wallet_controller = { path = "mwc-wallet/controller" }
+mwc_wallet_api = "5.3.4"
+mwc_wallet_impls = "5.3.4"
+mwc_wallet_libwallet = "5.3.4"
+mwc_wallet_config= "5.3.4"
+mwc_wallet_util = "5.3.4"
+mwc_wallet_controller = "5.3.4"
 
 url = "2.1.0"
 futures = "0.3.15"
