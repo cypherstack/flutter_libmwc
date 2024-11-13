@@ -464,13 +464,13 @@ abstract class Libmwc {
             for (int i = 0; i < splits.length; i++) {
               var word = splits[i];
               if (word == "Required:") {
-                required = Decimal.parse(splits[i + 1].replaceAll(",", ""));
+                required = Decimal.parse(splits[i + 1].replaceAll(",", "").replaceAll("\"", ""));
               } else if (word == "Available:") {
-                available = Decimal.parse(splits[i + 1].replaceAll(",", ""));
+                available = Decimal.parse(splits[i + 1].replaceAll(",", "").replaceAll("\"", ""));
               }
             }
             int largestSatoshiFee =
-                ((required - available) * Decimal.fromInt(100000000))
+                ((required - available) * Decimal.fromInt(1000000000))
                     .toBigInt()
                     .toInt();
             var amountSending = amount - largestSatoshiFee;

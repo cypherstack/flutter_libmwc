@@ -236,7 +236,7 @@ pub unsafe extern "C"  fn rust_open_wallet(
     config: *const c_char,
     password: *const c_char,
 ) -> *const c_char {
-    init_logger();
+    //init_logger();
     let result = match _open_wallet(
         config,
         password
