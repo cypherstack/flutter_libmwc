@@ -65,7 +65,7 @@ typedef GetChainHeight = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef GetChainHeightFFI = Pointer<Utf8> Function(Pointer<Utf8>);
 
 typedef AddressInfo = Pointer<Utf8> Function(
-    Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>);
+    Pointer<Utf8>, Pointer<Int8>);
 typedef AddressInfoFFI = Pointer<Utf8> Function(
     Pointer<Utf8>, Pointer<Int8>);
 
