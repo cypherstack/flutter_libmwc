@@ -15,6 +15,10 @@ final DynamicLibrary mwcNative = io.Platform.isWindows
 typedef WalletMnemonic = Pointer<Utf8> Function();
 typedef WalletMnemonicFFI = Pointer<Utf8> Function();
 
+
+typedef InitLogs = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef InitLogsFFI = Pointer<Utf8> Function(Pointer<Utf8>);
+
 typedef WalletInit = Pointer<Utf8> Function(
     Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
 typedef WalletInitFFI = Pointer<Utf8> Function(
@@ -94,6 +98,16 @@ final WalletMnemonic _walletMnemonic = mwcNative
 
 String walletMnemonic() {
   return _walletMnemonic().toDartString();
+}
+
+
+final InitLogs _initLogs = mwcNative
+    .lookup<NativeFunction<InitLogsFFI>>("rust_init_logs")
+    .asFunction();
+
+String initLogs( String config) {
+  return _initLogs(config.toNativeUtf8())
+      .toDartString();
 }
 
 final WalletInit _initWallet = mwcNative

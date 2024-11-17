@@ -30,6 +30,7 @@ use mwc_util::logger::LoggingConfig;
 use mwc_util::secp::key::SecretKey;
 use ed25519_dalek::{PublicKey as DalekPublicKey, SecretKey as DalekSecretKey};
 use android_logger::FilterBuilder;
+use mwc_wallet_impls::Subscriber;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
@@ -520,15 +521,9 @@ pub unsafe extern "C" fn rust_create_tx(
         mwcmqs_config: mwcmqs_config.parse().unwrap()
     };
 
-    let handle = listener_spawn(&listen);
-    listener_cancel(handle);
-    debug!("LISTENER CANCELLED IS {}", listener_cancelled(handle));
-
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
-
     ensure_wallet!(wlt, wallet);
-
     let result = match _create_tx(
         wallet,
         sek_key,
@@ -541,7 +536,7 @@ pub unsafe extern "C" fn rust_create_tx(
     ) {
         Ok(slate) => {
             //Spawn listener again
-            listener_spawn(&listen);
+            //listener_spawn(&listen);
             slate
         }, Err(e ) => {
             let error_msg = format!("Error {}", &e.to_string());
@@ -785,6 +780,7 @@ pub unsafe extern "C" fn rust_init_logs(config: *const c_char) -> *const c_char 
         }
     };
     let _ =_init_logs(wallet_dir_str);
+    println!("Logger initialized successfully");
     let success_msg = CString::new("Logger initialized successfully").unwrap();
     success_msg.into_raw()
 }
@@ -1546,6 +1542,11 @@ pub fn tx_create(
     let owner_api = Owner::new(wallet.clone(), None, None);
     //let mwcmqs_conf = serde_json::from_str::<MQSConfig>(mwcmqs_config).unwrap();
 
+    let message = match note {
+        "" => None,
+        _ => Some(note.to_string()),
+    };
+
     let init_send_args = InitTxSendArgs {
         method: "mwcmqs".to_string(),
         dest: address.to_string(),
@@ -1554,7 +1555,7 @@ pub fn tx_create(
         post_tx: true,
         fluff: true
     };
-
+    
     let args = InitTxArgs {
         src_acct_name: Some("default".to_string()),
         amount,
@@ -1563,7 +1564,7 @@ pub fn tx_create(
         num_change_outputs: 1,
         selection_strategy_is_use_all,
         send_args: Some(init_send_args),
-        message: Some(note.to_string()),
+        message: message,
         ..Default::default()
     };
 
@@ -1777,6 +1778,10 @@ pub fn tx_send_http(
     address: &str,
 ) -> Result<String, Error>{
     let api = Owner::new(wallet.clone(), None, None);
+    let message = match message {
+        "" => None,
+        _ => Some(message.to_string()),
+    };
     let init_send_args = InitTxSendArgs {
         method: "http".to_string(),
         dest: address.to_string(),
@@ -1793,7 +1798,7 @@ pub fn tx_send_http(
         max_outputs: 500,
         num_change_outputs: 1,
         selection_strategy_is_use_all,
-        message: Some(message.to_string()),
+        message: message,
         send_args: Some(init_send_args),
         ..Default::default()
     };
@@ -1842,27 +1847,29 @@ impl Task for Listener {
 
     fn run(&self, cancel_tok: &CancellationToken) -> Result<Self::Output, anyhow::Error> {
         let mut spins = 0;
-
-        let wallet_data_str = &self.wallet_ptr_str;
-        // let wallet_data = wallet_ptr.to_str().unwrap();
-        let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data_str).unwrap();
+        let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(&self.wallet_ptr_str)?;
         let wlt = tuple_wallet_data.0;
         let sek_key = tuple_wallet_data.1;
+        let mwcmqs_conf = serde_json::from_str::<MQSConfig>(&self.mwcmqs_config)?;
+
         unsafe {
-            let mwcmqs_conf = serde_json::from_str::<MQSConfig>(&self.mwcmqs_config.as_str()).unwrap();
             ensure_wallet!(wlt, wallet);
-            while !cancel_tok.cancelled() {
-                if mwc_wallet_impls::adapters::get_mwcmqs_brocker().is_none() {
-                    let _ = controller::init_start_mwcmqs_listener(
-                        wallet.clone(),
-                        mwcmqs_conf.clone(),
-                        Arc::new(Mutex::new(sek_key.clone())),
-                        true,
-                    )
-                    .map_err(|e| MWCWalletControllerError::GenericError(e.to_string()));
-                    };
-                    spins += 1;
+            if mwc_wallet_impls::adapters::get_mwcmqs_brocker().is_none() {
+                let mwcmqs_broker = controller::init_start_mwcmqs_listener(
+                    wallet.clone(),
+                    mwcmqs_conf.clone(),
+                    Arc::new(Mutex::new(sek_key.clone())),
+                    true,
+                );
+                match mwcmqs_broker {
+                    Ok((_, _subsriber)) => {
+                        println!("MWCMQS listener started successfully.");
+                    }
+                    Err(e) => {
+                        println!("Error starting MWCMQS listener: {}", e);
+                    }
                 }
+            }
         }
         Ok(spins)
     }
@@ -1889,7 +1896,6 @@ pub unsafe extern "C" fn rust_mwcmqs_listener_start(
     let mwcmqs_config = mwcmqs_config.to_str().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
-    // let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let listen = Listener {
         wallet_ptr_str: wallet_data.to_string(),
         mwcmqs_config: mwcmqs_config.parse().unwrap()
@@ -1905,9 +1911,18 @@ pub unsafe extern "C" fn rust_mwcmqs_listener_start(
 pub unsafe extern "C" fn _listener_cancel(handler: *mut c_void) -> *const c_char {
     let handle = handler as *mut TaskHandle<usize>;
     listener_cancel(handle);
+    if let Some((_, mut subscriber)) = mwc_wallet_impls::adapters::get_mwcmqs_brocker() {
+        if subscriber.is_running() {
+            if subscriber.stop() {
+                println!("MWCMQS listener stopped successfully.");
+            } else {
+                println!("Unable to stop the MWCMQS listener.");
+            }   
+        }
+    }
     let error_msg = format!("{}", listener_cancelled(handle));
     let error_msg_ptr = CString::new(error_msg).unwrap();
-    let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+    let ptr = error_msg_ptr.as_ptr();
     std::mem::forget(error_msg_ptr);
     ptr
 }

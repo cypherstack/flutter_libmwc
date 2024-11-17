@@ -10,8 +10,8 @@ fi
 COMMIT=$(git log -1 --pretty=format:"%H")
 OS="LINUX"
 sed -i "/\/\*${OS}_VERSION/c\\/\*${OS}_VERSION\*\/ const ${OS}_VERSION = \"$COMMIT\";" $VERSIONS_FILE
-rm -rf build/rust
-cp -rf ../../rust build/rust
+#rm -rf build/rust
+rsync -av --exclude='target' ../../rust/ build/rust/
 cd build/rust
 if [ "$IS_ARM" = true ]  ; then
     echo "Building arm version"

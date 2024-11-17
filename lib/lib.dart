@@ -65,6 +65,39 @@ abstract class Libmwc {
     }
   }
 
+  static Future<String> _initLogs(
+    ({
+      String config,
+    }) data,
+  ) async {
+    try {
+      final String mnemonic = lib_mwc.initLogs(data.config);
+      if (mnemonic.isEmpty) {
+        throw Exception("Error getting mnemonic, returned empty string");
+      }
+      return mnemonic;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  static Future<String> initLogs({
+    required String config,
+  }) async {
+    return await m.protect(() async {
+      try {
+        return await compute(
+          _initLogs,
+          (
+            config: config,
+          ),
+        );
+      } catch (e) {
+        throw ("Error init logs : ${e.toString()}");
+      }
+    });
+  }
+
   // Private function wrapper for compute
   static Future<String> _initializeWalletWrapper(
     ({
