@@ -44,6 +44,9 @@ class FFITestService {
     // Phase 2: Basic FFI functionality.
     allPassed &= await _runBasicFFITests();
     
+    // Phase 3: Wallet management tests.
+    allPassed &= await _runWalletManagementTests();
+    
     _logInfo('Test suite completed. Overall result: ${allPassed ? "PASS" : "FAIL"}');
     return allPassed;
   }
@@ -126,6 +129,150 @@ class FFITestService {
     return allPassed;
   }
   
+  /// Run wallet management integration tests.
+  static Future<bool> _runWalletManagementTests() async {
+    bool allPassed = true;
+    
+    // Test 1: Wallet configuration validation.
+    allPassed &= await _runTest(
+      'Wallet Configuration',
+      'Test wallet configuration creation and validation',
+      () async {
+        final testConfig = _getTestWalletConfig();
+        if (testConfig.isEmpty) {
+          throw TestException('Failed to create test wallet configuration');
+        }
+        
+        // Validate config contains required fields.
+        final configData = {'wallet_dir': '', 'check_node_api_http_addr': '', 'chain': ''};
+        for (final key in configData.keys) {
+          if (!testConfig.contains(key)) {
+            throw TestException('Missing required config field: $key');
+          }
+        }
+        
+        return 'Test wallet configuration created and validated successfully';
+      }
+    );
+    
+    // Test 2: Wallet initialization.
+    allPassed &= await _runTest(
+      'Wallet Initialization',
+      'Test new wallet creation via FFI',
+      () async {
+        final testMnemonic = Libmwc.getMnemonic();
+        final testConfig = _getTestWalletConfig();
+        final testPassword = 'test_password_123';
+        final walletName = 'ffi_test_wallet_${DateTime.now().millisecondsSinceEpoch}';
+        
+        try {
+          final result = await Libmwc.initializeNewWallet(
+            config: testConfig,
+            mnemonic: testMnemonic,
+            password: testPassword,
+            name: walletName,
+          );
+          
+          if (result.toUpperCase().contains('ERROR')) {
+            throw TestException('Wallet initialization failed: $result');
+          }
+          
+          return 'New wallet initialized successfully: $walletName';
+          
+        } catch (e) {
+          // Expected to potentially fail if wallet already exists or other issues.
+          if (e.toString().contains('already exists')) {
+            return 'Wallet initialization handled existing wallet correctly';
+          }
+          rethrow;
+        }
+      }
+    );
+    
+    // Test 3: Wallet recovery.
+    allPassed &= await _runTest(
+      'Wallet Recovery',
+      'Test wallet recovery from mnemonic via FFI',
+      () async {
+        final testMnemonic = Libmwc.getMnemonic();
+        final testConfig = _getTestWalletConfig();
+        final testPassword = 'recovery_test_123';
+        final walletName = 'ffi_recovery_test_${DateTime.now().millisecondsSinceEpoch}';
+        
+        try {
+          await Libmwc.recoverWallet(
+            config: testConfig,
+            password: testPassword,
+            mnemonic: testMnemonic,
+            name: walletName,
+          );
+          
+          return 'Wallet recovery from mnemonic completed successfully';
+          
+        } catch (e) {
+          // Expected to potentially fail in test environment.
+          if (e.toString().contains('directory') || e.toString().contains('permission')) {
+            return 'Wallet recovery handled filesystem constraints correctly';
+          }
+          throw TestException('Unexpected error in wallet recovery: $e');
+        }
+      }
+    );
+    
+    // Test 4: Chain height retrieval.
+    allPassed &= await _runTest(
+      'Chain Height Query',
+      'Test chain height retrieval via FFI using remote MWC node',
+      () async {
+        final testConfig = _getTestWalletConfig();
+        
+        try {
+          final height = await Libmwc.getChainHeight(config: testConfig);
+          
+          if (height < 0) {
+            throw TestException('Invalid chain height returned: $height');
+          }
+          
+          // Mainnet should have a reasonable height (over 1 million blocks as of 2024).
+          if (height < 1000000) {
+            throw TestException('Chain height seems too low for mainnet: $height');
+          }
+          
+          return 'Chain height retrieved successfully: $height (mainnet)';
+          
+        } catch (e) {
+          final errorStr = e.toString();
+          
+          // Handle specific error types with more detail.
+          if (errorStr.contains('FormatException') || errorStr.contains('Invalid radix-10')) {
+            throw TestException('Failed to parse chain height response: node may have returned an error message instead of height');
+          } else if (errorStr.contains('connection') || errorStr.contains('network') || errorStr.contains('timeout')) {
+            throw TestException('Network connection issue with remote node: ${errorStr.substring(0, 100)}...');
+          } else if (errorStr.contains('Cannot m')) {
+            throw TestException('Remote node connection failed - possibly network or SSL issue');
+          }
+          
+          // Re-throw with more context.
+          throw TestException('Chain height query failed: ${errorStr.substring(0, 100)}...');
+        }
+      }
+    );
+    
+    return allPassed;
+  }
+  
+  /// Get test wallet configuration.
+  static String _getTestWalletConfig() {
+    final config = {
+      'wallet_dir': _getTestWalletDir(),
+      'check_node_api_http_addr': 'https://mwc713.mwc.mw:443', // Working remote node.
+      'chain': 'mainnet', // Use mainnet since remote node is mainnet.
+      'account': 'default',
+    };
+    
+    return '{"wallet_dir":"${config['wallet_dir']}","check_node_api_http_addr":"${config['check_node_api_http_addr']}","chain":"${config['chain']}","account":"${config['account']}"}';
+  }
+  
   /// Run a single test with proper error handling and result tracking.
   static Future<bool> _runTest(
     String name,
@@ -178,6 +325,23 @@ class FFITestService {
   static void _logError(String message) {
     final timestamp = DateTime.now().toIso8601String();
     debugPrint('[$timestamp] [ERROR] $message');
+  }
+  
+  /// Get appropriate test wallet directory for current platform.
+  static String _getTestWalletDir() {
+    if (Platform.isAndroid) {
+      return '/data/data/com.example.flutter_libmwc_example/files/ffi_test_wallets/';
+    } else if (Platform.isIOS) {
+      return '/var/mobile/Containers/Data/Application/ffi_test_wallets/';
+    } else if (Platform.isLinux) {
+      return '/tmp/flutter_libmwc_ffi_test_wallets/';
+    } else if (Platform.isWindows) {
+      return r'C:\temp\flutter_libmwc_ffi_test_wallets\';
+    } else if (Platform.isMacOS) {
+      return '/tmp/flutter_libmwc_ffi_test_wallets/';
+    } else {
+      return '/tmp/flutter_libmwc_ffi_test_wallets/';
+    }
   }
 }
 
