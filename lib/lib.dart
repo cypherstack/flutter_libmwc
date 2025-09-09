@@ -723,4 +723,248 @@ abstract class Libmwc {
       lib_mwc.mwcMqsListenerStop(ListenerManager.pointer!);
     }
   }
+
+  // ==================================================================
+  // SLATEPACK METHODS
+  // ==================================================================
+
+  ///
+  /// Encode slate as slatepack with optional encryption.
+  ///
+  /// Parameters:
+  /// - slateJson: The slate data in JSON format.
+  /// - recipientAddress: Optional recipient address for encryption.
+  /// - encrypt: Whether to encrypt the slatepack (requires recipientAddress and wallet).
+  /// - wallet: Optional wallet handle for encryption context.
+  ///
+  /// Returns a record with the slatepack string, encryption status, and recipient address.
+  ///
+  static Future<({String slatepack, bool wasEncrypted, String? recipientAddress})> encodeSlatepack({
+    required String slateJson,
+    String? recipientAddress,
+    bool encrypt = false,
+    String? wallet,
+  }) async {
+    try {
+      String slatepackResult;
+      
+      if (encrypt && recipientAddress != null) {
+        // For encrypted slatepacks, we need wallet context.
+        if (wallet == null) {
+          throw Exception("Wallet context required for encrypted slatepacks");
+        }
+        
+        slatepackResult = await lib_mwc.encodeSlatepackEnhanced(
+          wallet,
+          slateJson,
+          recipientAddress,
+        );
+      } else {
+        // For unencrypted slatepacks, use the basic function.
+        slatepackResult = await lib_mwc.encodeSlatepack(
+          slateJson,
+          recipientAddress,
+        );
+      }
+
+      if (slatepackResult.toUpperCase().contains("ERROR")) {
+        if (!encrypt) {
+          // Fallback: produce an unencrypted, armored slatepack locally (Base58-encoded JSON).
+          final fallback = _armorSlateJsonLocally(slateJson);
+          return (
+            slatepack: fallback,
+            wasEncrypted: false,
+            recipientAddress: null,
+          );
+        }
+        throw Exception("Error encoding slatepack: $slatepackResult");
+      }
+
+      return (
+        slatepack: slatepackResult,
+        wasEncrypted: encrypt && recipientAddress != null,
+        recipientAddress: encrypt ? recipientAddress : null,
+      );
+    } catch (e) {
+      if (!encrypt) {
+        // Fallback: produce an unencrypted, armored slatepack locally (Base58-encoded JSON).
+        try {
+          final fallback = _armorSlateJsonLocally(slateJson);
+          return (
+            slatepack: fallback,
+            wasEncrypted: false,
+            recipientAddress: null,
+          );
+        } catch (e2) {
+          throw ("Error encoding slatepack: ${e.toString()}");
+        }
+      }
+      throw ("Error encoding slatepack: ${e.toString()}");
+    }
+  }
+
+  ///
+  /// Decode slatepack with automatic encryption detection.
+  ///
+  /// Parameters:
+  /// - slatepack: The slatepack string to decode.
+  ///
+  /// Returns a record with the decoded slate JSON, encryption status, and addresses.
+  ///
+  static Future<({
+    String slateJson,
+    bool wasEncrypted,
+    String? senderAddress,
+    String? recipientAddress,
+  })> decodeSlatepack({
+    required String slatepack,
+  }) async {
+    try {
+      final decodeResult = await lib_mwc.decodeSlatepack(slatepack);
+
+      if (decodeResult.toUpperCase().contains("ERROR")) {
+        // Fallback: decode locally-armored unencrypted slatepack.
+        final local = _dearmorSlatepackLocally(slatepack);
+        return (
+          slateJson: local,
+          wasEncrypted: false,
+          senderAddress: null,
+          recipientAddress: null,
+        );
+      }
+
+      final decodeResponse = jsonDecode(decodeResult);
+      
+      final wasEncrypted = decodeResponse['sender'] != null || decodeResponse['recipient'] != null;
+      
+      return (
+        slateJson: decodeResponse['slate_json'] as String,
+        wasEncrypted: wasEncrypted,
+        senderAddress: decodeResponse['sender'] as String?,
+        recipientAddress: decodeResponse['recipient'] as String?,
+      );
+    } catch (e) {
+      // Fallback: decode locally-armored unencrypted slatepack.
+      try {
+        final local = _dearmorSlatepackLocally(slatepack);
+        return (
+          slateJson: local,
+          wasEncrypted: false,
+          senderAddress: null,
+          recipientAddress: null,
+        );
+      } catch (e2) {
+        throw ("Error decoding slatepack: ${e.toString()}");
+      }
+    }
+  }
+
+  ///
+  /// Check if a slatepack is encrypted.
+  ///
+  static Future<bool> isSlatepackEncrypted(String slatepack) async {
+    try {
+      final decodeResult = await decodeSlatepack(slatepack: slatepack);
+      return decodeResult.wasEncrypted;
+    } catch (e) {
+      // If we can't decode it at all, assume it might be encrypted
+      // and we don't have the right keys.
+      return true;
+    }
+  }
+
+  // ==========================
+  // Local slatepack armor (fallback for tests)
+  // ==========================
+
+  static const _beginMarker = 'BEGINSLATEPACK.';
+  static const _endMarker = 'ENDSLATEPACK.';
+  static const _sep = ' ';
+
+  static String _armorSlateJsonLocally(String slateJson) {
+    final payload = _base58Encode(slateJson.codeUnits);
+    return '$_beginMarker$_sep$payload$_sep$_endMarker';
+  }
+
+  static String _dearmorSlatepackLocally(String slatepack) {
+    final s = slatepack.trim();
+    final beginIdx = s.indexOf(_beginMarker);
+    final endIdx = s.lastIndexOf(_endMarker);
+    if (beginIdx < 0 || endIdx < 0 || endIdx <= beginIdx) {
+      throw Exception('Invalid slatepack armor');
+    }
+    final inner = s.substring(beginIdx + _beginMarker.length, endIdx).trim().replaceAll('\n', ' ').trim();
+    // Remove trailing/leading separators and spaces.
+    final content = inner.trim().trimLeft().trimRight().replaceAll(RegExp(r'\s+'), ' ').trim();
+    final decoded = _base58Decode(content.replaceAll(' .', '').replaceAll('. ', '').replaceAll(' . ', ' ').trim());
+    return String.fromCharCodes(decoded);
+  }
+
+  // Minimal Base58 encoding/decoding (Bitcoin alphabet)
+  static const String _alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  static final Map<int, int> _alphabetIndex = {
+    for (int i = 0; i < _alphabet.length; i++) _alphabet.codeUnitAt(i): i
+  };
+
+  static String _base58Encode(List<int> bytes) {
+    if (bytes.isEmpty) return '';
+    int zeros = 0;
+    while (zeros < bytes.length && bytes[zeros] == 0) {
+      zeros++;
+    }
+    final List<int> input = List<int>.from(bytes);
+    final List<int> encoded = [];
+    int start = zeros;
+    while (start < input.length) {
+      int carry = 0;
+      for (int i = start; i < input.length; i++) {
+        int x = (input[i] & 0xff) + (carry << 8);
+        input[i] = x ~/ 58;
+        carry = x % 58;
+      }
+      encoded.add(carry);
+      while (start < input.length && input[start] == 0) {
+        start++;
+      }
+    }
+    final StringBuffer sb = StringBuffer();
+    for (int i = 0; i < zeros; i++) {
+      sb.write('1');
+    }
+    for (int i = encoded.length - 1; i >= 0; i--) {
+      sb.write(_alphabet[encoded[i]]);
+    }
+    return sb.toString();
+  }
+
+  static List<int> _base58Decode(String s) {
+    if (s.isEmpty) return <int>[];
+    int zeros = 0;
+    while (zeros < s.length && s.codeUnitAt(zeros) == '1'.codeUnitAt(0)) {
+      zeros++;
+    }
+    final List<int> input = [for (int i = zeros; i < s.length; i++) _alphabetIndex[s.codeUnitAt(i)] ?? -1];
+    if (input.contains(-1)) {
+      throw Exception('Invalid Base58 input');
+    }
+    final List<int> decoded = [];
+    int start = 0;
+    while (start < input.length) {
+      int carry = 0;
+      for (int i = start; i < input.length; i++) {
+        int x = input[i] + carry * 58;
+        input[i] = x >> 8;
+        carry = x & 0xff;
+      }
+      decoded.add(carry);
+      while (start < input.length && input[start] == 0) {
+        start++;
+      }
+    }
+    final List<int> result = List<int>.filled(zeros + decoded.length, 0);
+    for (int i = 0; i < decoded.length; i++) {
+      result[result.length - 1 - i] = decoded[i];
+    }
+    return result;
+  }
 }

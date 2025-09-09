@@ -92,6 +92,17 @@ typedef TxHttpSend = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
 typedef TxHttpSendFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
     Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>);
 
+typedef EncodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef EncodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef EncodeSlatepackEnhanced = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef EncodeSlatepackEnhancedFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+
+typedef DecodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef DecodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>);
+
 final WalletMnemonic _walletMnemonic = mwcNative
     .lookup<NativeFunction<WalletMnemonicFFI>>("get_mnemonic")
     .asFunction();
@@ -293,6 +304,43 @@ Future<String> txHttpSend(
       message.toNativeUtf8(),
       amount.toString().toNativeUtf8().cast<Int8>(),
       address.toNativeUtf8())
+      .toDartString();
+}
+
+final EncodeSlatepack _encodeSlatepack = mwcNative
+    .lookup<NativeFunction<EncodeSlatepackFFI>>("rust_encode_slatepack")
+    .asFunction();
+
+Future<String> encodeSlatepack(
+    String slateJson,
+    String? recipientAddress) async {
+  return _encodeSlatepack(
+      slateJson.toNativeUtf8(),
+      (recipientAddress ?? "").toNativeUtf8())
+      .toDartString();
+}
+
+final EncodeSlatepackEnhanced _encodeSlatepackEnhanced = mwcNative
+    .lookup<NativeFunction<EncodeSlatepackEnhancedFFI>>("rust_encode_slatepack_enhanced")
+    .asFunction();
+
+Future<String> encodeSlatepackEnhanced(
+    String wallet,
+    String slateJson,
+    String recipientAddress) async {
+  return _encodeSlatepackEnhanced(
+      wallet.toNativeUtf8(),
+      slateJson.toNativeUtf8(),
+      recipientAddress.toNativeUtf8())
+      .toDartString();
+}
+
+final DecodeSlatepack _decodeSlatepack = mwcNative
+    .lookup<NativeFunction<DecodeSlatepackFFI>>("rust_decode_slatepack")
+    .asFunction();
+
+Future<String> decodeSlatepack(String slatepack) async {
+  return _decodeSlatepack(slatepack.toNativeUtf8())
       .toDartString();
 }
 

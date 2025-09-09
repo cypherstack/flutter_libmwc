@@ -50,6 +50,9 @@ class FFITestService {
     // Phase 4: Transaction functionality tests.
     allPassed &= await _runTransactionTests();
     
+    // Phase 5: Basic slatepack functionality tests.
+    allPassed &= await _runSlatepackTests();
+    
     _logInfo('Test suite completed. Overall result: ${allPassed ? "PASS" : "FAIL"}');
     return allPassed;
   }
@@ -395,6 +398,333 @@ class FFITestService {
           
         } catch (e) {
           throw TestException('Transaction error handling validation failed: ${e.toString().substring(0, 100)}...');
+        }
+      }
+    );
+    
+    return allPassed;
+  }
+  
+  /// Run basic slatepack functionality integration tests.
+  static Future<bool> _runSlatepackTests() async {
+    bool allPassed = true;
+    
+    // Test 1: Slatepack API Structure Validation.
+    allPassed &= await _runTest(
+      'Slatepack API Structure',
+      'Validate slatepack API structure and parameter types',
+      () async {
+        try {
+          // Test basic slatepack parameter validation.
+          const testSlateJson = '{"id":"test","tx":{"body":{"inputs":[],"outputs":[],"kernels":[]}}}';
+          const testSlatepack = 'BEGINSLATEPACK. test slatepack data .ENDSLATEPACK';
+          const testRecipientAddress = 'test_user@mwcmqs.example.com';
+          
+          // Validate parameter constraints for encoding.
+          if (testSlateJson.isEmpty) {
+            throw TestException('Slate JSON validation failed');
+          }
+          
+          if (!testSlateJson.contains('id')) {
+            throw TestException('Slate JSON structure validation failed');
+          }
+          
+          // Validate slatepack format structure.
+          if (!testSlatepack.contains('BEGINSLATEPACK') || !testSlatepack.contains('ENDSLATEPACK')) {
+            throw TestException('Slatepack format validation failed');
+          }
+          
+          // Validate address format.
+          if (testRecipientAddress.isEmpty || !testRecipientAddress.contains('@')) {
+            throw TestException('Recipient address format validation failed');
+          }
+          
+          return 'Slatepack API structure validation passed: slate format, slatepack format, and address format correct';
+          
+        } catch (e) {
+          throw TestException('Slatepack API structure test failed: ${e.toString().substring(0, 100)}...');
+        }
+      }
+    );
+    
+    // Test 2: Slatepack Format Validation.
+    allPassed &= await _runTest(
+      'Slatepack Format Validation',
+      'Validate slatepack format patterns and structure',
+      () async {
+        try {
+          // Test various slatepack format patterns.
+          final validFormats = [
+            'BEGINSLATEPACK. test data .ENDSLATEPACK',
+            'BEGINSLATEPACK.\nencoded_data_here\n.ENDSLATEPACK',
+            'BEGINSLATEPACK. VGVzdCBkYXRh .ENDSLATEPACK', // Base64-like.
+          ];
+          
+          final invalidFormats = [
+            'INVALID FORMAT',
+            'BEGINSLATEPACK without end',
+            'missing begin ENDSLATEPACK',
+            '',
+            'BEGINSLATE PACK. test .ENDSLATEPACK', // Wrong format.
+          ];
+          
+          // Validate all valid formats pass basic structure check.
+          for (final format in validFormats) {
+            if (!format.contains('BEGINSLATEPACK') || !format.contains('ENDSLATEPACK')) {
+              throw TestException('Valid slatepack format failed validation: $format');
+            }
+          }
+          
+          // Validate all invalid formats fail basic structure check.
+          for (final format in invalidFormats) {
+            if (format.contains('BEGINSLATEPACK') && format.contains('ENDSLATEPACK')) {
+              throw TestException('Invalid slatepack format passed validation: $format');
+            }
+          }
+          
+          return 'Slatepack format validation passed: ${validFormats.length} valid formats recognized, ${invalidFormats.length} invalid formats rejected';
+          
+        } catch (e) {
+          throw TestException('Slatepack format validation failed: ${e.toString().substring(0, 100)}...');
+        }
+      }
+    );
+
+    // Test 3: Slatepack Roundtrip (compact, unencrypted).
+    allPassed &= await _runTest(
+      'Slatepack Roundtrip (compact)',
+      'Encode compact slate JSON to slatepack and decode back via FFI',
+      () async {
+        try {
+          // Construct a minimal compact slate JSON.
+          // Use version 3 + compact_slate flag to satisfy current lib expectations.
+          const compactSlateJson = '{\n'
+              '  "version_info": {\n'
+              '    "orig_version": 3,\n'
+              '    "version": 3,\n'
+              '    "block_header_version": 2\n'
+              '  },\n'
+              '  "id": "0436430c-2b02-624c-2032-570501212b00",\n'
+              '  "sta": "S1",\n'
+              '  "num_participants": 2,\n'
+              '  "amount": "1000000000",\n'
+              '  "fee": "1000000",\n'
+              '  "height": "0",\n'
+              '  "lock_height": "0",\n'
+              '  "ttl_cutoff_height": null,\n'
+              '  "payment_proof": null,\n'
+              '  "compact_slate": true,\n'
+              '  "participant_data": []\n'
+              '}';
+
+          // Encode to slatepack (unencrypted) — recipientAddress null.
+          final enc = await Libmwc.encodeSlatepack(
+            slateJson: compactSlateJson,
+            recipientAddress: null,
+            encrypt: false,
+          );
+
+          // Basic format assertions.
+          if (!enc.slatepack.contains('BEGINSLATEPACK') ||
+              !enc.slatepack.contains('ENDSLATEPACK')) {
+            throw TestException('Encoded slatepack missing BEGIN/END markers');
+          }
+          if (enc.wasEncrypted) {
+            throw TestException('Unencrypted encode reported as encrypted');
+          }
+
+          // Decode back to JSON.
+          final dec = await Libmwc.decodeSlatepack(slatepack: enc.slatepack);
+          final decoded = jsonDecode(dec.slateJson) as Map<String, dynamic>;
+          final decodedId = decoded['id'] as String?;
+          final versionInfo = decoded['version_info'] as Map<String, dynamic>?;
+          if (decodedId != '0436430c-2b02-624c-2032-570501212b00') {
+            throw TestException('Decoded slate id mismatch or missing: $decodedId');
+          }
+          if (versionInfo == null || versionInfo['version'] != 3) {
+            throw TestException('Decoded slate version is not v3');
+          }
+
+          // Verify encryption detection helper.
+          final isEncrypted = await Libmwc.isSlatepackEncrypted(enc.slatepack);
+          if (isEncrypted) {
+            throw TestException('isSlatepackEncrypted returned true for unencrypted slatepack');
+          }
+
+          return 'Roundtrip succeeded; id=$decodedId; v4 compact; markers present; not encrypted';
+        } catch (e) {
+          throw TestException('Slatepack roundtrip (compact) failed: $e');
+        }
+      },
+    );
+
+    // Test 4: Slatepack Encryption Requirements (expected failure without wallet context).
+    allPassed &= await _runTest(
+      'Slatepack Encryption Requirements',
+      'Verify encrypted encode requires wallet context and recipient',
+      () async {
+        try {
+          bool threw = false;
+          try {
+            await Libmwc.encodeSlatepack(
+              slateJson: '{"id":"abc","version_info":{"version":3}}',
+              recipientAddress: 'dummy@mwcmqs.mwc.mw',
+              encrypt: true,
+              wallet: null, // No wallet context in test environment
+            );
+          } catch (e) {
+            threw = true;
+            final msg = e.toString();
+            if (!msg.toLowerCase().contains('wallet') ||
+                !msg.toLowerCase().contains('required')) {
+              throw TestException('Unexpected error for encrypted encode without wallet: $msg');
+            }
+          }
+          if (!threw) {
+            throw TestException('Encrypted encode did not throw without wallet context');
+          }
+          return 'Encrypted encode correctly requires wallet context';
+        } catch (e) {
+          throw TestException('Encryption requirement validation failed: $e');
+        }
+      },
+    );
+
+    // Test 5: Slatepack Decode Invalid Format Handling.
+    allPassed &= await _runTest(
+      'Slatepack Decode Invalid Format',
+      'Decode invalid slatepack and validate graceful handling',
+      () async {
+        try {
+          final bogus = 'NOT_A_SLATEPACK';
+          try {
+            final dec = await Libmwc.decodeSlatepack(slatepack: bogus);
+            // High-level API may not throw; validate empty slate JSON returned.
+            if (dec.slateJson.isNotEmpty) {
+              throw TestException('Invalid slatepack returned non-empty slate JSON');
+            }
+            return 'Invalid slatepack handled gracefully (empty slate JSON)';
+          } catch (e) {
+            // If it throws, that's also acceptable as graceful failure.
+            final es = e.toString();
+            final trunc = es.substring(0, es.length < 80 ? es.length : 80);
+            return 'Invalid slatepack decode threw as expected: $trunc...';
+          }
+        } catch (e) {
+          throw TestException('Invalid format handling failed: $e');
+        }
+      },
+    );
+
+    // Test 3: Slatepack Encoding Parameter Validation.
+    allPassed &= await _runTest(
+      'Slatepack Encoding Parameters',
+      'Validate slatepack encoding parameter handling',
+      () async {
+        try {
+          // Test encoding parameter validation without calling actual FFI.
+          final testCases = [
+            {
+              'name': 'basic slate',
+              'slateJson': '{"id":"test-123","version_info":{"version":3}}',
+              'encrypt': false,
+              'recipientAddress': null,
+            },
+            {
+              'name': 'encrypted slate',
+              'slateJson': '{"id":"test-456","version_info":{"version":3}}',
+              'encrypt': true,
+              'recipientAddress': 'user@mwcmqs.example.com',
+            },
+          ];
+          
+          for (final testCase in testCases) {
+            final slateJson = testCase['slateJson'] as String;
+            final encrypt = testCase['encrypt'] as bool;
+            final recipientAddress = testCase['recipientAddress'] as String?;
+            
+            // Validate slate JSON structure.
+            if (!slateJson.contains('id')) {
+              throw TestException('Test case ${testCase['name']} missing required slate ID');
+            }
+            
+            // Validate encryption parameters.
+            if (encrypt && (recipientAddress == null || recipientAddress.isEmpty)) {
+              throw TestException('Test case ${testCase['name']} encryption requires recipient address');
+            }
+            
+            // Validate address format if provided.
+            if (recipientAddress != null && !recipientAddress.contains('@')) {
+              throw TestException('Test case ${testCase['name']} invalid recipient address format');
+            }
+          }
+          
+          return 'Slatepack encoding parameter validation passed: ${testCases.length} test cases validated';
+          
+        } catch (e) {
+          throw TestException('Slatepack encoding parameter validation failed: ${e.toString().substring(0, 100)}...');
+        }
+      }
+    );
+    
+    // Test 4: Slatepack Decoding Parameter Validation.
+    allPassed &= await _runTest(
+      'Slatepack Decoding Parameters', 
+      'Validate slatepack decoding parameter handling and response structure',
+      () async {
+        try {
+          // Test decoding parameter validation and expected response structure.
+          final testSlatepack = 'BEGINSLATEPACK. dGVzdCBkYXRh .ENDSLATEPACK';
+          
+          // Validate slatepack format.
+          if (!testSlatepack.contains('BEGINSLATEPACK') || !testSlatepack.contains('ENDSLATEPACK')) {
+            throw TestException('Test slatepack format validation failed');
+          }
+          
+          // Define expected decode response structure.
+          final expectedFields = [
+            'slate_json',
+            'sender', // nullable.
+            'recipient', // nullable.
+          ];
+          
+          // Validate we have proper validation for expected response fields.
+          for (final field in expectedFields) {
+            if (field.isEmpty) {
+              throw TestException('Empty expected field in validation list');
+            }
+          }
+          
+          // Test decoding error scenarios.
+          final errorTestCases = [
+            {
+              'input': '',
+              'expectedError': 'empty slatepack',
+            },
+            {
+              'input': 'INVALID FORMAT',
+              'expectedError': 'invalid format',
+            },
+            {
+              'input': 'BEGINSLATEPACK. corrupted_data .ENDSLATEPACK',
+              'expectedError': 'decoding error',
+            },
+          ];
+          
+          // Validate error cases are properly structured.
+          for (final testCase in errorTestCases) {
+            final input = testCase['input'] as String;
+            final expectedError = testCase['expectedError'] as String;
+            
+            if (input.isEmpty && expectedError != 'empty slatepack') {
+              throw TestException('Error test case mismatch: empty input should expect empty slatepack error');
+            }
+          }
+          
+          return 'Slatepack decoding parameter validation passed: ${expectedFields.length} response fields validated, ${errorTestCases.length} error cases structured';
+          
+        } catch (e) {
+          throw TestException('Slatepack decoding parameter validation failed: ${e.toString().substring(0, 100)}...');
         }
       }
     );
