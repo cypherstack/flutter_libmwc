@@ -56,7 +56,10 @@ pub fn encode_slatepack_with_keys(
     sender_secret: Option<&DalekSecretKey>,
 ) -> Result<String, Error> {
     // Deserialize the slate to validate it.
-    let slate = Slate::deserialize_upgrade_plain(slate_json)?;
+    let mut slate = Slate::deserialize_upgrade_plain(slate_json)?;
+    // Ensure compact model for Slatepack SP encoding (required by mwc713/MWCQT).
+    // Many call sites produce a full slate; SP requires compact.
+    slate.compact_slate = true;
     
     // Create secp context.
     let secp = Secp256k1::new();
