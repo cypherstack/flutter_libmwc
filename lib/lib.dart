@@ -3,8 +3,8 @@ import 'dart:ffi';
 
 import 'package:decimal/decimal.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_libmwc/mwc.dart' as lib_mwc;
 import 'package:flutter_libmwc/models/transaction.dart';
+import 'package:flutter_libmwc/mwc.dart' as lib_mwc;
 import 'package:mutex/mutex.dart';
 
 class BadMWCHTTPAddressException implements Exception {
@@ -88,9 +88,7 @@ abstract class Libmwc {
       try {
         return await compute(
           _initLogs,
-          (
-            config: config,
-          ),
+          (config: config,),
         );
       } catch (e) {
         throw ("Error init logs : ${e.toString()}");
@@ -424,10 +422,7 @@ abstract class Libmwc {
   /// Private function for address info function
   ///
   static Future<String> _addressInfoWrapper(
-    ({
-      String wallet,
-      int index
-    }) data,
+    ({String wallet, int index}) data,
   ) async {
     return lib_mwc.getAddressInfo(
       data.wallet,
@@ -444,10 +439,8 @@ abstract class Libmwc {
   }) async {
     return await m.protect(() async {
       try {
-        return await compute(_addressInfoWrapper, (
-          wallet: wallet,
-          index: index
-        ));
+        return await compute(
+            _addressInfoWrapper, (wallet: wallet, index: index));
       } catch (e) {
         throw ("Error getting address info : ${e.toString()}");
       }
@@ -497,9 +490,11 @@ abstract class Libmwc {
             for (int i = 0; i < splits.length; i++) {
               var word = splits[i];
               if (word == "Required:") {
-                required = Decimal.parse(splits[i + 1].replaceAll(",", "").replaceAll("\"", ""));
+                required = Decimal.parse(
+                    splits[i + 1].replaceAll(",", "").replaceAll("\"", ""));
               } else if (word == "Available:") {
-                available = Decimal.parse(splits[i + 1].replaceAll(",", "").replaceAll("\"", ""));
+                available = Decimal.parse(
+                    splits[i + 1].replaceAll(",", "").replaceAll("\"", ""));
               }
             }
             int largestSatoshiFee =
@@ -724,6 +719,154 @@ abstract class Libmwc {
     }
   }
 
+  /// Receive a transaction slate (step 2 of slatepack flow).
+  static Future<({String slateId, String commitId})> txReceive({
+    required String wallet,
+    required String slateJson,
+  }) async {
+    return await m.protect(() async {
+      try {
+        final String result = lib_mwc.txReceive(wallet, slateJson);
+        // Debug logging for shape inspection
+        // ignore: avoid_print
+        final _rlen = result.length;
+        final _rprefix = result.substring(0, _rlen > 512 ? 512 : _rlen);
+        print('[WALLET][DEBUG] txReceive raw result: ' + _rprefix + (_rlen > 512 ? '…' : ''));
+        if (result.toUpperCase().contains("ERROR")) {
+          throw Exception("Error receiving transaction $result");
+        }
+
+        // Robustly extract the updated slate JSON from the nested tuple.
+        final outer = jsonDecode(result);
+        if (outer is! List || outer.isEmpty) {
+          // ignore: avoid_print
+          print('[WALLET][DEBUG] Unexpected receive result shape: ' + result);
+          throw Exception('Unexpected receive result shape');
+        }
+        final first = outer[0];
+        if (first == null || first is! String) {
+          // ignore: avoid_print
+          print('[WALLET][DEBUG] Unexpected inner type: ' + first.toString());
+          throw Exception('Unexpected receive tuple inner type');
+        }
+        final inner = jsonDecode(first);
+        if (inner is! List || inner.length < 2 || inner[1] == null || inner[1] is! String) {
+          // ignore: avoid_print
+          print('[WALLET][DEBUG] Unexpected inner pair: ' + inner.toString());
+          throw Exception('Unexpected receive inner pair shape');
+        }
+        final updatedSlateJson = inner[1] as String;
+        // ignore: avoid_print
+        final _ulen = updatedSlateJson.length;
+        final _uprefix = updatedSlateJson.substring(0, _ulen > 256 ? 256 : _ulen);
+        print('[WALLET][DEBUG] Updated slate json (prefix): ' + _uprefix + (_ulen > 256 ? '…' : ''));
+        final updatedSlate = jsonDecode(updatedSlateJson);
+
+        final List<dynamic> outputs =
+            updatedSlate['tx']?['body']?['outputs'] as List? ?? [];
+        final commitId =
+            outputs.isEmpty ? '' : (outputs[0]['commit'] as String? ?? '');
+
+        final ({String slateId, String commitId}) data = (
+          slateId: (updatedSlate['id'] as String? ?? ''),
+          commitId: commitId,
+        );
+
+        return data;
+      } catch (e) {
+        throw ("Error receiving transaction: ${e.toString()}");
+      }
+    });
+  }
+
+  /// Receive a transaction slate and return updated slate JSON for re-encoding.
+  static Future<({String slateId, String commitId, String slateJson})>
+      txReceiveDetailed({
+    required String wallet,
+    required String slateJson,
+  }) async {
+    return await m.protect(() async {
+      try {
+        final String result = lib_mwc.txReceive(wallet, slateJson);
+        // ignore: avoid_print
+        final _r2len = result.length;
+        final _r2prefix = result.substring(0, _r2len > 512 ? 512 : _r2len);
+        print('[WALLET][DEBUG] txReceiveDetailed raw result: ' + _r2prefix + (_r2len > 512 ? '…' : ''));
+        if (result.toUpperCase().contains("ERROR")) {
+          throw Exception("Error receiving transaction $result");
+        }
+
+        // Current Rust returns outer tuple: ( json_pair, {"slate_msg":""} )
+        // where json_pair is a JSON-encoded array: [ txs_json, updated_slate_json ]
+        final outer = jsonDecode(result);
+        final jsonPairEncoded = outer[0] as String;
+        // ignore: avoid_print
+        final _jlen = jsonPairEncoded.length;
+        final _jprefix = jsonPairEncoded.substring(0, _jlen > 256 ? 256 : _jlen);
+        print('[WALLET][DEBUG] jsonPairEncoded (prefix): ' + _jprefix + (_jlen > 256 ? '…' : ''));
+        final pair = jsonDecode(jsonPairEncoded);
+        // Extract updated slate JSON (second element)
+        final updatedSlateJson = pair[1] as String;
+        // ignore: avoid_print
+        final _ul2 = updatedSlateJson.length;
+        final _up2 = updatedSlateJson.substring(0, _ul2 > 256 ? 256 : _ul2);
+        print('[WALLET][DEBUG] updatedSlateJson (prefix): ' + _up2 + (_ul2 > 256 ? '…' : ''));
+        // Parse to fetch ids for convenience from the updated slate
+        final updatedSlate = jsonDecode(updatedSlateJson);
+
+        final List<dynamic> outputs =
+            updatedSlate['tx']?['body']?['outputs'] as List? ?? [];
+        final commitId =
+            outputs.isEmpty ? '' : (outputs[0]['commit'] as String? ?? '');
+
+        final ({String slateId, String commitId, String slateJson}) data = (
+          slateId: (updatedSlate['id'] as String? ?? ''),
+          commitId: commitId,
+          slateJson: updatedSlateJson,
+        );
+
+        return data;
+      } catch (e) {
+        throw ("Error receiving transaction: ${e.toString()}");
+      }
+    });
+  }
+
+  /// Finalize a transaction slate (step 3 of slatepack flow).
+  static Future<({String slateId, String commitId})> txFinalize({
+    required String wallet,
+    required String slateJson,
+  }) async {
+    return await m.protect(() async {
+      try {
+        final String result = lib_mwc.txFinalize(wallet, slateJson);
+        if (result.toUpperCase().contains("ERROR")) {
+          throw Exception("Error finalizing transaction $result");
+        }
+
+        // Decode the finalized tx and return Slate Id and CommitId.
+        final slate0 = jsonDecode(result);
+        final slate = jsonDecode(slate0[0] as String);
+        final part1 = jsonDecode(slate[0] as String);
+        final part2 = jsonDecode(slate[1] as String);
+
+        final List<dynamic> outputs =
+            part2['tx']?['body']?['outputs'] as List? ?? [];
+        final commitId =
+            outputs.isEmpty ? '' : (outputs[0]['commit'] as String? ?? '');
+
+        final ({String slateId, String commitId}) data = (
+          slateId: part1[0]['tx_slate_id'],
+          commitId: commitId,
+        );
+
+        return data;
+      } catch (e) {
+        throw ("Error finalizing transaction: ${e.toString()}");
+      }
+    });
+  }
+
   // ==================================================================
   // SLATEPACK METHODS
   // ==================================================================
@@ -739,21 +882,40 @@ abstract class Libmwc {
   ///
   /// Returns a record with the slatepack string, encryption status, and recipient address.
   ///
-  static Future<({String slatepack, bool wasEncrypted, String? recipientAddress})> encodeSlatepack({
+  static Future<
+          ({String slatepack, bool wasEncrypted, String? recipientAddress})>
+      encodeSlatepack({
     required String slateJson,
     String? recipientAddress,
     bool encrypt = false,
     String? wallet,
   }) async {
     try {
+      // If consumer accidentally passes the (txs_json, slate_json) tuple-as-JSON,
+      // unwrap it to the actual slate JSON (second element) to prevent malformed S2s.
+      try {
+        final dynamic maybe = jsonDecode(slateJson);
+        if (maybe is List &&
+            maybe.length == 2 &&
+            maybe[0] is String &&
+            maybe[1] is String) {
+          final dynamic trySlate = jsonDecode(maybe[1] as String);
+          if (trySlate is Map || trySlate is List) {
+            slateJson = maybe[1] as String;
+          }
+        }
+      } catch (_) {
+        // Not a tuple or not JSON; proceed as-is.
+      }
+
       String slatepackResult;
-      
+
       if (encrypt && recipientAddress != null) {
         // For encrypted slatepacks, we need wallet context.
         if (wallet == null) {
           throw Exception("Wallet context required for encrypted slatepacks");
         }
-        
+
         slatepackResult = await lib_mwc.encodeSlatepackEnhanced(
           wallet,
           slateJson,
@@ -811,12 +973,13 @@ abstract class Libmwc {
   ///
   /// Returns a record with the decoded slate JSON, encryption status, and addresses.
   ///
-  static Future<({
-    String slateJson,
-    bool wasEncrypted,
-    String? senderAddress,
-    String? recipientAddress,
-  })> decodeSlatepack({
+  static Future<
+      ({
+        String slateJson,
+        bool wasEncrypted,
+        String? senderAddress,
+        String? recipientAddress,
+      })> decodeSlatepack({
     required String slatepack,
   }) async {
     try {
@@ -834,9 +997,10 @@ abstract class Libmwc {
       }
 
       final decodeResponse = jsonDecode(decodeResult);
-      
-      final wasEncrypted = decodeResponse['sender'] != null || decodeResponse['recipient'] != null;
-      
+
+      final wasEncrypted = decodeResponse['sender'] != null ||
+          decodeResponse['recipient'] != null;
+
       return (
         slateJson: decodeResponse['slate_json'] as String,
         wasEncrypted: wasEncrypted,
@@ -856,6 +1020,72 @@ abstract class Libmwc {
       } catch (e2) {
         throw ("Error decoding slatepack: ${e.toString()}");
       }
+    }
+  }
+
+  /// Build a proper S2 slatepack from an incoming S1 slatepack.
+  /// - Automatically decrypts S1 if unencrypted, or if encrypted and wallet is available.
+  /// - Calls txReceive to update the slate.
+  /// - Re-encodes S2, preserving encryption by targeting the original sender when possible.
+  static Future<String> buildResponseSlatepack({
+    required String wallet,
+    required String slatepackS1,
+  }) async {
+    // Decode S1 (use wallet-aware path for encrypted slatepacks)
+    final decoded =
+        await decodeSlatepackWithWallet(wallet: wallet, slatepack: slatepackS1);
+
+    // Update slate (receive)
+    final received = await txReceiveDetailed(
+      wallet: wallet,
+      slateJson: decoded.slateJson,
+    );
+
+    // If S1 was encrypted and we know the sender, encrypt S2 back to sender
+    final bool shouldEncrypt =
+        decoded.wasEncrypted && decoded.senderAddress != null;
+    final enc = await encodeSlatepack(
+      slateJson: received.slateJson,
+      recipientAddress: decoded.senderAddress,
+      encrypt: shouldEncrypt,
+      wallet: shouldEncrypt ? wallet : null,
+    );
+    return enc.slatepack;
+  }
+
+  /// Decode slatepack using wallet context (supports encrypted slatepacks).
+  static Future<
+      ({
+        String slateJson,
+        bool wasEncrypted,
+        String? senderAddress,
+        String? recipientAddress,
+      })> decodeSlatepackWithWallet({
+    required String wallet,
+    required String slatepack,
+  }) async {
+    try {
+      final decodeResult =
+          await lib_mwc.decodeSlatepackEnhanced(wallet, slatepack);
+
+      if (decodeResult.toUpperCase().contains("ERROR")) {
+        // Fallback to basic decode which may handle unencrypted local armor
+        return await decodeSlatepack(slatepack: slatepack);
+      }
+
+      final decodeResponse = jsonDecode(decodeResult);
+      final wasEncrypted = decodeResponse['sender'] != null ||
+          decodeResponse['recipient'] != null;
+
+      return (
+        slateJson: decodeResponse['slate_json'] as String,
+        wasEncrypted: wasEncrypted,
+        senderAddress: decodeResponse['sender'] as String?,
+        recipientAddress: decodeResponse['recipient'] as String?,
+      );
+    } catch (e) {
+      // Fallback to basic decode
+      return await decodeSlatepack(slatepack: slatepack);
     }
   }
 
@@ -881,6 +1111,29 @@ abstract class Libmwc {
   static const _endMarker = 'ENDSLATEPACK.';
   static const _sep = ' ';
 
+  /// Normalize/canonicalize a slatepack string's armor whitespace.
+  /// - Ensures a newline after the begin marker and before the end marker.
+  /// - Preserves the payload as-is (does not mutate groups or characters).
+  static String canonicalizeSlatepackArmor(String slatepack) {
+    final s = slatepack.trim();
+    final beginIdx = s.indexOf(_beginMarker);
+    final endIdx = s.lastIndexOf(_endMarker);
+    if (beginIdx < 0 || endIdx < 0 || endIdx <= beginIdx) return slatepack;
+
+    final before = s.substring(0, beginIdx + _beginMarker.length);
+    final middleRaw = s.substring(beginIdx + _beginMarker.length, endIdx);
+    final after = s.substring(endIdx);
+
+    final middle = middleRaw.trim();
+    final sb = StringBuffer();
+    sb.write(before);
+    sb.write('\n');
+    sb.write(middle);
+    sb.write('\n');
+    sb.write(after);
+    return sb.toString();
+  }
+
   static String _armorSlateJsonLocally(String slateJson) {
     final payload = _base58Encode(slateJson.codeUnits);
     return '$_beginMarker$_sep$payload$_sep$_endMarker';
@@ -893,15 +1146,29 @@ abstract class Libmwc {
     if (beginIdx < 0 || endIdx < 0 || endIdx <= beginIdx) {
       throw Exception('Invalid slatepack armor');
     }
-    final inner = s.substring(beginIdx + _beginMarker.length, endIdx).trim().replaceAll('\n', ' ').trim();
+    final inner = s
+        .substring(beginIdx + _beginMarker.length, endIdx)
+        .trim()
+        .replaceAll('\n', ' ')
+        .trim();
     // Remove trailing/leading separators and spaces.
-    final content = inner.trim().trimLeft().trimRight().replaceAll(RegExp(r'\s+'), ' ').trim();
-    final decoded = _base58Decode(content.replaceAll(' .', '').replaceAll('. ', '').replaceAll(' . ', ' ').trim());
+    final content = inner
+        .trim()
+        .trimLeft()
+        .trimRight()
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final decoded = _base58Decode(content
+        .replaceAll(' .', '')
+        .replaceAll('. ', '')
+        .replaceAll(' . ', ' ')
+        .trim());
     return String.fromCharCodes(decoded);
   }
 
   // Minimal Base58 encoding/decoding (Bitcoin alphabet)
-  static const String _alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  static const String _alphabet =
+      '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   static final Map<int, int> _alphabetIndex = {
     for (int i = 0; i < _alphabet.length; i++) _alphabet.codeUnitAt(i): i
   };
@@ -943,7 +1210,10 @@ abstract class Libmwc {
     while (zeros < s.length && s.codeUnitAt(zeros) == '1'.codeUnitAt(0)) {
       zeros++;
     }
-    final List<int> input = [for (int i = zeros; i < s.length; i++) _alphabetIndex[s.codeUnitAt(i)] ?? -1];
+    final List<int> input = [
+      for (int i = zeros; i < s.length; i++)
+        _alphabetIndex[s.codeUnitAt(i)] ?? -1
+    ];
     if (input.contains(-1)) {
       throw Exception('Invalid Base58 input');
     }

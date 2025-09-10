@@ -342,10 +342,15 @@ class WalletService {
     try {
       _logInfo('Decoding slatepack');
       
-      // Use the same FFI function as test battery.
-      final result = await Libmwc.decodeSlatepack(
-        slatepack: slatepack,
-      );
+      // Prefer wallet-aware decode when a wallet is open (handles encrypted slatepacks).
+      final result = (_currentWalletHandle != null)
+          ? await Libmwc.decodeSlatepackWithWallet(
+              wallet: _currentWalletHandle!,
+              slatepack: slatepack,
+            )
+          : await Libmwc.decodeSlatepack(
+              slatepack: slatepack,
+            );
       
       _logInfo('Slatepack decoded successfully');
       return SlatepackDecodeResult(
@@ -361,6 +366,87 @@ class WalletService {
       return SlatepackDecodeResult(
         success: false,
         error: 'Failed to decode slatepack: $e',
+      );
+    }
+  }
+
+  /// Receive a slatepack/transaction and return a response slatepack for the sender.
+  static Future<ReceiveSlatepackResult> receiveSlatepack({
+    required String slatepack,
+  }) async {
+    try {
+      if (_currentWalletHandle == null) {
+        throw Exception('No wallet is currently open');
+      }
+
+      // Decode (wallet-aware) to get slate JSON and sender address.
+      final dec = await decodeSlatepack(slatepack: slatepack);
+      if (!dec.success || dec.slateJson == null) {
+        throw Exception(dec.error ?? 'Failed to decode slatepack');
+      }
+
+      // Receive and obtain updated slate JSON (to encode back for sender).
+      final rx = await Libmwc.txReceiveDetailed(
+        wallet: _currentWalletHandle!,
+        slateJson: dec.slateJson!,
+      );
+
+      // Encode response slatepack back to sender if address known; otherwise unencrypted.
+      final enc = await Libmwc.encodeSlatepack(
+        slateJson: rx.slateJson,
+        recipientAddress: dec.senderAddress,
+        encrypt: dec.senderAddress != null,
+        wallet: _currentWalletHandle,
+      );
+
+      return ReceiveSlatepackResult(
+        success: true,
+        slateId: rx.slateId,
+        commitId: rx.commitId,
+        responseSlatepack: enc.slatepack,
+        wasEncrypted: enc.wasEncrypted,
+        recipientAddress: dec.senderAddress,
+      );
+    } catch (e) {
+      _logError('Failed to receive slatepack: $e');
+      return ReceiveSlatepackResult(
+        success: false,
+        error: 'Failed to receive slatepack: $e',
+      );
+    }
+  }
+
+  /// Finalize a slatepack/transaction (sender step 3).
+  static Future<FinalizeSlatepackResult> finalizeSlatepack({
+    required String slatepack,
+  }) async {
+    try {
+      if (_currentWalletHandle == null) {
+        throw Exception('No wallet is currently open');
+      }
+
+      // Decode (wallet-aware) to get slate JSON.
+      final dec = await decodeSlatepack(slatepack: slatepack);
+      if (!dec.success || dec.slateJson == null) {
+        throw Exception(dec.error ?? 'Failed to decode slatepack');
+      }
+
+      // Finalize.
+      final fin = await Libmwc.txFinalize(
+        wallet: _currentWalletHandle!,
+        slateJson: dec.slateJson!,
+      );
+
+      return FinalizeSlatepackResult(
+        success: true,
+        slateId: fin.slateId,
+        commitId: fin.commitId,
+      );
+    } catch (e) {
+      _logError('Failed to finalize slatepack: $e');
+      return FinalizeSlatepackResult(
+        success: false,
+        error: 'Failed to finalize slatepack: $e',
       );
     }
   }
@@ -572,5 +658,39 @@ class SlatepackDecodeResult {
     this.wasEncrypted,
     this.senderAddress,
     this.recipientAddress,
+  });
+}
+
+class ReceiveSlatepackResult {
+  final bool success;
+  final String? error;
+  final String? slateId;
+  final String? commitId;
+  final String? responseSlatepack;
+  final bool? wasEncrypted;
+  final String? recipientAddress;
+
+  ReceiveSlatepackResult({
+    required this.success,
+    this.error,
+    this.slateId,
+    this.commitId,
+    this.responseSlatepack,
+    this.wasEncrypted,
+    this.recipientAddress,
+  });
+}
+
+class FinalizeSlatepackResult {
+  final bool success;
+  final String? error;
+  final String? slateId;
+  final String? commitId;
+
+  FinalizeSlatepackResult({
+    required this.success,
+    this.error,
+    this.slateId,
+    this.commitId,
   });
 }

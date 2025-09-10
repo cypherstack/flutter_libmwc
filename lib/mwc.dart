@@ -103,6 +103,15 @@ typedef EncodeSlatepackEnhancedFFI = Pointer<Utf8> Function(
 typedef DecodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef DecodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>);
 
+typedef DecodeSlatepackEnhanced = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef DecodeSlatepackEnhancedFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef TxReceive = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef TxReceiveFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef TxFinalize = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef TxFinalizeFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
 final WalletMnemonic _walletMnemonic = mwcNative
     .lookup<NativeFunction<WalletMnemonicFFI>>("get_mnemonic")
     .asFunction();
@@ -344,6 +353,34 @@ Future<String> decodeSlatepack(String slatepack) async {
       .toDartString();
 }
 
+final DecodeSlatepackEnhanced _decodeSlatepackEnhanced = mwcNative
+    .lookup<NativeFunction<DecodeSlatepackEnhancedFFI>>("rust_decode_slatepack_enhanced")
+    .asFunction();
+
+Future<String> decodeSlatepackEnhanced(String wallet, String slatepack) async {
+  return _decodeSlatepackEnhanced(
+      wallet.toNativeUtf8(),
+      slatepack.toNativeUtf8())
+      .toDartString();
+}
+
+final TxReceive _txReceive = mwcNative
+    .lookup<NativeFunction<TxReceiveFFI>>("rust_tx_receive")
+    .asFunction();
+
+String txReceive(String wallet, String slateJson) {
+  return _txReceive(wallet.toNativeUtf8(), slateJson.toNativeUtf8())
+      .toDartString();
+}
+
+final TxFinalize _txFinalize = mwcNative
+    .lookup<NativeFunction<TxFinalizeFFI>>("rust_tx_finalize")
+    .asFunction();
+
+String txFinalize(String wallet, String slateJson) {
+  return _txFinalize(wallet.toNativeUtf8(), slateJson.toNativeUtf8())
+      .toDartString();
+}
 
 
 

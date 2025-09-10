@@ -24,6 +24,11 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
   final _slatepackController = TextEditingController();
   SlatepackDecodeResult? _decodedResult;
   bool _isDecoding = false;
+  // Receive/finalize actions
+  bool _isReceiving = false;
+  bool _isFinalizing = false;
+  ReceiveSlatepackResult? _receiveResult;
+  FinalizeSlatepackResult? _finalizeResult;
 
   @override
   void initState() {
@@ -124,6 +129,8 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
 
       setState(() {
         _decodedResult = result;
+        _receiveResult = null;
+        _finalizeResult = null;
       });
 
       if (result.success) {
@@ -136,6 +143,70 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
     } finally {
       setState(() {
         _isDecoding = false;
+      });
+    }
+  }
+
+  Future<void> _receiveCurrentSlatepack() async {
+    if (_slatepackController.text.trim().isEmpty) {
+      _showErrorDialog('Please enter a slatepack');
+      return;
+    }
+
+    setState(() {
+      _isReceiving = true;
+      _receiveResult = null;
+    });
+
+    try {
+      final res = await WalletService.receiveSlatepack(
+        slatepack: _slatepackController.text.trim(),
+      );
+      setState(() {
+        _receiveResult = res;
+      });
+      if (res.success) {
+        _showSuccessSnackBar('Received slatepack and built response');
+      } else {
+        _showErrorDialog(res.error ?? 'Failed to receive slatepack');
+      }
+    } catch (e) {
+      _showErrorDialog('Failed to receive slatepack: $e');
+    } finally {
+      setState(() {
+        _isReceiving = false;
+      });
+    }
+  }
+
+  Future<void> _finalizeCurrentSlatepack() async {
+    if (_slatepackController.text.trim().isEmpty) {
+      _showErrorDialog('Please enter a slatepack');
+      return;
+    }
+
+    setState(() {
+      _isFinalizing = true;
+      _finalizeResult = null;
+    });
+
+    try {
+      final res = await WalletService.finalizeSlatepack(
+        slatepack: _slatepackController.text.trim(),
+      );
+      setState(() {
+        _finalizeResult = res;
+      });
+      if (res.success) {
+        _showSuccessSnackBar('Finalized slatepack and posted transaction');
+      } else {
+        _showErrorDialog(res.error ?? 'Failed to finalize slatepack');
+      }
+    } catch (e) {
+      _showErrorDialog('Failed to finalize slatepack: $e');
+    } finally {
+      setState(() {
+        _isFinalizing = false;
       });
     }
   }
@@ -381,6 +452,46 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
                   style: TextStyle(fontSize: 16),
                 ),
         ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isReceiving ? null : _receiveCurrentSlatepack,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: _isReceiving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                      )
+                    : const Text('Receive This Slatepack'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _isFinalizing ? null : _finalizeCurrentSlatepack,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: _isFinalizing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                      )
+                    : const Text('Finalize This Slatepack'),
+              ),
+            ),
+          ],
+        ),
         if (_decodedResult != null) ...[
           const SizedBox(height: 16),
           Card(
@@ -440,6 +551,85 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
                       'Error: ${_decodedResult!.error}',
                       style: TextStyle(color: Colors.red.shade700),
                     ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+        if (_receiveResult != null) ...[
+          const SizedBox(height: 16),
+          Card(
+            color: _receiveResult!.success ? Colors.blue.shade50 : Colors.red.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Receive Result',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: _receiveResult!.success ? Colors.blue.shade700 : Colors.red.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_receiveResult!.success) ...[
+                    _buildResultRow('Slate ID', _receiveResult!.slateId ?? '', Colors.blueGrey),
+                    _buildResultRow('Commit ID', _receiveResult!.commitId ?? '', Colors.blueGrey),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Response Slatepack:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        IconButton(
+                          onPressed: () => _copyToClipboard(_receiveResult!.responseSlatepack ?? '', 'Response Slatepack'),
+                          icon: const Icon(Icons.copy),
+                          color: Colors.blue.shade700,
+                        ),
+                      ],
+                    ),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.blue.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: SelectableText(
+                        _receiveResult!.responseSlatepack ?? '',
+                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                      ),
+                    ),
+                  ] else ...[
+                    Text('Error: ${_receiveResult!.error}', style: TextStyle(color: Colors.red.shade700)),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+        if (_finalizeResult != null) ...[
+          const SizedBox(height: 16),
+          Card(
+            color: _finalizeResult!.success ? Colors.teal.shade50 : Colors.red.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Finalize Result',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: _finalizeResult!.success ? Colors.teal.shade700 : Colors.red.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_finalizeResult!.success) ...[
+                    _buildResultRow('Slate ID', _finalizeResult!.slateId ?? '', Colors.blueGrey),
+                    _buildResultRow('Commit ID', _finalizeResult!.commitId ?? '', Colors.blueGrey),
+                  ] else ...[
+                    Text('Error: ${_finalizeResult!.error}', style: TextStyle(color: Colors.red.shade700)),
                   ],
                 ],
               ),

@@ -67,16 +67,17 @@ pub fn encode_slatepack_with_keys(
             .ok_or_else(|| Error::GenericError(
                 "Sender secret key is required for encrypted slatepacks. Please provide wallet context.".to_string()
             ))?;
-        
+
         // Create a new secret key from the bytes (since DalekSecretKey doesn't implement Clone).
         let sender_secret_key = DalekSecretKey::from_bytes(&sender_secret_key_ref.to_bytes())
             .map_err(|e| Error::GenericError(format!("Failed to create sender secret key: {:?}", e)))?;
-        
+
         let sender_public = DalekPublicKey::from(&sender_secret_key);
-        
-        // Parse recipient address to get recipient public key.
-        let recipient_public = parse_mwcmqs_address_to_public_key(recipient_addr)?;
-        
+
+        // Accept either a raw hex ed25519 public key (64 hex chars), or an MWCMQS-style
+        // address where the left part before '@' encodes the public key as hex.
+        let recipient_public = parse_recipient_public_key(recipient_addr)?;
+
         (sender_public, sender_secret_key, Some(recipient_public))
     } else {
         // For unencrypted slatepacks, use dummy keys (this is acceptable for unencrypted).
@@ -87,10 +88,13 @@ pub fn encode_slatepack_with_keys(
         (dummy_sender, dummy_secret, None)
     };
     
+    // Choose appropriate SlatePurpose based on the slate state, aligning with mwc713 behavior.
+    let purpose = infer_slate_purpose(&slate);
+
     let armored = Slatepacker::encrypt_to_send(
         slate,
         SlateVersion::SP,
-        SlatePurpose::FullSlate,
+        purpose,
         sender_key,
         recipient_key,
         &sender_secret_key,
@@ -101,6 +105,31 @@ pub fn encode_slatepack_with_keys(
     Ok(armored)
 }
 
+/// Infer the best SlatePurpose for encoding based on the slate's current state.
+/// This mirrors mwc713's approach of preserving content/purpose for the current step.
+fn infer_slate_purpose(slate: &Slate) -> SlatePurpose {
+    // Infer stage from how many participant partial signatures are present.
+    // Two-party flow heuristics:
+    // - 0 partial signatures -> SendInitial (S1)
+    // - 1 partial signature  -> SendResponse (S2)
+    // - >=2 partial signatures -> FullSlate (final/other)
+    if slate.num_participants == 2 && !slate.participant_data.is_empty() {
+        let sig_count = slate
+            .participant_data
+            .iter()
+            .filter(|p| p.part_sig.is_some())
+            .count();
+        return match sig_count {
+            0 => SlatePurpose::SendInitial,
+            1 => SlatePurpose::SendResponse,
+            _ => SlatePurpose::FullSlate,
+        };
+    }
+
+    // Fallback for other flows (invoice, multi-party, etc.)
+    SlatePurpose::FullSlate
+}
+
 /// Parse an MWCMQS address to extract the public key for encryption.
 /// 
 /// # Arguments
@@ -108,38 +137,33 @@ pub fn encode_slatepack_with_keys(
 /// 
 /// # Returns
 /// * Result containing the DalekPublicKey or error.
-fn parse_mwcmqs_address_to_public_key(address: &str) -> Result<DalekPublicKey, Error> {
-    // Parse the address format: publicKey@domain:port.
-    let parts: Vec<&str> = address.split('@').collect();
-    if parts.len() != 2 {
-        return Err(Error::GenericError(format!(
-            "Invalid MWCMQS address format: {}",
-            address
-        )));
-    }
-    
-    let public_key_str = parts[0];
-    
-    // Convert the public key string to bytes and then to DalekPublicKey.
-    // The MWCMQS addresses use base58 encoding.
-    let public_key_bytes = mwc_util::from_hex(public_key_str)
-        .map_err(|e| Error::GenericError(format!(
-            "Failed to decode public key from address {}: {}",
-            address, e
+fn parse_recipient_public_key(input: &str) -> Result<DalekPublicKey, Error> {
+    // Case 1: raw hex pubkey
+    let try_hex = |s: &str| -> Result<DalekPublicKey, Error> {
+        let bytes = mwc_util::from_hex(s).map_err(|e| Error::GenericError(format!(
+            "Failed to decode recipient public key hex: {}", e
         )))?;
-    
-    if public_key_bytes.len() != 32 {
-        return Err(Error::GenericError(format!(
-            "Invalid public key length in address {}: expected 32 bytes, got {}",
-            address, public_key_bytes.len()
-        )));
+        if bytes.len() != 32 {
+            return Err(Error::GenericError(format!(
+                "Invalid recipient public key length: expected 32 bytes, got {}",
+                bytes.len()
+            )));
+        }
+        DalekPublicKey::from_bytes(&bytes)
+            .map_err(|e| Error::GenericError(format!("Invalid recipient public key: {:?}", e)))
+    };
+
+    if !input.contains('@') {
+        // Treat as raw hex ed25519 public key (as returned by decode for sender/recipient)
+        return try_hex(input);
     }
-    
-    DalekPublicKey::from_bytes(&public_key_bytes)
-        .map_err(|e| Error::GenericError(format!(
-            "Failed to create public key from address {}: {:?}",
-            address, e
-        )))
+
+    // Case 2: address with '@' — take left side as hex public key
+    let parts: Vec<&str> = input.split('@').collect();
+    if parts.is_empty() || parts[0].is_empty() {
+        return Err(Error::GenericError("Invalid recipient address (missing public key)".to_string()));
+    }
+    try_hex(parts[0])
 }
 
 /// Decode a slatepack into slate JSON.
