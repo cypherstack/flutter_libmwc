@@ -555,6 +555,32 @@ class WalletService {
   static String? get currentWalletHandle => _currentWalletHandle;
   static bool get hasOpenWallet => _currentWalletHandle != null && _currentWalletName != null;
 
+  /// Generate a valid S1 Slate JSON from the currently open wallet (no finalize/post).
+  static Future<String> generateS1Json({
+    required int amount,
+    int minimumConfirmations = 1,
+    bool useAll = false,
+    String message = '',
+  }) async {
+    try {
+      if (_currentWalletHandle == null) {
+        throw Exception('No wallet is currently open');
+      }
+
+      final s1 = await Libmwc.txInit(
+        wallet: _currentWalletHandle!,
+        amount: amount,
+        minimumConfirmations: minimumConfirmations,
+        selectionStrategyIsAll: useAll,
+        message: message,
+      );
+      return s1; // raw Slate JSON
+    } catch (e) {
+      _logError('Failed to generate S1 JSON: $e');
+      rethrow;
+    }
+  }
+
   /// Log info message.
   static void _logInfo(String message) {
     final timestamp = DateTime.now().toIso8601String();

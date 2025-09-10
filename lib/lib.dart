@@ -871,6 +871,29 @@ abstract class Libmwc {
   // SLATEPACK METHODS
   // ==================================================================
 
+  /// Initialize a send (S1) without finalization/posting and return the slate JSON.
+  static Future<String> txInit({
+    required String wallet,
+    required int amount,
+    int minimumConfirmations = 1,
+    bool selectionStrategyIsAll = false,
+    String message = '',
+  }) async {
+    return await m.protect(() async {
+      final result = await lib_mwc.txInit(
+        wallet,
+        selectionStrategyIsAll ? 1 : 0,
+        minimumConfirmations,
+        message,
+        amount,
+      );
+      if (result.toUpperCase().contains('ERROR')) {
+        throw Exception('Error initializing slate: $result');
+      }
+      return result; // This is the raw Slate JSON (S1)
+    });
+  }
+
   ///
   /// Encode slate as slatepack with optional encryption.
   ///
@@ -910,57 +933,37 @@ abstract class Libmwc {
 
       String slatepackResult;
 
-      if (encrypt && recipientAddress != null) {
-        // For encrypted slatepacks, we need wallet context.
-        if (wallet == null) {
-          throw Exception("Wallet context required for encrypted slatepacks");
-        }
-
+      // Prefer wallet-aware encoding whenever wallet is provided so the sender key
+      // is included even for unencrypted slatepacks (improves compatibility).
+      if (wallet != null) {
         slatepackResult = await lib_mwc.encodeSlatepackEnhanced(
           wallet,
           slateJson,
-          recipientAddress,
+          (recipientAddress ?? ''),
         );
       } else {
-        // For unencrypted slatepacks, use the basic function.
+        // Fallback to basic function (no wallet context).
         slatepackResult = await lib_mwc.encodeSlatepack(
           slateJson,
-          recipientAddress,
+          (recipientAddress ?? ''),
         );
       }
 
       if (slatepackResult.toUpperCase().contains("ERROR")) {
-        if (!encrypt) {
-          // Fallback: produce an unencrypted, armored slatepack locally (Base58-encoded JSON).
-          final fallback = _armorSlateJsonLocally(slateJson);
-          return (
-            slatepack: fallback,
-            wasEncrypted: false,
-            recipientAddress: null,
-          );
-        }
+        // Do not produce local Base58 armor for interoperability; surface the error.
         throw Exception("Error encoding slatepack: $slatepackResult");
       }
 
+      // Ensure canonical newline formatting for compatibility with MWCQT and others.
+      final canon = canonicalizeSlatepackArmor(slatepackResult);
+
       return (
-        slatepack: slatepackResult,
+        slatepack: canon,
         wasEncrypted: encrypt && recipientAddress != null,
         recipientAddress: encrypt ? recipientAddress : null,
       );
     } catch (e) {
-      if (!encrypt) {
-        // Fallback: produce an unencrypted, armored slatepack locally (Base58-encoded JSON).
-        try {
-          final fallback = _armorSlateJsonLocally(slateJson);
-          return (
-            slatepack: fallback,
-            wasEncrypted: false,
-            recipientAddress: null,
-          );
-        } catch (e2) {
-          throw ("Error encoding slatepack: ${e.toString()}");
-        }
-      }
+      // Surface the error directly; other wallets cannot decode local fallback armor.
       throw ("Error encoding slatepack: ${e.toString()}");
     }
   }
@@ -1124,11 +1127,19 @@ abstract class Libmwc {
     final middleRaw = s.substring(beginIdx + _beginMarker.length, endIdx);
     final after = s.substring(endIdx);
 
-    final middle = middleRaw.trim();
+    // Normalize payload: strip whitespace and reflow to fixed-width lines for compatibility.
+    final payload = middleRaw.replaceAll(RegExp(r"\s+"), "").trim();
+    const lineLen = 60;
+    final lines = <String>[];
+    for (int i = 0; i < payload.length; i += lineLen) {
+      final end = (i + lineLen < payload.length) ? i + lineLen : payload.length;
+      lines.add(payload.substring(i, end));
+    }
+
     final sb = StringBuffer();
     sb.write(before);
     sb.write('\n');
-    sb.write(middle);
+    sb.writeAll(lines, '\n');
     sb.write('\n');
     sb.write(after);
     return sb.toString();

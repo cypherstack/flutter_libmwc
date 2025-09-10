@@ -19,12 +19,18 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
   bool _encryptSlatepack = false;
   String? _encodedSlatepack;
   bool _isEncoding = false;
+  // Generate S1 controls.
+  final _s1AmountController = TextEditingController(text: '100000');
+  final _s1MessageController = TextEditingController();
+  int _s1MinConf = 1;
+  bool _s1UseAll = false;
+  bool _isGeneratingS1 = false;
   
   // Decoding tab.
   final _slatepackController = TextEditingController();
   SlatepackDecodeResult? _decodedResult;
   bool _isDecoding = false;
-  // Receive/finalize actions
+  // Receive/finalize actions.
   bool _isReceiving = false;
   bool _isFinalizing = false;
   ReceiveSlatepackResult? _receiveResult;
@@ -43,6 +49,8 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
     _slateJsonController.dispose();
     _recipientAddressController.dispose();
     _slatepackController.dispose();
+    _s1AmountController.dispose();
+    _s1MessageController.dispose();
     super.dispose();
   }
 
@@ -107,6 +115,36 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
     } finally {
       setState(() {
         _isEncoding = false;
+      });
+    }
+  }
+
+  Future<void> _generateS1() async {
+    final amtStr = _s1AmountController.text.trim();
+    final amt = int.tryParse(amtStr);
+    if (amt == null || amt <= 0) {
+      _showErrorDialog('Enter a valid positive integer amount');
+      return;
+    }
+    setState(() {
+      _isGeneratingS1 = true;
+    });
+    try {
+      final s1 = await WalletService.generateS1Json(
+        amount: amt,
+        minimumConfirmations: _s1MinConf,
+        useAll: _s1UseAll,
+        message: _s1MessageController.text.trim(),
+      );
+      setState(() {
+        _slateJsonController.text = s1;
+      });
+      _showSuccessSnackBar('Generated S1 slate JSON');
+    } catch (e) {
+      _showErrorDialog('Failed to generate S1: $e');
+    } finally {
+      setState(() {
+        _isGeneratingS1 = false;
       });
     }
   }
@@ -247,6 +285,76 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Generate S1 (from wallet)', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _s1AmountController,
+                      decoration: const InputDecoration(
+                        labelText: 'Amount (in smallest units)',
+                        hintText: 'e.g. 100000',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: _s1MinConf,
+                      decoration: const InputDecoration(
+                        labelText: 'Min confirmations',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [1, 2, 5, 10]
+                          .map((v) => DropdownMenuItem(value: v, child: Text('$v')))
+                          .toList(),
+                      onChanged: (v) => setState(() => _s1MinConf = v ?? 1),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _s1MessageController,
+                  decoration: const InputDecoration(
+                    labelText: 'Message (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Use all available coins'),
+                  value: _s1UseAll,
+                  onChanged: (v) => setState(() => _s1UseAll = v ?? false),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    onPressed: _isGeneratingS1 ? null : _generateS1,
+                    icon: _isGeneratingS1
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.playlist_add),
+                    label: const Text('Generate S1'),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),

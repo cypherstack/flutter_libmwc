@@ -2243,6 +2243,77 @@ pub unsafe extern "C" fn rust_tx_finalize(
     p
 }
 
+// Initialize a send transaction without finalizing/posting (produce S1 slate JSON).
+#[no_mangle]
+pub unsafe extern "C" fn rust_tx_init(
+    wallet: *const c_char,
+    selection_strategy_is_use_all: *const c_char,
+    minimum_confirmations: *const c_char,
+    message: *const c_char,
+    amount: *const c_char,
+) -> *const c_char {
+    let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
+    let (wlt, sek_key): (i64, Option<SecretKey>) = match serde_json::from_str(wallet_str) {
+        Ok(data) => data,
+        Err(e) => {
+            let err = CString::new(format!("Error: Failed to parse wallet handle: {}", e)).unwrap();
+            let p = err.as_ptr();
+            std::mem::forget(err);
+            return p;
+        }
+    };
+    ensure_wallet!(wlt, wallet);
+
+    let c_use_all = CStr::from_ptr(selection_strategy_is_use_all);
+    let use_all_flag: u64 = c_use_all.to_str().unwrap().parse().unwrap_or(0);
+    let use_all = use_all_flag != 0;
+
+    let c_min_conf = CStr::from_ptr(minimum_confirmations);
+    let min_conf: u64 = c_min_conf.to_str().unwrap().parse().unwrap_or(1);
+
+    let c_msg = CStr::from_ptr(message);
+    let msg_str = c_msg.to_str().unwrap_or("");
+
+    let c_amount = CStr::from_ptr(amount);
+    let amount_val: u64 = match c_amount.to_str().unwrap_or("0").parse() { Ok(v) => v, Err(_) => 0 };
+
+    let out = match _tx_init_core(&wallet, sek_key.clone(), use_all, min_conf, msg_str, amount_val) {
+        Ok(s) => s,
+        Err(e) => format!("Error: {}", e),
+    };
+    let c_out = CString::new(out).unwrap();
+    let p = c_out.as_ptr();
+    std::mem::forget(c_out);
+    p
+}
+
+fn _tx_init_core(
+    wallet: &Wallet,
+    keychain_mask: Option<SecretKey>,
+    selection_strategy_is_use_all: bool,
+    minimum_confirmations: u64,
+    message: &str,
+    amount: u64,
+) -> Result<String, Error> {
+    let api = Owner::new(wallet.clone(), None, None);
+    let message_opt = if message.is_empty() { None } else { Some(message.to_string()) };
+
+    let args = InitTxArgs {
+        src_acct_name: Some("default".to_string()),
+        amount,
+        minimum_confirmations,
+        max_outputs: 500,
+        num_change_outputs: 1,
+        selection_strategy_is_use_all,
+        message: message_opt,
+        send_args: None, // Produce offline S1.
+        ..Default::default()
+    };
+
+    let slate = api.init_send_tx(keychain_mask.as_ref(), &args, 1)?;
+    Ok(serde_json::to_string(&slate).unwrap())
+}
+
 unsafe fn _encode_slatepack_enhanced(
     wallet: *const c_char,
     slate_json: *const c_char,

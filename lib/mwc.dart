@@ -112,6 +112,11 @@ typedef TxReceiveFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef TxFinalize = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef TxFinalizeFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 
+typedef TxInit = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Int8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>);
+typedef TxInitFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Int8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>);
+
 final WalletMnemonic _walletMnemonic = mwcNative
     .lookup<NativeFunction<WalletMnemonicFFI>>("get_mnemonic")
     .asFunction();
@@ -382,6 +387,24 @@ String txFinalize(String wallet, String slateJson) {
       .toDartString();
 }
 
+final TxInit _txInit = mwcNative
+    .lookup<NativeFunction<TxInitFFI>>("rust_tx_init")
+    .asFunction();
+
+Future<String> txInit(
+    String wallet,
+    int selectionStrategyIsAll,
+    int minimumConfirmations,
+    String message,
+    int amount) async {
+  return _txInit(
+      wallet.toNativeUtf8(),
+      selectionStrategyIsAll.toString().toNativeUtf8().cast<Int8>(),
+      minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
+      message.toNativeUtf8(),
+      amount.toString().toNativeUtf8().cast<Int8>())
+      .toDartString();
+}
 
 
 
