@@ -196,6 +196,43 @@ class WalletService {
     }
   }
 
+  /// Get the MWCMQS address for the currently open wallet.
+  static Future<WalletAddressResult> getWalletAddress({int index = 0}) async {
+    try {
+      if (_currentWalletHandle == null) {
+        return WalletAddressResult(
+          success: false,
+          error: 'No wallet is currently open',
+        );
+      }
+
+      _logInfo('Getting wallet address');
+
+      final result = await Libmwc.getAddressInfo(
+        wallet: _currentWalletHandle!,
+        index: index,
+      );
+
+      if (result.toUpperCase().contains('ERROR')) {
+        return WalletAddressResult(
+          success: false,
+          error: result,
+        );
+      }
+
+      return WalletAddressResult(
+        success: true,
+        address: result,
+      );
+    } catch (e) {
+      _logError('Failed to get wallet address: $e');
+      return WalletAddressResult(
+        success: false,
+        error: 'Failed to get wallet address: $e',
+      );
+    }
+  }
+
 /// Get chain height using same FFI functions as test battery.
   static Future<int?> getChainHeight() async {
     try {
@@ -475,6 +512,18 @@ class WalletBalanceResult {
     this.pending,
     this.total,
     this.awaitingFinalization,
+  });
+}
+
+class WalletAddressResult {
+  final bool success;
+  final String? address;
+  final String? error;
+
+  WalletAddressResult({
+    required this.success,
+    this.address,
+    this.error,
   });
 }
 

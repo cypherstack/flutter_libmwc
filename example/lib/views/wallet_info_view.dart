@@ -15,6 +15,7 @@ class _WalletInfoViewState extends State<WalletInfoView> {
   int? _chainHeight;
   bool _isLoading = false;
   String? _error;
+  String? _address;
 
   @override
   void initState() {
@@ -31,12 +32,17 @@ class _WalletInfoViewState extends State<WalletInfoView> {
     try {
       final balanceResult = await WalletService.getWalletBalance();
       final chainHeight = await WalletService.getChainHeight();
+      final addressResult = await WalletService.getWalletAddress(index: 0);
 
       setState(() {
         _balance = balanceResult;
         _chainHeight = chainHeight;
+        _address = addressResult.address;
         if (!balanceResult.success) {
           _error = balanceResult.error;
+        }
+        if (!addressResult.success && _error == null) {
+          _error = addressResult.error ?? 'Failed to fetch wallet address';
         }
       });
     } catch (e) {
@@ -184,6 +190,43 @@ class _WalletInfoViewState extends State<WalletInfoView> {
                                   icon: const Icon(Icons.copy, size: 18),
                                 ),
                               ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text('Address:',
+                                style: TextStyle(fontWeight: FontWeight.w500)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _address ?? 'N/A',
+                                      textAlign: TextAlign.right,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontFamily: 'monospace',
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: (_address == null || _address!.isEmpty)
+                                        ? null
+                                        : () => _copyToClipboard(
+                                              _address!,
+                                              'Wallet address',
+                                            ),
+                                    icon: const Icon(Icons.copy, size: 18),
+                                    tooltip: 'Copy address',
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
