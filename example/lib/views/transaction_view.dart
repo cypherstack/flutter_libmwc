@@ -122,7 +122,7 @@ class _TransactionViewState extends State<TransactionView> {
 
   String _formatMwc(double? amount) {
     if (amount == null) return 'N/A';
-    return '${(amount / 1000000000).toStringAsFixed(9)} MWC';
+    return '${amount.toStringAsFixed(9)} MWC';
   }
 
   @override
@@ -213,7 +213,7 @@ class _TransactionViewState extends State<TransactionView> {
                         
                         // Check against spendable balance.
                         if (_balance?.spendable != null) {
-                          final spendableMwc = _balance!.spendable! / 1000000000;
+                          final spendableMwc = _balance!.spendable!;
                           if (amount > spendableMwc) {
                             return 'Amount exceeds spendable balance';
                           }
