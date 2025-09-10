@@ -2311,6 +2311,21 @@ fn _tx_init_core(
     };
 
     let slate = api.init_send_tx(keychain_mask.as_ref(), &args, 1)?;
+
+    // Lock selected outputs to preserve context for finalize (mirrors mwc713 file/offline flow).
+    {
+        wallet_lock!(wallet, w);
+        // Lock selected outputs to preserve TX context prior to sending S1.
+        // Address tag is informational.
+        mwc_wallet_libwallet::owner::tx_lock_outputs(
+            &mut **w,
+            None,
+            &slate,
+            Some("offline".to_string()),
+            0,
+            false,
+        )?;
+    }
     Ok(serde_json::to_string(&slate).unwrap())
 }
 
