@@ -92,6 +92,31 @@ typedef TxHttpSend = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
 typedef TxHttpSendFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
     Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>);
 
+typedef EncodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef EncodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef EncodeSlatepackEnhanced = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+typedef EncodeSlatepackEnhancedFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
+
+typedef DecodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>);
+typedef DecodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>);
+
+typedef DecodeSlatepackEnhanced = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef DecodeSlatepackEnhancedFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef TxReceive = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef TxReceiveFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef TxFinalize = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef TxFinalizeFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+
+typedef TxInit = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Int8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>);
+typedef TxInitFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Int8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>);
+
 final WalletMnemonic _walletMnemonic = mwcNative
     .lookup<NativeFunction<WalletMnemonicFFI>>("get_mnemonic")
     .asFunction();
@@ -296,7 +321,90 @@ Future<String> txHttpSend(
       .toDartString();
 }
 
+final EncodeSlatepack _encodeSlatepack = mwcNative
+    .lookup<NativeFunction<EncodeSlatepackFFI>>("rust_encode_slatepack")
+    .asFunction();
 
+Future<String> encodeSlatepack(
+    String slateJson,
+    String? recipientAddress) async {
+  return _encodeSlatepack(
+      slateJson.toNativeUtf8(),
+      (recipientAddress ?? "").toNativeUtf8())
+      .toDartString();
+}
+
+final EncodeSlatepackEnhanced _encodeSlatepackEnhanced = mwcNative
+    .lookup<NativeFunction<EncodeSlatepackEnhancedFFI>>("rust_encode_slatepack_enhanced")
+    .asFunction();
+
+Future<String> encodeSlatepackEnhanced(
+    String wallet,
+    String slateJson,
+    String recipientAddress) async {
+  return _encodeSlatepackEnhanced(
+      wallet.toNativeUtf8(),
+      slateJson.toNativeUtf8(),
+      recipientAddress.toNativeUtf8())
+      .toDartString();
+}
+
+final DecodeSlatepack _decodeSlatepack = mwcNative
+    .lookup<NativeFunction<DecodeSlatepackFFI>>("rust_decode_slatepack")
+    .asFunction();
+
+Future<String> decodeSlatepack(String slatepack) async {
+  return _decodeSlatepack(slatepack.toNativeUtf8())
+      .toDartString();
+}
+
+final DecodeSlatepackEnhanced _decodeSlatepackEnhanced = mwcNative
+    .lookup<NativeFunction<DecodeSlatepackEnhancedFFI>>("rust_decode_slatepack_enhanced")
+    .asFunction();
+
+Future<String> decodeSlatepackEnhanced(String wallet, String slatepack) async {
+  return _decodeSlatepackEnhanced(
+      wallet.toNativeUtf8(),
+      slatepack.toNativeUtf8())
+      .toDartString();
+}
+
+final TxReceive _txReceive = mwcNative
+    .lookup<NativeFunction<TxReceiveFFI>>("rust_tx_receive")
+    .asFunction();
+
+String txReceive(String wallet, String slateJson) {
+  return _txReceive(wallet.toNativeUtf8(), slateJson.toNativeUtf8())
+      .toDartString();
+}
+
+final TxFinalize _txFinalize = mwcNative
+    .lookup<NativeFunction<TxFinalizeFFI>>("rust_tx_finalize")
+    .asFunction();
+
+String txFinalize(String wallet, String slateJson) {
+  return _txFinalize(wallet.toNativeUtf8(), slateJson.toNativeUtf8())
+      .toDartString();
+}
+
+final TxInit _txInit = mwcNative
+    .lookup<NativeFunction<TxInitFFI>>("rust_tx_init")
+    .asFunction();
+
+Future<String> txInit(
+    String wallet,
+    int selectionStrategyIsAll,
+    int minimumConfirmations,
+    String message,
+    int amount) async {
+  return _txInit(
+      wallet.toNativeUtf8(),
+      selectionStrategyIsAll.toString().toNativeUtf8().cast<Int8>(),
+      minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
+      message.toNativeUtf8(),
+      amount.toString().toNativeUtf8().cast<Int8>())
+      .toDartString();
+}
 
 
 

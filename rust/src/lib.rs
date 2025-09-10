@@ -19,7 +19,8 @@ use mwc_wallet_util::mwc_core::global;
 use mwc_util::file::get_first_line;
 use mwc_wallet_util::mwc_util::ZeroingString;
 use mwc_util::Mutex;
-use mwc_wallet_libwallet::{scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress};
+use mwc_wallet_libwallet::{scan, wallet_lock, NodeClient, WalletInst, WalletLCProvider, Error, proof::proofaddress as proofaddress, Slate};
+use mwc_wallet_libwallet::internal;
 use mwc_wallet_controller::{controller, Error as MWCWalletControllerError};
 
 use mwc_wallet_util::mwc_keychain::{Keychain, ExtKeychain};
@@ -31,6 +32,8 @@ use mwc_util::secp::key::SecretKey;
 use ed25519_dalek::{PublicKey as DalekPublicKey, SecretKey as DalekSecretKey};
 use android_logger::FilterBuilder;
 use mwc_wallet_impls::Subscriber;
+
+mod slatepack;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
@@ -1925,4 +1928,466 @@ pub unsafe extern "C" fn _listener_cancel(handler: *mut c_void) -> *const c_char
     let ptr = error_msg_ptr.as_ptr();
     std::mem::forget(error_msg_ptr);
     ptr
+}
+
+// ==================================================
+// SLATEPACK FUNCTIONS
+// ==================================================
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_encode_slatepack(
+    slate_json: *const c_char,
+    recipient_address: *const c_char,
+) -> *const c_char {
+    let result = match _encode_slatepack(
+        slate_json,
+        recipient_address,
+    ) {
+        Ok(slatepack_str) => {
+            slatepack_str
+        }, Err(e) => {
+            let error_msg = format!("Error: {}", &e.to_string());
+            let error_msg_ptr = CString::new(error_msg).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            ptr
+        }
+    };
+    result
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_encode_slatepack_enhanced(
+    wallet: *const c_char,
+    slate_json: *const c_char,
+    recipient_address: *const c_char,
+) -> *const c_char {
+    let result = match _encode_slatepack_enhanced(
+        wallet,
+        slate_json,
+        recipient_address,
+    ) {
+        Ok(slatepack_str) => {
+            slatepack_str
+        }, Err(e) => {
+            let error_msg = format!("Error: {}", &e.to_string());
+            let error_msg_ptr = CString::new(error_msg).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            ptr
+        }
+    };
+    result
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_decode_slatepack(
+    slatepack_str: *const c_char,
+) -> *const c_char {
+    let result = match _decode_slatepack(slatepack_str) {
+        Ok(result_json) => {
+            result_json
+        }, Err(e) => {
+            // Return proper JSON error response matching SlatepackDecodeResult structure.
+            let error_response = serde_json::json!({
+                "slate_json": "",
+                "sender": null,
+                "recipient": null,
+                "success": false,
+                "error": e.to_string()
+            });
+            let error_json = serde_json::to_string(&error_response).unwrap_or_else(|_| 
+                format!(r#"{{"slate_json":"","success":false,"error":"{}"}}"#, e.to_string())
+            );
+            let error_msg_ptr = CString::new(error_json).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            ptr
+        }
+    };
+    result
+}
+
+// Wallet-aware slatepack decode that can decrypt when wallet keys are available.
+#[no_mangle]
+pub unsafe extern "C" fn rust_decode_slatepack_enhanced(
+    wallet: *const c_char,
+    slatepack_str: *const c_char,
+) -> *const c_char {
+    let c_wallet = CStr::from_ptr(wallet);
+    let c_slatepack = CStr::from_ptr(slatepack_str);
+
+    let wallet_str = c_wallet.to_str().unwrap();
+    let slatepack = c_slatepack.to_str().unwrap();
+
+    let parsed: Result<(i64, Option<SecretKey>), _> = serde_json::from_str(wallet_str);
+    if parsed.is_err() {
+        let error_response = serde_json::json!({
+            "slate_json": "",
+            "sender": null,
+            "recipient": null,
+            "success": false,
+            "error": format!("Failed to parse wallet handle: {}", parsed.err().unwrap())
+        });
+        let error_json = CString::new(serde_json::to_string(&error_response).unwrap()).unwrap();
+        let ptr = error_json.as_ptr();
+        std::mem::forget(error_json);
+        return ptr;
+    }
+
+    let (wlt, _sek) = parsed.unwrap();
+    ensure_wallet!(wlt, wallet);
+
+    let result = match slatepack::decode_slatepack_with_wallet(slatepack, Some(&wallet)) {
+        Ok((slate_json, sender_info, recipient_info)) => {
+            let decode_response = serde_json::json!({
+                "slate_json": slate_json,
+                "sender": sender_info,
+                "recipient": recipient_info
+            });
+            let result_json = serde_json::to_string(&decode_response)
+                .map_err(|e| Error::GenericError(format!("Failed to serialize decode result: {}", e)));
+            match result_json {
+                Ok(s) => {
+                    let out = CString::new(s).unwrap();
+                    let p = out.as_ptr();
+                    std::mem::forget(out);
+                    p
+                }
+                Err(e) => {
+                    let error_response = serde_json::json!({
+                        "slate_json": "",
+                        "sender": null,
+                        "recipient": null,
+                        "success": false,
+                        "error": e.to_string()
+                    });
+                    let err = CString::new(serde_json::to_string(&error_response).unwrap()).unwrap();
+                    let p = err.as_ptr();
+                    std::mem::forget(err);
+                    p
+                }
+            }
+        }
+        Err(e) => {
+            let error_response = serde_json::json!({
+                "slate_json": "",
+                "sender": null,
+                "recipient": null,
+                "success": false,
+                "error": e.to_string()
+            });
+            let err = CString::new(serde_json::to_string(&error_response).unwrap()).unwrap();
+            let p = err.as_ptr();
+            std::mem::forget(err);
+            p
+        }
+    };
+
+    result
+}
+
+unsafe fn _encode_slatepack(
+    slate_json: *const c_char,
+    recipient_address: *const c_char,
+) -> Result<*const c_char, Error> {
+    let c_slate_json = CStr::from_ptr(slate_json);
+    let c_recipient_address = CStr::from_ptr(recipient_address);
+
+    let str_slate_json = c_slate_json.to_str().unwrap();
+    let str_recipient_address = c_recipient_address.to_str().unwrap();
+
+    // Convert empty string to None for recipient address.
+    let recipient_opt = if str_recipient_address.is_empty() {
+        None
+    } else {
+        Some(str_recipient_address)
+    };
+
+    let slatepack_str = slatepack::encode_slatepack(str_slate_json, recipient_opt)?;
+
+    let result = CString::new(slatepack_str).unwrap();
+    let ptr = result.as_ptr();
+    std::mem::forget(result);
+    Ok(ptr)
+}
+
+// ==================================================
+// TX RECEIVE / FINALIZE (Slatepack Step 2 and 3)
+// ==================================================
+
+fn _tx_receive_core(
+    wallet: &Wallet,
+    keychain_mask: Option<SecretKey>,
+    slate_json: &str,
+) -> Result<String, Error> {
+    // Inflate & upgrade slate
+    let mut slate = Slate::deserialize_upgrade_plain(slate_json)?;
+
+    // Use libwallet foreign receive directly (matches mwc713).
+    // Scope the wallet lock guard so it is released before Owner API calls
+    // to avoid deadlocks.
+    let updated_slate = {
+        wallet_lock!(wallet, w);
+        let dest_acct_name: Option<String> = None; // or Some("default".to_string())
+        let received = mwc_wallet_libwallet::foreign::receive_tx(
+            &mut **w,
+            keychain_mask.as_ref(),
+            &mut slate,
+            None,                 // address
+            None,                 // key_id
+            None,                 // output_amounts
+            &dest_acct_name,      // dest account name
+            None,                 // message
+            false,                // use_test_rng = false
+            true,                 // update_current_height = true
+        )?;
+        received.0
+    };
+
+    // Build the same composite tuple shape as init_send does: (txs_json, slate_json)
+    let owner_api = Owner::new(wallet.clone(), None, None);
+    let txs = owner_api.retrieve_txs(
+        keychain_mask.as_ref(),
+        false,                 // refresh_from_node
+        None,                  // tx_id
+        Some(updated_slate.id),// tx_slate_id
+        None                   // include_cancelled
+    )?;
+
+    let pair = (
+        serde_json::to_string(&txs.1).unwrap(),
+        serde_json::to_string(&updated_slate).unwrap(),
+    );
+    Ok(serde_json::to_string(&pair).unwrap())
+}
+
+fn _tx_finalize_core(
+    wallet: &Wallet,
+    keychain_mask: Option<SecretKey>,
+    slate_json: &str,
+) -> Result<String, Error> {
+    // Inflate & upgrade slate
+    let slate = Slate::deserialize_upgrade_plain(slate_json)?;
+
+    // Finalize (and post via node as configured inside wallet/lib)
+    let owner_api = Owner::new(wallet.clone(), None, None);
+    let finalized = owner_api.finalize_tx(keychain_mask.as_ref(), &slate)?;
+
+    // Build the same composite tuple shape as init_send does: (txs_json, slate_json)
+    let txs = owner_api.retrieve_txs(
+        keychain_mask.as_ref(),
+        false,                 // refresh_from_node
+        None,                  // tx_id
+        Some(finalized.id),    // tx_slate_id
+        None                   // include_cancelled
+    )?;
+
+    let pair = (
+        serde_json::to_string(&txs.1).unwrap(),
+        serde_json::to_string(&finalized).unwrap(),
+    );
+    Ok(serde_json::to_string(&pair).unwrap())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_tx_receive(
+    wallet: *const c_char,
+    slate_json: *const c_char,
+) -> *const c_char {
+    let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
+    let slate_str = CStr::from_ptr(slate_json).to_str().unwrap();
+
+    let (wlt, sek_key): (i64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
+    ensure_wallet!(wlt, wallet);
+
+    let out = match _tx_receive_core(&wallet, sek_key.clone(), slate_str) {
+        Ok(processed_slate) => {
+            // Keep shape: (<slate_json>, {"slate_msg":""})
+            let empty_json = r#"{\"slate_msg\": \"\"}"#;
+            let response_tuple = (&processed_slate, &empty_json);
+            serde_json::to_string(&response_tuple).unwrap()
+        }
+        Err(e) => format!("Error {}", e),
+    };
+
+    let c_out = CString::new(out).unwrap();
+    let p = c_out.as_ptr();
+    std::mem::forget(c_out);
+    p
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn rust_tx_finalize(
+    wallet: *const c_char,
+    slate_json: *const c_char,
+) -> *const c_char {
+    let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
+    let slate_str = CStr::from_ptr(slate_json).to_str().unwrap();
+
+    let (wlt, sek_key): (i64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
+    ensure_wallet!(wlt, wallet);
+
+    let out = match _tx_finalize_core(&wallet, sek_key.clone(), slate_str) {
+        Ok(final_slate) => {
+            let empty_json = r#"{\"slate_msg\": \"\"}"#;
+            let response_tuple = (&final_slate, &empty_json);
+            serde_json::to_string(&response_tuple).unwrap()
+        }
+        Err(e) => format!("Error {}", e),
+    };
+
+    let c_out = CString::new(out).unwrap();
+    let p = c_out.as_ptr();
+    std::mem::forget(c_out);
+    p
+}
+
+// Initialize a send transaction without finalizing/posting (produce S1 slate JSON).
+#[no_mangle]
+pub unsafe extern "C" fn rust_tx_init(
+    wallet: *const c_char,
+    selection_strategy_is_use_all: *const c_char,
+    minimum_confirmations: *const c_char,
+    message: *const c_char,
+    amount: *const c_char,
+) -> *const c_char {
+    let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
+    let (wlt, sek_key): (i64, Option<SecretKey>) = match serde_json::from_str(wallet_str) {
+        Ok(data) => data,
+        Err(e) => {
+            let err = CString::new(format!("Error: Failed to parse wallet handle: {}", e)).unwrap();
+            let p = err.as_ptr();
+            std::mem::forget(err);
+            return p;
+        }
+    };
+    ensure_wallet!(wlt, wallet);
+
+    let c_use_all = CStr::from_ptr(selection_strategy_is_use_all);
+    let use_all_flag: u64 = c_use_all.to_str().unwrap().parse().unwrap_or(0);
+    let use_all = use_all_flag != 0;
+
+    let c_min_conf = CStr::from_ptr(minimum_confirmations);
+    let min_conf: u64 = c_min_conf.to_str().unwrap().parse().unwrap_or(1);
+
+    let c_msg = CStr::from_ptr(message);
+    let msg_str = c_msg.to_str().unwrap_or("");
+
+    let c_amount = CStr::from_ptr(amount);
+    let amount_val: u64 = match c_amount.to_str().unwrap_or("0").parse() { Ok(v) => v, Err(_) => 0 };
+
+    let out = match _tx_init_core(&wallet, sek_key.clone(), use_all, min_conf, msg_str, amount_val) {
+        Ok(s) => s,
+        Err(e) => format!("Error: {}", e),
+    };
+    let c_out = CString::new(out).unwrap();
+    let p = c_out.as_ptr();
+    std::mem::forget(c_out);
+    p
+}
+
+fn _tx_init_core(
+    wallet: &Wallet,
+    keychain_mask: Option<SecretKey>,
+    selection_strategy_is_use_all: bool,
+    minimum_confirmations: u64,
+    message: &str,
+    amount: u64,
+) -> Result<String, Error> {
+    let api = Owner::new(wallet.clone(), None, None);
+    let message_opt = if message.is_empty() { None } else { Some(message.to_string()) };
+
+    let args = InitTxArgs {
+        src_acct_name: Some("default".to_string()),
+        amount,
+        minimum_confirmations,
+        max_outputs: 500,
+        num_change_outputs: 1,
+        selection_strategy_is_use_all,
+        message: message_opt,
+        send_args: None, // Produce offline S1.
+        ..Default::default()
+    };
+
+    let slate = api.init_send_tx(keychain_mask.as_ref(), &args, 1)?;
+
+    // Lock selected outputs to preserve context for finalize (mirrors mwc713 file/offline flow).
+    {
+        wallet_lock!(wallet, w);
+        // Lock selected outputs to preserve TX context prior to sending S1.
+        // Address tag is informational.
+        mwc_wallet_libwallet::owner::tx_lock_outputs(
+            &mut **w,
+            None,
+            &slate,
+            Some("offline".to_string()),
+            0,
+            false,
+        )?;
+    }
+    Ok(serde_json::to_string(&slate).unwrap())
+}
+
+unsafe fn _encode_slatepack_enhanced(
+    wallet: *const c_char,
+    slate_json: *const c_char,
+    recipient_address: *const c_char,
+) -> Result<*const c_char, Error> {
+    let c_wallet = CStr::from_ptr(wallet);
+    let c_slate_json = CStr::from_ptr(slate_json);
+    let c_recipient_address = CStr::from_ptr(recipient_address);
+
+    let str_wallet = c_wallet.to_str().unwrap();
+    let str_slate_json = c_slate_json.to_str().unwrap();
+    let str_recipient_address = c_recipient_address.to_str().unwrap();
+
+    // Parse wallet handle.
+    let wallet_handle: (u64, Option<u64>) = serde_json::from_str(str_wallet)
+        .map_err(|e| Error::GenericError(format!("Failed to parse wallet handle: {}", e)))?;
+    
+    // Get wallet instance.
+    let wallet_ptr = wallet_handle.0 as *mut Wallet;
+    let wallet_instance = &*(wallet_ptr);
+
+    // Convert empty string to None for recipient address.
+    let recipient_opt = if str_recipient_address.is_empty() {
+        None
+    } else {
+        Some(str_recipient_address)
+    };
+
+    let slatepack_str = slatepack::encode_slatepack_with_wallet(
+        str_slate_json, 
+        recipient_opt,
+        Some(wallet_instance)
+    )?;
+
+    let result = CString::new(slatepack_str).unwrap();
+    let ptr = result.as_ptr();
+    std::mem::forget(result);
+    Ok(ptr)
+}
+
+unsafe fn _decode_slatepack(
+    slatepack_str: *const c_char,
+) -> Result<*const c_char, Error> {
+    let c_slatepack_str = CStr::from_ptr(slatepack_str);
+    let str_slatepack_str = c_slatepack_str.to_str().unwrap();
+
+    let (slate_json, sender_info, recipient_info) = slatepack::decode_slatepack(str_slatepack_str)?;
+    
+    let decode_response = serde_json::json!({
+        "slate_json": slate_json,
+        "sender": sender_info,
+        "recipient": recipient_info
+    });
+
+    let result_json = serde_json::to_string(&decode_response)
+        .map_err(|e| Error::GenericError(format!("Failed to serialize decode result: {}", e)))?;
+
+    let result = CString::new(result_json).unwrap();
+    let ptr = result.as_ptr();
+    std::mem::forget(result);
+    Ok(ptr)
 }
