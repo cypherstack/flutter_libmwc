@@ -23,7 +23,7 @@ class _CreateWalletViewState extends State<CreateWalletView> {
   @override
   void initState() {
     super.initState();
-    _generateMnemonic();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _generateMnemonic());
   }
 
   @override
@@ -37,7 +37,7 @@ class _CreateWalletViewState extends State<CreateWalletView> {
   void _generateMnemonic() {
     try {
       _generatedMnemonic = WalletService.generateMnemonic();
-      setState(() {});
+      if (mounted) setState(() {});
     } catch (e) {
       _showErrorDialog('Failed to generate mnemonic: $e');
     }
@@ -46,9 +46,10 @@ class _CreateWalletViewState extends State<CreateWalletView> {
   Future<void> _createWallet() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isCreating = true;
-    });
+    if (mounted)
+      setState(() {
+        _isCreating = true;
+      });
 
     try {
       final result = await WalletService.createWallet(
@@ -65,9 +66,10 @@ class _CreateWalletViewState extends State<CreateWalletView> {
     } catch (e) {
       _showErrorDialog('Failed to create wallet: $e');
     } finally {
-      setState(() {
-        _isCreating = false;
-      });
+      if (mounted)
+        setState(() {
+          _isCreating = false;
+        });
     }
   }
 
