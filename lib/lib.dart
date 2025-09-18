@@ -34,16 +34,7 @@ abstract class Libmwc {
   /// Check if [address] is a valid mwc address according to libmwc
   ///
   static bool validateSendAddress({required String address}) {
-    final String validate = lib_mwc.validateSendAddress(address);
-    if (int.parse(validate) == 1) {
-      // Check if address contains a domain
-      if (address.contains("@")) {
-        return true;
-      }
-      return false;
-    } else {
-      return false;
-    }
+    return int.tryParse(lib_mwc.validateSendAddress(address)) == 1;
   }
 
   ///
