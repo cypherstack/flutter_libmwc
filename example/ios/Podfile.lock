@@ -1,34 +1,35 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_libepiccash (0.0.1):
+  - flutter_libmwc (0.0.1):
     - Flutter
-  - flutter_secure_storage (3.3.1):
+  - flutter_secure_storage (6.0.0):
     - Flutter
-  - path_provider_ios (0.0.1):
+  - path_provider_foundation (0.0.1):
     - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_libepiccash (from `.symlinks/plugins/flutter_libepiccash/ios`)
+  - flutter_libmwc (from `.symlinks/plugins/flutter_libmwc/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
-  - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_libepiccash:
-    :path: ".symlinks/plugins/flutter_libepiccash/ios"
+  flutter_libmwc:
+    :path: ".symlinks/plugins/flutter_libmwc/ios"
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
-  path_provider_ios:
-    :path: ".symlinks/plugins/path_provider_ios/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
 
 SPEC CHECKSUMS:
-  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
-  flutter_libepiccash: 150a44e20a26cfd98693fe14c08a74be5bf1e429
-  flutter_secure_storage: 7953c38a04c3fdbb00571bcd87d8e3b5ceb9daec
-  path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_libmwc: f4da999f066aca84a1cf36ee7a07783d6fd60bd0
+  flutter_secure_storage: 23fc622d89d073675f2eaa109381aefbcf5a49be
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: c4c93c5f6502fe2754f48404d3594bf779584011
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.16.2
