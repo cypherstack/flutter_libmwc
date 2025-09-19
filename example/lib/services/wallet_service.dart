@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_libmwc/lib.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Wallet service that wraps the same FFI functions used in the test battery
 /// to provide user-friendly wallet operations.
@@ -26,9 +27,9 @@ class WalletService {
   }) async {
     try {
       _logInfo('Creating wallet: $walletName');
-      
+
       // Use same configuration pattern as test battery.
-      final config = _getWalletConfig(walletName);
+      final config = await _getWalletConfig(walletName);
       final mnemonic = customMnemonic ?? Libmwc.getMnemonic();
       
       // Use the same FFI function as test battery.
@@ -74,9 +75,9 @@ class WalletService {
   }) async {
     try {
       _logInfo('Recovering wallet: $walletName');
-      
+
       // Use same configuration pattern as test battery.
-      final config = _getWalletConfig(walletName);
+      final config = await _getWalletConfig(walletName);
       
       // Use the same FFI function as test battery.
       await Libmwc.recoverWallet(
@@ -119,9 +120,9 @@ class WalletService {
   }) async {
     try {
       _logInfo('Opening wallet: $walletName');
-      
+
       // Use same configuration pattern as test battery.
-      final config = _getWalletConfig(walletName);
+      final config = await _getWalletConfig(walletName);
       
       // Use the same FFI function as test battery.
       final result = await Libmwc.openWallet(
@@ -240,7 +241,7 @@ class WalletService {
         return null;
       }
 
-      final config = _getWalletConfig(_currentWalletName!);
+      final config = await _getWalletConfig(_currentWalletName!);
       return await Libmwc.getChainHeight(config: config);
       
     } catch (e) {
@@ -519,9 +520,9 @@ class WalletService {
   }
 
 /// Get wallet configuration using same pattern as test battery.
-  static String _getWalletConfig(String walletName) {
-    final walletDir = _getWalletDirectory(walletName);
-    
+  static Future<String> _getWalletConfig(String walletName) async {
+    final walletDir = await _getWalletDirectory(walletName);
+
     // Use same configuration pattern as test battery.
     final config = {
       'wallet_dir': walletDir,
@@ -529,16 +530,18 @@ class WalletService {
       'chain': 'mainnet',
       'account': 'default',
     };
-    
+
     return jsonEncode(config);
   }
 
-/// Get wallet directory path using same pattern as test battery.
-  static String _getWalletDirectory(String walletName) {
+/// Get wallet directory path using proper platform directories.
+  static Future<String> _getWalletDirectory(String walletName) async {
     if (Platform.isAndroid) {
       return '/data/data/com.example.flutter_libmwc_example/files/wallets/$walletName/';
     } else if (Platform.isIOS) {
-      return '/var/mobile/Containers/Data/Application/wallets/$walletName/';
+      // Use proper iOS Application Support directory instead of hardcoded path.
+      final appSupportDir = await getApplicationSupportDirectory();
+      return '${appSupportDir.path}/wallets/$walletName/';
     } else if (Platform.isLinux) {
       return '/tmp/flutter_libmwc_wallets/$walletName/';
     } else if (Platform.isWindows) {

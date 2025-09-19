@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_libmwc/lib.dart';
 import 'package:flutter_libmwc/mwc.dart' as lib_mwc;
+import 'package:path_provider/path_provider.dart';
 import '../models/test_result.dart';
 
 /// Comprehensive FFI integration test service.
@@ -149,7 +150,7 @@ class FFITestService {
       'Wallet Configuration',
       'Test wallet configuration creation and validation',
       () async {
-        final testConfig = _getTestWalletConfig();
+        final testConfig = await _getTestWalletConfig();
         if (testConfig.isEmpty) {
           throw TestException('Failed to create test wallet configuration');
         }
@@ -172,7 +173,7 @@ class FFITestService {
       'Test new wallet creation via FFI',
       () async {
         final testMnemonic = Libmwc.getMnemonic();
-        final testConfig = _getTestWalletConfig();
+        final testConfig = await _getTestWalletConfig();
         final testPassword = 'test_password_123';
         final walletName = 'ffi_test_wallet_${DateTime.now().millisecondsSinceEpoch}';
         
@@ -206,7 +207,7 @@ class FFITestService {
       'Test wallet recovery from mnemonic via FFI',
       () async {
         final testMnemonic = Libmwc.getMnemonic();
-        final testConfig = _getTestWalletConfig();
+        final testConfig = await _getTestWalletConfig();
         final testPassword = 'recovery_test_123';
         final walletName = 'ffi_recovery_test_${DateTime.now().millisecondsSinceEpoch}';
         
@@ -235,7 +236,7 @@ class FFITestService {
       'Chain Height Query',
       'Test chain height retrieval via FFI using remote MWC node',
       () async {
-        final testConfig = _getTestWalletConfig();
+        final testConfig = await _getTestWalletConfig();
         
         try {
           final height = await Libmwc.getChainHeight(config: testConfig);
@@ -310,7 +311,7 @@ class FFITestService {
       () async {
         try {
           // Test that we can create test configuration without errors.
-          final testConfig = _getTestWalletConfig();
+          final testConfig = await _getTestWalletConfig();
           
           if (!testConfig.contains('wallet_dir') || 
               !testConfig.contains('check_node_api_http_addr') ||
@@ -897,14 +898,15 @@ class FFITestService {
   }
   
   /// Get test wallet configuration.
-  static String _getTestWalletConfig() {
+  static Future<String> _getTestWalletConfig() async {
+    final walletDir = await _getTestWalletDir();
     final config = {
-      'wallet_dir': _getTestWalletDir(),
+      'wallet_dir': walletDir,
       'check_node_api_http_addr': 'https://mwc713.mwc.mw:443', // Working remote node.
       'chain': 'mainnet', // Use mainnet since remote node is mainnet.
       'account': 'default',
     };
-    
+
     return '{"wallet_dir":"${config['wallet_dir']}","check_node_api_http_addr":"${config['check_node_api_http_addr']}","chain":"${config['chain']}","account":"${config['account']}"}';
   }
   
@@ -963,11 +965,13 @@ class FFITestService {
   }
   
   /// Get appropriate test wallet directory for current platform.
-  static String _getTestWalletDir() {
+  static Future<String> _getTestWalletDir() async {
     if (Platform.isAndroid) {
       return '/data/data/com.example.flutter_libmwc_example/files/ffi_test_wallets/';
     } else if (Platform.isIOS) {
-      return '/var/mobile/Containers/Data/Application/ffi_test_wallets/';
+      // Use proper iOS Application Support directory instead of hardcoded path
+      final appSupportDir = await getApplicationSupportDirectory();
+      return '${appSupportDir.path}/ffi_test_wallets/';
     } else if (Platform.isLinux) {
       return '/tmp/flutter_libmwc_ffi_test_wallets/';
     } else if (Platform.isWindows) {
