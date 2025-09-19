@@ -273,7 +273,7 @@ fn _open_wallet(
         Ok(res) => {
             let wlt = res.0;
             let sek_key = res.1;
-            let wallet_int = Box::into_raw(Box::new(wlt)) as i64;
+            let wallet_int = Box::into_raw(Box::new(wlt)) as u64;
             let wallet_data = (wallet_int, sek_key);
             let wallet_ptr = serde_json::to_string(&wallet_data).unwrap();
             result.push_str(&wallet_ptr);
@@ -312,7 +312,7 @@ pub unsafe extern "C"  fn rust_wallet_balances(
     };
 
     let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -446,7 +446,7 @@ pub unsafe extern "C" fn rust_wallet_scan_outputs(
     let number_of_blocks: u64 = c_number_of_blocks.to_str().unwrap().to_string().parse().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -517,7 +517,7 @@ pub unsafe extern "C" fn rust_create_tx(
     let key_index: u32 = CStr::from_ptr(secret_key_index).to_str().unwrap().parse().unwrap();
     let mwcmqs_config = CStr::from_ptr(mwcmqs_config).to_str().unwrap();
 
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
 
     let listen = Listener {
         wallet_ptr_str: wallet_data.to_string(),
@@ -607,7 +607,7 @@ pub unsafe extern "C" fn rust_txs_get(
     };
 
     let wallet_data = c_wallet.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -668,7 +668,7 @@ pub unsafe extern "C" fn rust_tx_cancel(
     let uuid = Uuid::parse_str(tx_id).map_err(|e| MWCWalletControllerError::GenericError(e.to_string())).unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -857,7 +857,7 @@ pub unsafe extern "C" fn rust_tx_send_http(
     let str_address = c_address.to_str().unwrap();
 
     let wallet_data = c_wallet.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
     ensure_wallet!(wlt, wallet);
@@ -929,7 +929,7 @@ pub unsafe extern "C" fn rust_get_wallet_address(
     let index: u32 = index.to_str().unwrap().to_string().parse().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -1007,7 +1007,7 @@ pub unsafe extern "C" fn rust_get_tx_fees(
     let amount: u64 = amount.to_str().unwrap().to_string().parse().unwrap();
 
     let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -1840,7 +1840,7 @@ pub fn tx_send_http(
 #[derive(Debug, Clone)]
 pub struct Listener {
     pub wallet_ptr_str: String,
-    // pub wallet_data: (i64, Option<SecretKey>),
+    // pub wallet_data: (u64, Option<SecretKey>),
     pub mwcmqs_config: String
 }
 
@@ -1850,7 +1850,7 @@ impl Task for Listener {
 
     fn run(&self, cancel_tok: &CancellationToken) -> Result<Self::Output, anyhow::Error> {
         let mut spins = 0;
-        let tuple_wallet_data: (i64, Option<SecretKey>) = serde_json::from_str(&self.wallet_ptr_str)?;
+        let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(&self.wallet_ptr_str)?;
         let wlt = tuple_wallet_data.0;
         let sek_key = tuple_wallet_data.1;
         let mwcmqs_conf = serde_json::from_str::<MQSConfig>(&self.mwcmqs_config)?;
@@ -2020,7 +2020,7 @@ pub unsafe extern "C" fn rust_decode_slatepack_enhanced(
     let wallet_str = c_wallet.to_str().unwrap();
     let slatepack = c_slatepack.to_str().unwrap();
 
-    let parsed: Result<(i64, Option<SecretKey>), _> = serde_json::from_str(wallet_str);
+    let parsed: Result<(u64, Option<SecretKey>), _> = serde_json::from_str(wallet_str);
     if parsed.is_err() {
         let error_response = serde_json::json!({
             "slate_json": "",
@@ -2198,7 +2198,7 @@ pub unsafe extern "C" fn rust_tx_receive(
     let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
     let slate_str = CStr::from_ptr(slate_json).to_str().unwrap();
 
-    let (wlt, sek_key): (i64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
+    let (wlt, sek_key): (u64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
     ensure_wallet!(wlt, wallet);
 
     let out = match _tx_receive_core(&wallet, sek_key.clone(), slate_str) {
@@ -2225,7 +2225,7 @@ pub unsafe extern "C" fn rust_tx_finalize(
     let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
     let slate_str = CStr::from_ptr(slate_json).to_str().unwrap();
 
-    let (wlt, sek_key): (i64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
+    let (wlt, sek_key): (u64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
     ensure_wallet!(wlt, wallet);
 
     let out = match _tx_finalize_core(&wallet, sek_key.clone(), slate_str) {
@@ -2253,7 +2253,7 @@ pub unsafe extern "C" fn rust_tx_init(
     amount: *const c_char,
 ) -> *const c_char {
     let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
-    let (wlt, sek_key): (i64, Option<SecretKey>) = match serde_json::from_str(wallet_str) {
+    let (wlt, sek_key): (u64, Option<SecretKey>) = match serde_json::from_str(wallet_str) {
         Ok(data) => data,
         Err(e) => {
             let err = CString::new(format!("Error: Failed to parse wallet handle: {}", e)).unwrap();
