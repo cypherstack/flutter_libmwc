@@ -176,11 +176,21 @@ pub unsafe extern "C" fn mwc_wallet_init(
 
     let result = match _wallet_init(config, mnemonic, password, name) {
         Ok(created) => {
-            created
+            // Validate that the created result is actually a valid wallet handle before returning
+            let handle_str = unsafe { CStr::from_ptr(created).to_str().unwrap_or("") };
+            if is_valid_wallet_handle(handle_str) {
+                created
+            } else {
+                let error_msg = format!("LibWallet Error: Invalid wallet handle created during initialization: '{}'", handle_str);
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
         }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
+            let error_msg = format!("LibWallet Error: {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+            let ptr = error_msg_ptr.as_ptr();
             std::mem::forget(error_msg_ptr);
             ptr
         }
@@ -226,6 +236,7 @@ fn _wallet_init(
     password: *const c_char,
     name: *const c_char
 ) -> Result<*const c_char, Error> {
+    // println!("[WALLET_INIT] Starting wallet initialization");
 
     let config = unsafe { CStr::from_ptr(config) };
     let mnemonic = unsafe { CStr::from_ptr(mnemonic) };
@@ -233,38 +244,76 @@ fn _wallet_init(
     let name = unsafe { CStr::from_ptr(name) };
 
     let str_password = match password.to_str() {
-        Ok(str_pass) => {str_pass}, Err(e) => {return Err(
-            Error::GenericError(format!("{}", e.to_string()))
-        )}
+        Ok(str_pass) => {
+            // println!("[WALLET_INIT] Password parsed successfully (length: {})", str_pass.len());
+            str_pass
+        }, Err(e) => {
+            // println!("[WALLET_INIT] ERROR: Failed to parse password: {}", e.to_string());
+            return Err(Error::GenericError(format!("Failed to parse password: {}", e.to_string())))
+        }
     };
 
     let str_config = match config.to_str() {
-        Ok(str_conf) => {str_conf}, Err(e) => {return Err(
-            Error::GenericError(format!("{}", e.to_string()))
-        )}
+        Ok(str_conf) => {
+            // println!("[WALLET_INIT] Config parsed successfully: {}", str_conf);
+            str_conf
+        }, Err(e) => {
+            // println!("[WALLET_INIT] ERROR: Failed to parse config: {}", e.to_string());
+            return Err(Error::GenericError(format!("Failed to parse config: {}", e.to_string())))
+        }
     };
 
     let phrase = match mnemonic.to_str() {
-        Ok(str_phrase) => {str_phrase}, Err(e) => {return Err(
-            Error::GenericError(format!("{}", e.to_string()))
-        )}
+        Ok(str_phrase) => {
+            // println!("[WALLET_INIT] Mnemonic parsed successfully (length: {})", str_phrase.len());
+            str_phrase
+        }, Err(e) => {
+            // println!("[WALLET_INIT] ERROR: Failed to parse mnemonic: {}", e.to_string());
+            return Err(Error::GenericError(format!("Failed to parse mnemonic: {}", e.to_string())))
+        }
     };
 
     let str_name = match name.to_str() {
-        Ok(str_name) => {str_name}, Err(e) => {return Err(
-            Error::GenericError(format!("{}", e.to_string()))
-        )}
+        Ok(str_name) => {
+            // println!("[WALLET_INIT] Wallet name parsed successfully: {}", str_name);
+            str_name
+        }, Err(e) => {
+            // println!("[WALLET_INIT] ERROR: Failed to parse wallet name: {}", e.to_string());
+            return Err(Error::GenericError(format!("Failed to parse wallet name: {}", e.to_string())))
+        }
     };
 
-    let mut create_msg = "".to_string();
+    // println!("[WALLET_INIT] Calling create_wallet function...");
+    let mut result = String::from("");
     match create_wallet(str_config, phrase, str_password, str_name) {
         Ok(_) => {
-            create_msg.push_str("");
+            // println!("[WALLET_INIT] Wallet created successfully, now attempting to open it...");
+
+            // After creating wallet, open it to get a proper handle
+            match open_wallet(&str_config, str_password) {
+                Ok(res) => {
+                    // println!("[WALLET_INIT] Wallet opened successfully after creation");
+                    let wlt = res.0;
+                    let sek_key = res.1;
+                    let wallet_int = Box::into_raw(Box::new(wlt)) as u64;
+                    let wallet_data = (wallet_int, sek_key);
+                    let wallet_ptr = serde_json::to_string(&wallet_data).unwrap();
+                    // println!("[WALLET_INIT] Wallet handle created successfully (length: {})", wallet_ptr.len());
+                    result.push_str(&wallet_ptr);
+                }
+                Err(err) => {
+                    // println!("[WALLET_INIT] ERROR: Failed to open wallet after creation: {}", err.to_string());
+                    return Err(err);
+                }
+            }
         },Err(e) => {
+            // println!("[WALLET_INIT] ERROR: Failed to create wallet: {}", e.to_string());
             return Err(e);
         }
     }
-    let s = CString::new(create_msg).unwrap();
+
+    // println!("[WALLET_INIT] Wallet initialization completed successfully");
+    let s = CString::new(result).unwrap();
     let p = s.as_ptr(); // Get a pointer to the underlaying memory for s
     std::mem::forget(s); // Give up the responsibility of cleaning up/freeing s
     Ok(p)
@@ -282,11 +331,21 @@ pub unsafe extern "C"  fn mwc_rust_open_wallet(
         password
     ) {
         Ok(wallet) => {
-            wallet
+            // Validate that the opened result is actually a valid wallet handle before returning
+            let handle_str = unsafe { CStr::from_ptr(wallet).to_str().unwrap_or("") };
+            if is_valid_wallet_handle(handle_str) {
+                wallet
+            } else {
+                let error_msg = format!("LibWallet Error: Invalid wallet handle created during open: '{}'", handle_str);
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
         }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
+            let error_msg = format!("LibWallet Error: {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+            let ptr = error_msg_ptr.as_ptr();
             std::mem::forget(error_msg_ptr);
             ptr
         }
@@ -298,27 +357,53 @@ fn _open_wallet(
     config: *const c_char,
     password: *const c_char,
 ) -> Result<*const c_char, Error> {
+    // println!("[WALLET_OPEN] Starting wallet opening process");
+
     let c_conf = unsafe { CStr::from_ptr(config) };
     let c_password = unsafe { CStr::from_ptr(password) };
 
-    let str_config = c_conf.to_str().unwrap();
-    let str_password = c_password.to_str().unwrap();
+    let str_config = match c_conf.to_str() {
+        Ok(conf) => {
+            // println!("[WALLET_OPEN] Config parsed successfully: {}", conf);
+            conf
+        },
+        Err(e) => {
+            // println!("[WALLET_OPEN] ERROR: Failed to parse config: {}", e.to_string());
+            return Err(Error::GenericError(format!("Failed to parse config: {}", e.to_string())));
+        }
+    };
 
+    let str_password = match c_password.to_str() {
+        Ok(pass) => {
+            // println!("[WALLET_OPEN] Password parsed successfully (length: {})", pass.len());
+            pass
+        },
+        Err(e) => {
+            // println!("[WALLET_OPEN] ERROR: Failed to parse password: {}", e.to_string());
+            return Err(Error::GenericError(format!("Failed to parse password: {}", e.to_string())));
+        }
+    };
+
+    // println!("[WALLET_OPEN] Calling open_wallet function...");
     let mut result = String::from("");
     match open_wallet(&str_config, str_password) {
         Ok(res) => {
+            // println!("[WALLET_OPEN] Wallet opened successfully");
             let wlt = res.0;
             let sek_key = res.1;
             let wallet_int = Box::into_raw(Box::new(wlt)) as u64;
             let wallet_data = (wallet_int, sek_key);
             let wallet_ptr = serde_json::to_string(&wallet_data).unwrap();
+            // println!("[WALLET_OPEN] Wallet handle created successfully (length: {})", wallet_ptr.len());
             result.push_str(&wallet_ptr);
         }
         Err(err) => {
+            // println!("[WALLET_OPEN] ERROR: Failed to open wallet: {}", err.to_string());
             return Err(err);
         }
     };
 
+    // println!("[WALLET_OPEN] Wallet opening completed successfully");
     let s = CString::new(result).unwrap();
     let p = s.as_ptr(); // Get a pointer to the underlaying memory for s
     std::mem::forget(s); // Give up the responsibility of cleaning up/freeing s
@@ -347,8 +432,10 @@ pub unsafe extern "C"  fn mwc_rust_wallet_balances(
         _=> true
     };
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -416,11 +503,21 @@ pub unsafe extern "C"  fn mwc_rust_recover_from_mnemonic(
         name
     ) {
         Ok(recovered) => {
-            recovered
+            // Validate that the recovered result is actually a valid wallet handle before returning
+            let handle_str = unsafe { CStr::from_ptr(recovered).to_str().unwrap_or("") };
+            if is_valid_wallet_handle(handle_str) {
+                recovered
+            } else {
+                let error_msg = format!("LibWallet Error: Invalid wallet handle created during recovery: '{}'", handle_str);
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
         }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
+            let error_msg = format!("LibWallet Error: {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+            let ptr = error_msg_ptr.as_ptr();
             std::mem::forget(error_msg_ptr);
             ptr
         }
@@ -481,8 +578,10 @@ pub unsafe extern "C" fn mwc_rust_wallet_scan_outputs(
     let start_height: u64 = c_start_height.to_str().unwrap().to_string().parse().unwrap();
     let number_of_blocks: u64 = c_number_of_blocks.to_str().unwrap().to_string().parse().unwrap();
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -545,7 +644,7 @@ pub unsafe extern "C" fn mwc_rust_create_tx(
     note: *const c_char
 ) -> *const c_char {
 
-    let wallet_data = CStr::from_ptr(wallet).to_str().unwrap();
+    let wallet_ptr = CStr::from_ptr(wallet);
     let min_confirmations: u64 = CStr::from_ptr(confirmations).to_str().unwrap().to_string().parse().unwrap();
     let amount: u64 = CStr::from_ptr(amount).to_str().unwrap().to_string().parse().unwrap();
     let address = CStr::from_ptr(to_address).to_str().unwrap();
@@ -553,10 +652,13 @@ pub unsafe extern "C" fn mwc_rust_create_tx(
     let key_index: u32 = CStr::from_ptr(secret_key_index).to_str().unwrap().parse().unwrap();
     let mwcmqs_config = CStr::from_ptr(mwcmqs_config).to_str().unwrap();
 
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
 
     let listen = Listener {
-        wallet_ptr_str: wallet_data.to_string(),
+        wallet_ptr_str: wallet_ptr.to_str().unwrap().to_string(),
         mwcmqs_config: mwcmqs_config.parse().unwrap()
     };
 
@@ -642,8 +744,10 @@ pub unsafe extern "C" fn mwc_rust_txs_get(
         _=> true
     };
 
-    let wallet_data = c_wallet.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&c_wallet) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -703,8 +807,10 @@ pub unsafe extern "C" fn mwc_rust_tx_cancel(
     let tx_id = tx_id.to_str().unwrap();
     let uuid = Uuid::parse_str(tx_id).map_err(|e| MWCWalletControllerError::GenericError(e.to_string())).unwrap();
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -892,8 +998,10 @@ pub unsafe extern "C" fn mwc_rust_tx_send_http(
     let c_address = CStr::from_ptr(address);
     let str_address = c_address.to_str().unwrap();
 
-    let wallet_data = c_wallet.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&c_wallet) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
     ensure_wallet!(wlt, wallet);
@@ -964,8 +1072,35 @@ pub unsafe extern "C" fn mwc_rust_get_wallet_address(
     let index = CStr::from_ptr(index);
     let index: u32 = index.to_str().unwrap().to_string().parse().unwrap();
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let wallet_data = match wallet_ptr.to_str() {
+        Ok(str_data) => str_data,
+        Err(e) => {
+            let error_msg = format!("Error converting wallet handle to string: {}", e.to_string());
+            let error_msg_ptr = CString::new(error_msg).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            return ptr;
+        }
+    };
+
+    if wallet_data.is_empty() {
+        let error_msg = "Error: Wallet handle is empty. Make sure wallet is properly opened.";
+        let error_msg_ptr = CString::new(error_msg).unwrap();
+        let ptr = error_msg_ptr.as_ptr();
+        std::mem::forget(error_msg_ptr);
+        return ptr;
+    }
+
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match serde_json::from_str(wallet_data) {
+        Ok(data) => data,
+        Err(e) => {
+            let error_msg = format!("Error parsing wallet handle JSON: {}. Handle: '{}'", e.to_string(), wallet_data);
+            let error_msg_ptr = CString::new(error_msg).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            return ptr;
+        }
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -998,6 +1133,74 @@ fn _get_wallet_address(
     let p = s.as_ptr(); // Get a pointer to the underlaying memory for s
     std::mem::forget(s); // Give up the responsibility of cleaning up/freeing s
     Ok(p)
+}
+
+
+// Helper function to validate if a string is a valid wallet handle.
+fn is_valid_wallet_handle(handle_str: &str) -> bool {
+    // Check for common error patterns.
+    if handle_str.starts_with("Error ") {
+        return false;
+    }
+
+    // Check if it contains obvious error messages.
+    if handle_str.contains("LibWallet Error:") ||
+       handle_str.contains("Unable to get wallet config") ||
+       handle_str.contains("Generic error:") ||
+       handle_str.contains("Failed to") {
+        return false;
+    }
+
+    // Try to parse as JSON tuple.
+    match serde_json::from_str::<(u64, Option<SecretKey>)>(handle_str) {
+        Ok((ptr, _)) => {
+            // Additional validation: pointer should be greater than 0.
+            ptr > 0
+        }
+        Err(_) => false,
+    }
+}
+
+// Helper function to safely parse wallet handle.
+fn parse_wallet_handle(wallet_ptr: &CStr) -> Result<(u64, Option<SecretKey>), *const c_char> {
+    let wallet_data = match wallet_ptr.to_str() {
+        Ok(str_data) => str_data,
+        Err(e) => {
+            let error_msg = format!("Error converting wallet handle to string: {}", e.to_string());
+            let error_msg_ptr = CString::new(error_msg).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            return Err(ptr);
+        }
+    };
+
+    if wallet_data.is_empty() {
+        let error_msg = "Error: Wallet handle is empty. Make sure wallet is properly opened.";
+        let error_msg_ptr = CString::new(error_msg).unwrap();
+        let ptr = error_msg_ptr.as_ptr();
+        std::mem::forget(error_msg_ptr);
+        return Err(ptr);
+    }
+
+    // Validate the wallet handle before attempting to parse.
+    if !is_valid_wallet_handle(wallet_data) {
+        let error_msg = format!("Error: Invalid wallet handle detected. Expected JSON tuple, got: '{}'", wallet_data);
+        let error_msg_ptr = CString::new(error_msg).unwrap();
+        let ptr = error_msg_ptr.as_ptr();
+        std::mem::forget(error_msg_ptr);
+        return Err(ptr);
+    }
+
+    match serde_json::from_str(wallet_data) {
+        Ok(data) => Ok(data),
+        Err(e) => {
+            let error_msg = format!("Error parsing wallet handle JSON: {}. Handle: '{}'", e.to_string(), wallet_data);
+            let error_msg_ptr = CString::new(error_msg).unwrap();
+            let ptr = error_msg_ptr.as_ptr();
+            std::mem::forget(error_msg_ptr);
+            Err(ptr)
+        }
+    }
 }
 
 pub fn get_wallet_address(
@@ -1042,8 +1245,10 @@ pub unsafe extern "C" fn mwc_rust_get_tx_fees(
     let amount = CStr::from_ptr(c_amount);
     let amount: u64 = amount.to_str().unwrap().to_string().parse().unwrap();
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+    let tuple_wallet_data: (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     let wlt = tuple_wallet_data.0;
     let sek_key = tuple_wallet_data.1;
 
@@ -1089,11 +1294,18 @@ fn _get_tx_fees(
 }
 
 pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> Result<String, Error> {
+    // println!("[CREATE_WALLET] Starting wallet creation with name: {}", name);
+    // println!("[CREATE_WALLET] Config: {}", config);
+    // println!("[CREATE_WALLET] Mnemonic length: {}", phrase.len());
+    // println!("[CREATE_WALLET] Password length: {}", password.len());
+
     let wallet_pass = ZeroingString::from(password);
     let wallet_config = match Config::from_str(&config) {
         Ok(config) => {
+            // println!("[CREATE_WALLET] Config parsed successfully - wallet_dir: {}", config.wallet_dir);
             config
         }, Err(e) => {
+            // println!("[CREATE_WALLET] ERROR: Failed to parse config: {}", e.to_string());
             return  Err(Error::GenericError(format!(
                 "Error getting wallet config: {}",
                 e.to_string()
@@ -1101,23 +1313,32 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
         }
     };
 
+    // println!("[CREATE_WALLET] Getting wallet instance...");
     let wallet = match get_wallet(&wallet_config) {
         Ok(wllet) => {
+            // println!("[CREATE_WALLET] Wallet instance obtained successfully");
             wllet
         }
         Err(e) => {
+            // println!("[CREATE_WALLET] ERROR: Failed to get wallet instance: {}", e.to_string());
             return  Err(e);
         }
     };
+
+    // println!("[CREATE_WALLET] Locking wallet and getting LC provider...");
     let mut wallet_lock = wallet.lock();
     let lc = match wallet_lock.lc_provider() {
         Ok(wallet_lc) => {
+            // println!("[CREATE_WALLET] LC provider obtained successfully");
             wallet_lc
         }
         Err(e) => {
+            // println!("[CREATE_WALLET] ERROR: Failed to get LC provider: {}", e.to_string());
             return  Err(e);
         }
     };
+
+    // println!("[CREATE_WALLET] Calling lc.create_wallet...");
     let rec_phrase = ZeroingString::from(phrase);
     let result = match lc.create_wallet(
         Some(name),
@@ -1128,12 +1349,15 @@ pub fn create_wallet(config: &str, phrase: &str, password: &str, name: &str) -> 
         None
     ) {
         Ok(_) => {
+            // println!("[CREATE_WALLET] Wallet creation successful");
             "".to_string()
         },
         Err(e) => {
+            // println!("[CREATE_WALLET] ERROR: Wallet creation failed: {}", e.to_string());
             e.to_string()
         },
     };
+    // println!("[CREATE_WALLET] Create wallet completed with result: {}", result);
     Ok(result)
 }
 
@@ -1688,70 +1912,110 @@ pub fn nano_to_deci(amount: u64) -> f64 {
 
 */
 pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<SecretKey>), Error> {
+    // println!("[OPEN_WALLET] Starting wallet open process");
+    // println!("[OPEN_WALLET] Config JSON: {}", config_json);
+    // println!("[OPEN_WALLET] Password length: {}", password.len());
+
     let config = match Config::from_str(&config_json.to_string()) {
         Ok(config) => {
+            // println!("[OPEN_WALLET] Config parsed successfully - wallet_dir: {}, account: {:?}",
+            //         config.wallet_dir, config.account);
             config
-        }, Err(_e) => {
+        }, Err(e) => {
+            // println!("[OPEN_WALLET] ERROR: Failed to parse config JSON: {}", e.to_string());
             return Err(Error::GenericError(format!(
-                "{}",
-                "Unable to get wallet config"
+                "Unable to get wallet config: {}",
+                e.to_string()
             )))
         }
     };
+
+    // println!("[OPEN_WALLET] Getting wallet instance...");
     let wallet = match get_wallet(&config) {
         Ok(wllet) => {
+            // println!("[OPEN_WALLET] Wallet instance obtained successfully");
             wllet
         }
         Err(err) => {
+            // println!("[OPEN_WALLET] ERROR: Failed to get wallet instance: {}", err.to_string());
             return  Err(err);
         }
     };
+
     let mut secret_key = None;
     let mut opened = false;
     {
+        // println!("[OPEN_WALLET] Locking wallet and checking if wallet exists...");
         let mut wallet_lock = wallet.lock();
         let lc = wallet_lock.lc_provider()?;
-        if let Ok(exists_wallet) = lc.wallet_exists(None, None) {
-            if exists_wallet {
-                let temp = match lc.open_wallet(
-                    None,
-                    ZeroingString::from(password),
-                    false,
-                    false,
-                    None) {
-                    Ok(tmp_key) => {
-                        tmp_key
-                    }
-                    Err(err) => {
-                        return Err(err);
-                    }
-                };
-                secret_key = temp;
-                let wallet_inst = match lc.wallet_inst() {
-                    Ok(wallet_backend) => {
-                        wallet_backend
-                    }
-                    Err(err) => {
-                        return Err(err);
-                    }
-                };
-                if let Some(account) = config.account {
-                    match wallet_inst.set_parent_key_id_by_name(&account) {
-                        Ok(_) => {
-                            ()
+
+        match lc.wallet_exists(None, None) {
+            Ok(exists_wallet) => {
+                // println!("[OPEN_WALLET] Wallet exists check result: {}", exists_wallet);
+                if exists_wallet {
+                    // println!("[OPEN_WALLET] Wallet exists, attempting to open...");
+                    let temp = match lc.open_wallet(
+                        None,
+                        ZeroingString::from(password),
+                        false,
+                        false,
+                        None) {
+                        Ok(tmp_key) => {
+                            // println!("[OPEN_WALLET] Wallet opened successfully");
+                            tmp_key
                         }
                         Err(err) => {
-                            return  Err(err);
+                            // println!("[OPEN_WALLET] ERROR: Failed to open wallet: {}", err.to_string());
+                            return Err(err);
                         }
+                    };
+                    secret_key = temp;
+
+                    // println!("[OPEN_WALLET] Getting wallet instance...");
+                    let wallet_inst = match lc.wallet_inst() {
+                        Ok(wallet_backend) => {
+                            // println!("[OPEN_WALLET] Wallet instance obtained");
+                            wallet_backend
+                        }
+                        Err(err) => {
+                            // println!("[OPEN_WALLET] ERROR: Failed to get wallet instance: {}", err.to_string());
+                            return Err(err);
+                        }
+                    };
+
+                    if let Some(account) = config.account.clone() {
+                        // println!("[OPEN_WALLET] Setting parent key ID for account: {}", account);
+                        match wallet_inst.set_parent_key_id_by_name(&account) {
+                            Ok(_) => {
+                                // println!("[OPEN_WALLET] Parent key ID set successfully");
+                                opened = true;
+                            }
+                            Err(err) => {
+                                // println!("[OPEN_WALLET] ERROR: Failed to set parent key ID: {}", err.to_string());
+                                return  Err(err);
+                            }
+                        }
+                    } else {
+                        // println!("[OPEN_WALLET] WARNING: No account specified in config, setting opened=true anyway");
+                        opened = true;
                     }
-                    opened = true;
+                } else {
+                    // println!("[OPEN_WALLET] ERROR: Wallet does not exist in the specified directory");
                 }
+            }
+            Err(e) => {
+                // println!("[OPEN_WALLET] ERROR: Failed to check if wallet exists: {}", e.to_string());
+                return Err(e);
             }
         }
     }
+
+    // println!("[OPEN_WALLET] Final opened status: {}", opened);
     if opened {
+        // println!("[OPEN_WALLET] Wallet opened successfully");
         Ok((wallet, secret_key))
     } else {
+        // println!("[OPEN_WALLET] ERROR: Wallet seed doesn't exist or couldn't be opened");
         Err(Error::WalletSeedDoesntExist)
     }
 }
@@ -2285,10 +2549,13 @@ pub unsafe extern "C" fn mwc_rust_tx_receive(
     wallet: *const c_char,
     slate_json: *const c_char,
 ) -> *const c_char {
-    let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
+    let wallet_ptr = CStr::from_ptr(wallet);
     let slate_str = CStr::from_ptr(slate_json).to_str().unwrap();
 
-    let (wlt, sek_key): (u64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
+    let (wlt, sek_key): (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     ensure_wallet!(wlt, wallet);
 
     let out = match _tx_receive_core(&wallet, sek_key.clone(), slate_str) {
@@ -2312,10 +2579,13 @@ pub unsafe extern "C" fn mwc_rust_tx_finalize(
     wallet: *const c_char,
     slate_json: *const c_char,
 ) -> *const c_char {
-    let wallet_str = CStr::from_ptr(wallet).to_str().unwrap();
+    let wallet_ptr = CStr::from_ptr(wallet);
     let slate_str = CStr::from_ptr(slate_json).to_str().unwrap();
 
-    let (wlt, sek_key): (u64, Option<SecretKey>) = serde_json::from_str(wallet_str).unwrap();
+    let (wlt, sek_key): (u64, Option<SecretKey>) = match parse_wallet_handle(&wallet_ptr) {
+        Ok(data) => data,
+        Err(error_ptr) => return error_ptr,
+    };
     ensure_wallet!(wlt, wallet);
 
     let out = match _tx_finalize_core(&wallet, sek_key.clone(), slate_str) {
