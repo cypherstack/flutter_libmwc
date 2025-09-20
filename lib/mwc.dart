@@ -118,7 +118,7 @@ typedef TxInitFFI = Pointer<Utf8> Function(
     Pointer<Utf8>, Pointer<Int8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>);
 
 final WalletMnemonic _walletMnemonic = mwcNative
-    .lookup<NativeFunction<WalletMnemonicFFI>>("get_mnemonic")
+    .lookup<NativeFunction<WalletMnemonicFFI>>("mwc_get_mnemonic")
     .asFunction();
 
 String walletMnemonic() {
@@ -127,7 +127,7 @@ String walletMnemonic() {
 
 
 final InitLogs _initLogs = mwcNative
-    .lookup<NativeFunction<InitLogsFFI>>("rust_init_logs")
+    .lookup<NativeFunction<InitLogsFFI>>("mwc_rust_init_logs")
     .asFunction();
 
 String initLogs( String config) {
@@ -136,7 +136,7 @@ String initLogs( String config) {
 }
 
 final WalletInit _initWallet = mwcNative
-    .lookup<NativeFunction<WalletInitFFI>>("wallet_init")
+    .lookup<NativeFunction<WalletInitFFI>>("mwc_wallet_init")
     .asFunction();
 
 String initWallet(
@@ -147,7 +147,7 @@ String initWallet(
 }
 
 final WalletInfo _walletInfo = mwcNative
-    .lookup<NativeFunction<WalletInfoFFI>>("rust_wallet_balances")
+    .lookup<NativeFunction<WalletInfoFFI>>("mwc_rust_wallet_balances")
     .asFunction();
 
 Future<String> getWalletInfo(
@@ -160,7 +160,7 @@ Future<String> getWalletInfo(
 }
 
 final RecoverWallet _recoverWallet = mwcNative
-    .lookup<NativeFunction<RecoverWalletFFI>>("rust_recover_from_mnemonic")
+    .lookup<NativeFunction<RecoverWalletFFI>>("mwc_rust_recover_from_mnemonic")
     .asFunction();
 
 String recoverWallet(
@@ -171,7 +171,7 @@ String recoverWallet(
 }
 
 final ScanOutPuts _scanOutPuts = mwcNative
-    .lookup<NativeFunction<ScanOutPutsFFI>>("rust_wallet_scan_outputs")
+    .lookup<NativeFunction<ScanOutPutsFFI>>("mwc_rust_wallet_scan_outputs")
     .asFunction();
 
 Future<String> scanOutPuts(
@@ -185,7 +185,7 @@ Future<String> scanOutPuts(
 
 final MwcMqsListenerStart _MwcMqsListenerStart = mwcNative
     .lookup<NativeFunction<MwcMqsListenerStartFFI>>(
-    "rust_mwcmqs_listener_start")
+    "mwc_rust_mwcmqs_listener_start")
     .asFunction();
 
 Pointer<Void> mwcMqsListenerStart(String wallet, String MWCMQSConfig) {
@@ -196,7 +196,7 @@ Pointer<Void> mwcMqsListenerStart(String wallet, String MWCMQSConfig) {
 }
 
 final MwcMqsListenerStop _MwcMqsListenerStop = mwcNative
-    .lookup<NativeFunction<MwcMqsListenerStopFFI>>("_listener_cancel")
+    .lookup<NativeFunction<MwcMqsListenerStopFFI>>("mwc_listener_cancel")
     .asFunction();
 
 String mwcMqsListenerStop(Pointer<Void> handler) {
@@ -206,7 +206,7 @@ String mwcMqsListenerStop(Pointer<Void> handler) {
 }
 
 final CreateTransaction _createTransaction = mwcNative
-    .lookup<NativeFunction<CreateTransactionFFI>>("rust_create_tx")
+    .lookup<NativeFunction<CreateTransactionFFI>>("mwc_rust_create_tx")
     .asFunction();
 
 Future<String> createTransaction(String wallet, int amount, String address,
@@ -223,7 +223,7 @@ Future<String> createTransaction(String wallet, int amount, String address,
 }
 
 final GetTransactions _getTransactions = mwcNative
-    .lookup<NativeFunction<GetTransactionsFFI>>("rust_txs_get")
+    .lookup<NativeFunction<GetTransactionsFFI>>("mwc_rust_txs_get")
     .asFunction();
 
 Future<String> getTransactions(String wallet, int refreshFromNode) async {
@@ -233,7 +233,7 @@ Future<String> getTransactions(String wallet, int refreshFromNode) async {
 }
 
 final CancelTransaction _cancelTransaction = mwcNative
-    .lookup<NativeFunction<CancelTransactionFFI>>("rust_tx_cancel")
+    .lookup<NativeFunction<CancelTransactionFFI>>("mwc_rust_tx_cancel")
     .asFunction();
 
 String cancelTransaction(String wallet, String transactionId) {
@@ -242,7 +242,7 @@ String cancelTransaction(String wallet, String transactionId) {
 }
 
 final GetChainHeight _getChainHeight = mwcNative
-    .lookup<NativeFunction<GetChainHeightFFI>>("rust_get_chain_height")
+    .lookup<NativeFunction<GetChainHeightFFI>>("mwc_rust_get_chain_height")
     .asFunction();
 
 int getChainHeight(String config) {
@@ -251,7 +251,7 @@ int getChainHeight(String config) {
 }
 
 final AddressInfo _addressInfo = mwcNative
-    .lookup<NativeFunction<AddressInfoFFI>>("rust_get_wallet_address")
+    .lookup<NativeFunction<AddressInfoFFI>>("mwc_rust_get_wallet_address")
     .asFunction();
 
 String getAddressInfo(String wallet, int index) {
@@ -262,7 +262,7 @@ String getAddressInfo(String wallet, int index) {
 }
 
 final ValidateAddress _validateSendAddress = mwcNative
-    .lookup<NativeFunction<ValidateAddressFFI>>("rust_validate_address")
+    .lookup<NativeFunction<ValidateAddressFFI>>("mwc_rust_validate_address")
     .asFunction();
 
 String validateSendAddress(String address) {
@@ -270,7 +270,7 @@ String validateSendAddress(String address) {
 }
 
 final TransactionFees _transactionFees = mwcNative
-    .lookup<NativeFunction<TransactionFeesFFI>>("rust_get_tx_fees")
+    .lookup<NativeFunction<TransactionFeesFFI>>("mwc_rust_get_tx_fees")
     .asFunction();
 
 Future<String> getTransactionFees(
@@ -283,7 +283,7 @@ Future<String> getTransactionFees(
 }
 
 final DeleteWallet _deleteWallet = mwcNative
-    .lookup<NativeFunction<DeleteWalletFFI>>("rust_delete_wallet")
+    .lookup<NativeFunction<DeleteWalletFFI>>("mwc_rust_delete_wallet")
     .asFunction();
 
 Future<String> deleteWallet(String wallet, String config) async {
@@ -292,7 +292,7 @@ Future<String> deleteWallet(String wallet, String config) async {
 }
 
 final OpenWallet _openWallet = mwcNative
-    .lookup<NativeFunction<OpenWalletFFI>>("rust_open_wallet")
+    .lookup<NativeFunction<OpenWalletFFI>>("mwc_rust_open_wallet")
     .asFunction();
 
 String openWallet(String config, String password) {
@@ -301,7 +301,7 @@ String openWallet(String config, String password) {
 }
 
 final TxHttpSend _txHttpSend = mwcNative
-    .lookup<NativeFunction<TxHttpSendFFI>>("rust_tx_send_http")
+    .lookup<NativeFunction<TxHttpSendFFI>>("mwc_rust_tx_send_http")
     .asFunction();
 
 Future<String> txHttpSend(
@@ -322,7 +322,7 @@ Future<String> txHttpSend(
 }
 
 final EncodeSlatepack _encodeSlatepack = mwcNative
-    .lookup<NativeFunction<EncodeSlatepackFFI>>("rust_encode_slatepack")
+    .lookup<NativeFunction<EncodeSlatepackFFI>>("mwc_rust_encode_slatepack")
     .asFunction();
 
 Future<String> encodeSlatepack(
@@ -335,7 +335,7 @@ Future<String> encodeSlatepack(
 }
 
 final EncodeSlatepackEnhanced _encodeSlatepackEnhanced = mwcNative
-    .lookup<NativeFunction<EncodeSlatepackEnhancedFFI>>("rust_encode_slatepack_enhanced")
+    .lookup<NativeFunction<EncodeSlatepackEnhancedFFI>>("mwc_rust_encode_slatepack_enhanced")
     .asFunction();
 
 Future<String> encodeSlatepackEnhanced(
@@ -350,7 +350,7 @@ Future<String> encodeSlatepackEnhanced(
 }
 
 final DecodeSlatepack _decodeSlatepack = mwcNative
-    .lookup<NativeFunction<DecodeSlatepackFFI>>("rust_decode_slatepack")
+    .lookup<NativeFunction<DecodeSlatepackFFI>>("mwc_rust_decode_slatepack")
     .asFunction();
 
 Future<String> decodeSlatepack(String slatepack) async {
@@ -359,7 +359,7 @@ Future<String> decodeSlatepack(String slatepack) async {
 }
 
 final DecodeSlatepackEnhanced _decodeSlatepackEnhanced = mwcNative
-    .lookup<NativeFunction<DecodeSlatepackEnhancedFFI>>("rust_decode_slatepack_enhanced")
+    .lookup<NativeFunction<DecodeSlatepackEnhancedFFI>>("mwc_rust_decode_slatepack_enhanced")
     .asFunction();
 
 Future<String> decodeSlatepackEnhanced(String wallet, String slatepack) async {
@@ -370,7 +370,7 @@ Future<String> decodeSlatepackEnhanced(String wallet, String slatepack) async {
 }
 
 final TxReceive _txReceive = mwcNative
-    .lookup<NativeFunction<TxReceiveFFI>>("rust_tx_receive")
+    .lookup<NativeFunction<TxReceiveFFI>>("mwc_rust_tx_receive")
     .asFunction();
 
 String txReceive(String wallet, String slateJson) {
@@ -379,7 +379,7 @@ String txReceive(String wallet, String slateJson) {
 }
 
 final TxFinalize _txFinalize = mwcNative
-    .lookup<NativeFunction<TxFinalizeFFI>>("rust_tx_finalize")
+    .lookup<NativeFunction<TxFinalizeFFI>>("mwc_rust_tx_finalize")
     .asFunction();
 
 String txFinalize(String wallet, String slateJson) {
@@ -388,7 +388,7 @@ String txFinalize(String wallet, String slateJson) {
 }
 
 final TxInit _txInit = mwcNative
-    .lookup<NativeFunction<TxInitFFI>>("rust_tx_init")
+    .lookup<NativeFunction<TxInitFFI>>("mwc_rust_tx_init")
     .asFunction();
 
 Future<String> txInit(
