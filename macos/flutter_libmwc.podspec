@@ -19,7 +19,8 @@ A new Flutter plugin project.
   s.vendored_libraries = "**/*.a"
   s.dependency 'FlutterMacOS'
 
-  s.platform = :osx, '10.11'
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=macosx*]' => 'x86_64' }
+  s.platform = :osx, '15.2'
+  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=macosx*]' => 'x86_64', 'OTHER_LDFLAGS' => '-lc++' }
   s.swift_version = '5.0'
+  s.libraries = 'resolv', 'c++'
 end
