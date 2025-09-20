@@ -140,11 +140,21 @@ pub unsafe extern "C" fn wallet_init(
 
     let result = match _wallet_init(config, mnemonic, password, name) {
         Ok(created) => {
-            created
+            // Validate that the created result is actually a valid wallet handle before returning
+            let handle_str = unsafe { CStr::from_ptr(created).to_str().unwrap_or("") };
+            if is_valid_wallet_handle(handle_str) {
+                created
+            } else {
+                let error_msg = format!("LibWallet Error: Invalid wallet handle created during initialization: '{}'", handle_str);
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
         }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
+            let error_msg = format!("LibWallet Error: {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+            let ptr = error_msg_ptr.as_ptr();
             std::mem::forget(error_msg_ptr);
             ptr
         }
@@ -285,11 +295,21 @@ pub unsafe extern "C"  fn rust_open_wallet(
         password
     ) {
         Ok(wallet) => {
-            wallet
+            // Validate that the opened result is actually a valid wallet handle before returning
+            let handle_str = unsafe { CStr::from_ptr(wallet).to_str().unwrap_or("") };
+            if is_valid_wallet_handle(handle_str) {
+                wallet
+            } else {
+                let error_msg = format!("LibWallet Error: Invalid wallet handle created during open: '{}'", handle_str);
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
         }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
+            let error_msg = format!("LibWallet Error: {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+            let ptr = error_msg_ptr.as_ptr();
             std::mem::forget(error_msg_ptr);
             ptr
         }
@@ -447,11 +467,21 @@ pub unsafe extern "C"  fn rust_recover_from_mnemonic(
         name
     ) {
         Ok(recovered) => {
-            recovered
+            // Validate that the recovered result is actually a valid wallet handle before returning
+            let handle_str = unsafe { CStr::from_ptr(recovered).to_str().unwrap_or("") };
+            if is_valid_wallet_handle(handle_str) {
+                recovered
+            } else {
+                let error_msg = format!("LibWallet Error: Invalid wallet handle created during recovery: '{}'", handle_str);
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
         }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
+            let error_msg = format!("LibWallet Error: {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
+            let ptr = error_msg_ptr.as_ptr();
             std::mem::forget(error_msg_ptr);
             ptr
         }
@@ -1069,6 +1099,32 @@ fn _get_wallet_address(
     Ok(p)
 }
 
+
+// Helper function to validate if a string is a valid wallet handle.
+fn is_valid_wallet_handle(handle_str: &str) -> bool {
+    // Check for common error patterns.
+    if handle_str.starts_with("Error ") {
+        return false;
+    }
+
+    // Check if it contains obvious error messages.
+    if handle_str.contains("LibWallet Error:") ||
+       handle_str.contains("Unable to get wallet config") ||
+       handle_str.contains("Generic error:") ||
+       handle_str.contains("Failed to") {
+        return false;
+    }
+
+    // Try to parse as JSON tuple.
+    match serde_json::from_str::<(u64, Option<SecretKey>)>(handle_str) {
+        Ok((ptr, _)) => {
+            // Additional validation: pointer should be greater than 0.
+            ptr > 0
+        }
+        Err(_) => false,
+    }
+}
+
 // Helper function to safely parse wallet handle.
 fn parse_wallet_handle(wallet_ptr: &CStr) -> Result<(u64, Option<SecretKey>), *const c_char> {
     let wallet_data = match wallet_ptr.to_str() {
@@ -1084,6 +1140,15 @@ fn parse_wallet_handle(wallet_ptr: &CStr) -> Result<(u64, Option<SecretKey>), *c
 
     if wallet_data.is_empty() {
         let error_msg = "Error: Wallet handle is empty. Make sure wallet is properly opened.";
+        let error_msg_ptr = CString::new(error_msg).unwrap();
+        let ptr = error_msg_ptr.as_ptr();
+        std::mem::forget(error_msg_ptr);
+        return Err(ptr);
+    }
+
+    // Validate the wallet handle before attempting to parse.
+    if !is_valid_wallet_handle(wallet_data) {
+        let error_msg = format!("Error: Invalid wallet handle detected. Expected JSON tuple, got: '{}'", wallet_data);
         let error_msg_ptr = CString::new(error_msg).unwrap();
         let ptr = error_msg_ptr.as_ptr();
         std::mem::forget(error_msg_ptr);
@@ -1808,7 +1873,7 @@ pub fn open_wallet(config_json: &str, password: &str) -> Result<(Wallet, Option<
     let config = match Config::from_str(&config_json.to_string()) {
         Ok(config) => {
             // println!("[OPEN_WALLET] Config parsed successfully - wallet_dir: {}, account: {:?}",
-                    config.wallet_dir, config.account);
+            //         config.wallet_dir, config.account);
             config
         }, Err(e) => {
             // println!("[OPEN_WALLET] ERROR: Failed to parse config JSON: {}", e.to_string());
