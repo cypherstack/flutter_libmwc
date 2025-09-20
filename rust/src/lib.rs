@@ -131,7 +131,7 @@ use ffi_helpers::task::{CancellationToken, TaskHandle};
 */
 
 #[no_mangle]
-pub unsafe extern "C" fn wallet_init(
+pub unsafe extern "C" fn mwc_wallet_init(
     config: *const c_char,
     mnemonic: *const c_char,
     password: *const c_char,
@@ -153,7 +153,7 @@ pub unsafe extern "C" fn wallet_init(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn get_mnemonic() -> *const c_char {
+pub unsafe extern "C" fn mwc_get_mnemonic() -> *const c_char {
     let result = match _get_mnemonic() {
         Ok(phrase) => {
             phrase
@@ -236,7 +236,7 @@ fn _wallet_init(
 
 
 #[no_mangle]
-pub unsafe extern "C"  fn rust_open_wallet(
+pub unsafe extern "C"  fn mwc_rust_open_wallet(
     config: *const c_char,
     password: *const c_char,
 ) -> *const c_char {
@@ -295,7 +295,7 @@ fn _open_wallet(
     This contains wallet balances
 */
 #[no_mangle]
-pub unsafe extern "C"  fn rust_wallet_balances(
+pub unsafe extern "C"  fn mwc_rust_wallet_balances(
     wallet: *const c_char,
     refresh: *const c_char,
     min_confirmations: *const c_char,
@@ -366,7 +366,7 @@ fn _wallet_balances(
 
 
 #[no_mangle]
-pub unsafe extern "C"  fn rust_recover_from_mnemonic(
+pub unsafe extern "C"  fn mwc_rust_recover_from_mnemonic(
     config: *const c_char,
     password: *const c_char,
     mnemonic: *const c_char,
@@ -434,7 +434,7 @@ fn _recover_from_mnemonic(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_wallet_scan_outputs(
+pub unsafe extern "C" fn mwc_rust_wallet_scan_outputs(
     wallet: *const c_char,
     start_height: *const c_char,
     number_of_blocks: *const c_char,
@@ -499,7 +499,7 @@ fn _wallet_scan_outputs(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_create_tx(
+pub unsafe extern "C" fn mwc_rust_create_tx(
     wallet: *const c_char,
     amount: *const c_char,
     to_address: *const c_char,
@@ -594,7 +594,7 @@ fn _create_tx(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_txs_get(
+pub unsafe extern "C" fn mwc_rust_txs_get(
     wallet: *const c_char,
     refresh_from_node: *const c_char,
 ) -> *const c_char {
@@ -657,7 +657,7 @@ fn _txs_get(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_tx_cancel(
+pub unsafe extern "C" fn mwc_rust_tx_cancel(
     wallet: *const c_char,
     tx_id: *const c_char,
 ) -> *const c_char {
@@ -712,7 +712,7 @@ fn _tx_cancel(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_get_chain_height(
+pub unsafe extern "C" fn mwc_rust_get_chain_height(
     config: *const c_char,
 ) -> *const c_char {
     let result = match _get_chain_height(
@@ -772,7 +772,7 @@ pub fn _init_logs(config: &str) -> Result<*const c_char, Error> {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_init_logs(config: *const c_char) -> *const c_char {
+pub unsafe extern "C" fn mwc_rust_init_logs(config: *const c_char) -> *const c_char {
     // Convert C string to Rust string
     let c_conf = CStr::from_ptr(config);
     let wallet_dir_str = match c_conf.to_str() {
@@ -789,7 +789,7 @@ pub unsafe extern "C" fn rust_init_logs(config: *const c_char) -> *const c_char 
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_delete_wallet(
+pub unsafe extern "C" fn mwc_rust_delete_wallet(
     _wallet: *const c_char,
     config: *const c_char,
 ) -> *const c_char  {
@@ -832,7 +832,7 @@ fn _delete_wallet(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_tx_send_http(
+pub unsafe extern "C" fn mwc_rust_tx_send_http(
     wallet: *const c_char,
     selection_strategy_is_use_all: *const c_char,
     minimum_confirmations: *const c_char,
@@ -920,7 +920,7 @@ fn _tx_send_http(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_get_wallet_address(
+pub unsafe extern "C" fn mwc_rust_get_wallet_address(
     wallet: *const c_char,
     index: *const c_char,
 ) -> *const c_char {
@@ -976,7 +976,7 @@ pub fn get_wallet_address(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_validate_address(
+pub unsafe extern "C" fn mwc_rust_validate_address(
     address: *const c_char,
 ) -> *const c_char {
     let address = unsafe { CStr::from_ptr(address) };
@@ -994,7 +994,7 @@ pub unsafe extern "C" fn rust_validate_address(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_get_tx_fees(
+pub unsafe extern "C" fn mwc_rust_get_tx_fees(
     wallet: *const c_char,
     c_amount: *const c_char,
     min_confirmations: *const c_char,
@@ -1880,17 +1880,17 @@ impl Task for Listener {
 
 export_task! {
     Task: Listener;
-    spawn: listener_spawn;
-    wait: listener_wait;
-    poll: listener_poll;
-    cancel: listener_cancel;
-    cancelled: listener_cancelled;
-    handle_destroy: listener_handle_destroy;
-    result_destroy: listener_result_destroy;
+    spawn: mwc_listener_spawn;
+    wait: mwc_listener_wait;
+    poll: mwc_listener_poll;
+    cancel: mwc_listener_cancel_internal;
+    cancelled: mwc_listener_cancelled;
+    handle_destroy: mwc_listener_handle_destroy;
+    result_destroy: mwc_listener_result_destroy;
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_mwcmqs_listener_start(
+pub unsafe extern "C" fn mwc_rust_mwcmqs_listener_start(
     wallet: *const c_char,
     mwcmqs_config: *const c_char,
 ) -> *mut c_void {
@@ -1904,16 +1904,16 @@ pub unsafe extern "C" fn rust_mwcmqs_listener_start(
         mwcmqs_config: mwcmqs_config.parse().unwrap()
     };
 
-    let handler = listener_spawn(&listen);
+    let handler = mwc_listener_spawn(&listen);
     let handler_value = handler.read();
     let boxed_handler = Box::new(handler_value);
     Box::into_raw(boxed_handler) as *mut _
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn _listener_cancel(handler: *mut c_void) -> *const c_char {
+pub unsafe extern "C" fn mwc_listener_cancel(handler: *mut c_void) -> *const c_char {
     let handle = handler as *mut TaskHandle<usize>;
-    listener_cancel(handle);
+    mwc_listener_cancel_internal(handle);
     if let Some((_, mut subscriber)) = mwc_wallet_impls::adapters::get_mwcmqs_brocker() {
         if subscriber.is_running() {
             if subscriber.stop() {
@@ -1923,7 +1923,7 @@ pub unsafe extern "C" fn _listener_cancel(handler: *mut c_void) -> *const c_char
             }   
         }
     }
-    let error_msg = format!("{}", listener_cancelled(handle));
+    let error_msg = format!("{}", mwc_listener_cancelled(handle));
     let error_msg_ptr = CString::new(error_msg).unwrap();
     let ptr = error_msg_ptr.as_ptr();
     std::mem::forget(error_msg_ptr);
@@ -1935,7 +1935,7 @@ pub unsafe extern "C" fn _listener_cancel(handler: *mut c_void) -> *const c_char
 // ==================================================
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_encode_slatepack(
+pub unsafe extern "C" fn mwc_rust_encode_slatepack(
     slate_json: *const c_char,
     recipient_address: *const c_char,
 ) -> *const c_char {
@@ -1957,7 +1957,7 @@ pub unsafe extern "C" fn rust_encode_slatepack(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_encode_slatepack_enhanced(
+pub unsafe extern "C" fn mwc_rust_encode_slatepack_enhanced(
     wallet: *const c_char,
     slate_json: *const c_char,
     recipient_address: *const c_char,
@@ -1981,7 +1981,7 @@ pub unsafe extern "C" fn rust_encode_slatepack_enhanced(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_decode_slatepack(
+pub unsafe extern "C" fn mwc_rust_decode_slatepack(
     slatepack_str: *const c_char,
 ) -> *const c_char {
     let result = match _decode_slatepack(slatepack_str) {
@@ -2010,7 +2010,7 @@ pub unsafe extern "C" fn rust_decode_slatepack(
 
 // Wallet-aware slatepack decode that can decrypt when wallet keys are available.
 #[no_mangle]
-pub unsafe extern "C" fn rust_decode_slatepack_enhanced(
+pub unsafe extern "C" fn mwc_rust_decode_slatepack_enhanced(
     wallet: *const c_char,
     slatepack_str: *const c_char,
 ) -> *const c_char {
@@ -2191,7 +2191,7 @@ fn _tx_finalize_core(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_tx_receive(
+pub unsafe extern "C" fn mwc_rust_tx_receive(
     wallet: *const c_char,
     slate_json: *const c_char,
 ) -> *const c_char {
@@ -2218,7 +2218,7 @@ pub unsafe extern "C" fn rust_tx_receive(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn rust_tx_finalize(
+pub unsafe extern "C" fn mwc_rust_tx_finalize(
     wallet: *const c_char,
     slate_json: *const c_char,
 ) -> *const c_char {
@@ -2245,7 +2245,7 @@ pub unsafe extern "C" fn rust_tx_finalize(
 
 // Initialize a send transaction without finalizing/posting (produce S1 slate JSON).
 #[no_mangle]
-pub unsafe extern "C" fn rust_tx_init(
+pub unsafe extern "C" fn mwc_rust_tx_init(
     wallet: *const c_char,
     selection_strategy_is_use_all: *const c_char,
     minimum_confirmations: *const c_char,
