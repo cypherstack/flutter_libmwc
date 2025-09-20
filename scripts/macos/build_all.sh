@@ -12,6 +12,11 @@ sed -i '' "/\/\*${OS}_VERSION/c\\/\*${OS}_VERSION\*\/ const ${OS}_VERSION = \"$C
 cp -r ../../rust build/rust
 cd build/rust
 
+# Set deployment target for all dependencies (Rust and C)
+export MACOSX_DEPLOYMENT_TARGET=10.14
+export CFLAGS="-mmacosx-version-min=10.14"
+export CXXFLAGS="-mmacosx-version-min=10.14"
+
 # building
 cbindgen src/lib.rs -l c > libmwc_wallet.h
 cargo lipo --release --targets aarch64-apple-darwin
