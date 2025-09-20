@@ -547,7 +547,9 @@ class WalletService {
     } else if (Platform.isWindows) {
       return r'C:\temp\flutter_libmwc_wallets\\' + walletName + r'\';
     } else if (Platform.isMacOS) {
-      return '/tmp/flutter_libmwc_wallets/$walletName/';
+      // Use Documents directory for development to avoid sandboxing issues.
+      final documentsDir = await getApplicationDocumentsDirectory();
+      return '${documentsDir.path}/flutter_libmwc_wallets/$walletName/';
     } else {
       return '/tmp/flutter_libmwc_wallets/$walletName/';
     }

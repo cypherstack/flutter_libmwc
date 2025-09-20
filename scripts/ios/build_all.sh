@@ -8,13 +8,23 @@ if [ ! -f "$VERSIONS_FILE" ]; then
 fi
 COMMIT=$(git log -1 --pretty=format:"%H")
 OS="IOS"
-sed -i '' "/\/\*${OS}_VERSION/c\\/\*${OS}_VERSION\*\/ const ${OS}_VERSION = \"$COMMIT\";" $VERSIONS_FILE
+sed -i '' "/\/\*${OS}_VERSION/c\\
+/\*${OS}_VERSION\*/ const ${OS}_VERSION = \"$COMMIT\";" $VERSIONS_FILE
 cp -r ../../rust build/rust
 cd build/rust
 
 rustup target add aarch64-apple-ios x86_64-apple-ios
 
 # building
+export IPHONEOS_DEPLOYMENT_TARGET=12.0
+export CC_aarch64_apple_ios=clang
+export CFLAGS_aarch64_apple_ios="-mios-version-min=12.0"
+export CC_x86_64_apple_ios=clang
+export CFLAGS_x86_64_apple_ios="-mios-version-min=12.0"
+
+# Clean previous builds to force rebuild with correct deployment target.
+cargo clean
+
 cbindgen src/lib.rs -l c > libmwc_wallet.h
 cargo lipo --release
 

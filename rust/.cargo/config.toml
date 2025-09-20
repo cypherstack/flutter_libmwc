@@ -1,0 +1,9 @@
+[target.aarch64-apple-ios]
+rustflags = [
+    "-C", "link-arg=-mios-version-min=12.0"
+]
+
+[target.x86_64-apple-ios]
+rustflags = [
+    "-C", "link-arg=-mios-version-min=12.0"
+]
