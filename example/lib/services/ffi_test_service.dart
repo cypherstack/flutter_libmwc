@@ -508,7 +508,7 @@ class FFITestService {
               '  "version_info": {\n'
               '    "orig_version": 3,\n'
               '    "version": 3,\n'
-              '    "block_header_version": 2\n'
+              '    "block_header_version": 1\n'
               '  },\n'
               '  "id": "0436430c-2b02-624c-2032-570501212b00",\n'
               '  "sta": "S1",\n'
@@ -517,7 +517,7 @@ class FFITestService {
               '  "fee": "1000000",\n'
               '  "height": "0",\n'
               '  "lock_height": "0",\n'
-              '  "ttl_cutoff_height": null,\n'
+              '  "ttl_cutoff_height": "1440",\n'
               '  "payment_proof": null,\n'
               '  "compact_slate": true,\n'
               '  "participant_data": []\n'
@@ -573,7 +573,7 @@ class FFITestService {
           bool threw = false;
           try {
             await Libmwc.encodeSlatepack(
-              slateJson: '{"id":"abc","version_info":{"version":3}}',
+              slateJson: '{"id":"abc","version_info":{"version":3,"block_header_version":1}}',
               recipientAddress: 'dummy@mwcmqs.mwc.mw',
               encrypt: true,
               wallet: null, // No wallet context in test environment
@@ -632,13 +632,13 @@ class FFITestService {
           final testCases = [
             {
               'name': 'basic slate',
-              'slateJson': '{"id":"test-123","version_info":{"version":3}}',
+              'slateJson': '{"id":"test-123","version_info":{"version":3,"block_header_version":1}}',
               'encrypt': false,
               'recipientAddress': null,
             },
             {
               'name': 'encrypted slate',
-              'slateJson': '{"id":"test-456","version_info":{"version":3}}',
+              'slateJson': '{"id":"test-456","version_info":{"version":3,"block_header_version":1}}',
               'encrypt': true,
               'recipientAddress': 'user@mwcmqs.example.com',
             },
