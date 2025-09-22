@@ -60,6 +60,34 @@ pub fn encode_slatepack_with_keys(
     // Ensure compact model for Slatepack SP encoding (required by mwc713/MWCQT).
     // Many call sites produce a full slate; SP requires compact.
     slate.compact_slate = true;
+
+    // Fix slate for MWCQT compatibility: convert to JSON, modify, and re-parse.
+    let mut slate_json_value: serde_json::Value = serde_json::to_value(&slate)
+        .map_err(|e| Error::GenericError(format!("Failed to serialize slate: {}", e)))?;
+
+    // Fix block_header_version for MWCQT compatibility (use version 1 instead of 2).
+    if let Some(version_info) = slate_json_value.get_mut("version_info") {
+        if let Some(obj) = version_info.as_object_mut() {
+            obj.insert("block_header_version".to_string(), serde_json::Value::Number(serde_json::Number::from(1)));
+        }
+    }
+
+    // Add ttl_cutoff_height if missing (set to current height + 1440 blocks ~= 24 hours).
+    if slate_json_value.get("ttl_cutoff_height").is_none() ||
+       slate_json_value.get("ttl_cutoff_height") == Some(&serde_json::Value::Null) {
+        // Use height + 1440 blocks as default TTL (approximately 24 hours).
+        let current_height = slate_json_value.get("height")
+            .and_then(|h| h.as_u64())
+            .unwrap_or(0);
+        let ttl_height = current_height + 1440;
+        slate_json_value["ttl_cutoff_height"] = serde_json::Value::Number(serde_json::Number::from(ttl_height));
+    }
+
+    // Convert back to slate object.
+    let fixed_slate_json = serde_json::to_string(&slate_json_value)
+        .map_err(|e| Error::GenericError(format!("Failed to serialize fixed slate: {}", e)))?;
+    slate = Slate::deserialize_upgrade_plain(&fixed_slate_json)?;
+    slate.compact_slate = true; // Ensure compact flag is still set.
     
     // Create secp context.
     let secp = Secp256k1::new();

@@ -35,6 +35,42 @@ use mwc_wallet_impls::Subscriber;
 
 mod slatepack;
 
+/// Fix slate for MWCQT compatibility by ensuring proper version and TTL settings.
+/// This function modifies the slate JSON to:
+/// 1. Set block_header_version to 1 (instead of 2) for MWCQT compatibility.
+/// 2. Add ttl_cutoff_height if missing (current height + 1440 blocks ≈ 24 hours).
+/// 3. Ensure compact_slate flag is set to true.
+fn fix_slate_for_mwcqt_compatibility(slate: &Slate, current_chain_height: Option<u64>) -> Result<String, Error> {
+    // Convert slate to JSON for manipulation.
+    let mut slate_json_value: serde_json::Value = serde_json::to_value(slate)
+        .map_err(|e| Error::GenericError(format!("Failed to serialize slate: {}", e)))?;
+
+    // Fix block_header_version for MWCQT compatibility (use version 1 instead of 2).
+    if let Some(version_info) = slate_json_value.get_mut("version_info") {
+        if let Some(obj) = version_info.as_object_mut() {
+            obj.insert("block_header_version".to_string(), serde_json::Value::Number(serde_json::Number::from(1)));
+        }
+    }
+
+    // Add ttl_cutoff_height if missing (set to current height + 1440 blocks ~= 24 hours).
+    if slate_json_value.get("ttl_cutoff_height").is_none() ||
+       slate_json_value.get("ttl_cutoff_height") == Some(&serde_json::Value::Null) {
+        // Use current chain height if available, otherwise fall back to slate height.
+        let base_height = current_chain_height
+            .or_else(|| slate_json_value.get("height").and_then(|h| h.as_u64()))
+            .unwrap_or(0);
+        let ttl_height = base_height + 1440;
+        slate_json_value["ttl_cutoff_height"] = serde_json::Value::Number(serde_json::Number::from(ttl_height));
+    }
+
+    // Ensure compact_slate is set to true.
+    slate_json_value["compact_slate"] = serde_json::Value::Bool(true);
+
+    // Convert back to JSON string.
+    serde_json::to_string(&slate_json_value)
+        .map_err(|e| Error::GenericError(format!("Failed to serialize fixed slate: {}", e)))
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub wallet_dir: String,
@@ -1589,9 +1625,19 @@ pub fn tx_create(
                     return Err(e);
                 }
             };
+
+            // Get current chain height for proper TTL calculation.
+            let current_height = {
+                wallet_lock!(wallet, w);
+                match w.w2n_client().get_chain_tip() {
+                    Ok(chain_tip) => Some(chain_tip.0),
+                    Err(_) => None,
+                }
+            };
+
             let final_result = (
                 serde_json::to_string(&txs.1).unwrap(),
-                serde_json::to_string(&slate).unwrap()
+                fix_slate_for_mwcqt_compatibility(&slate, current_height)?
             );
             let str_result = serde_json::to_string(&final_result).unwrap();
             Ok(str_result)
@@ -1824,9 +1870,18 @@ pub fn tx_send_http(
                 }
             };
 
+            // Get current chain height for proper TTL calculation.
+            let current_height = {
+                wallet_lock!(wallet, w);
+                match w.w2n_client().get_chain_tip() {
+                    Ok(chain_tip) => Some(chain_tip.0),
+                    Err(_) => None,
+                }
+            };
+
             let tx_data = (
                 serde_json::to_string(&txs.1).unwrap(),
-                serde_json::to_string(&slate).unwrap()
+                fix_slate_for_mwcqt_compatibility(&slate, current_height)?
             );
             let str_tx_data = serde_json::to_string(&tx_data).unwrap();
             Ok(str_tx_data)
@@ -2155,9 +2210,18 @@ fn _tx_receive_core(
         None                   // include_cancelled
     )?;
 
+    // Get current chain height for proper TTL calculation.
+    let current_height = {
+        wallet_lock!(wallet, w);
+        match w.w2n_client().get_chain_tip() {
+            Ok(chain_tip) => Some(chain_tip.0),
+            Err(_) => None,
+        }
+    };
+
     let pair = (
         serde_json::to_string(&txs.1).unwrap(),
-        serde_json::to_string(&updated_slate).unwrap(),
+        fix_slate_for_mwcqt_compatibility(&updated_slate, current_height)?,
     );
     Ok(serde_json::to_string(&pair).unwrap())
 }
@@ -2183,9 +2247,18 @@ fn _tx_finalize_core(
         None                   // include_cancelled
     )?;
 
+    // Get current chain height for proper TTL calculation.
+    let current_height = {
+        wallet_lock!(wallet, w);
+        match w.w2n_client().get_chain_tip() {
+            Ok(chain_tip) => Some(chain_tip.0),
+            Err(_) => None,
+        }
+    };
+
     let pair = (
         serde_json::to_string(&txs.1).unwrap(),
-        serde_json::to_string(&finalized).unwrap(),
+        fix_slate_for_mwcqt_compatibility(&finalized, current_height)?,
     );
     Ok(serde_json::to_string(&pair).unwrap())
 }
@@ -2326,7 +2399,17 @@ fn _tx_init_core(
             false,
         )?;
     }
-    Ok(serde_json::to_string(&slate).unwrap())
+
+    // Get current chain height for proper TTL calculation.
+    let current_height = {
+        wallet_lock!(wallet, w);
+        match w.w2n_client().get_chain_tip() {
+            Ok(chain_tip) => Some(chain_tip.0),
+            Err(_) => None,
+        }
+    };
+
+    fix_slate_for_mwcqt_compatibility(&slate, current_height)
 }
 
 unsafe fn _encode_slatepack_enhanced(

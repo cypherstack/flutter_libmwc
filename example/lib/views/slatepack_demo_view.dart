@@ -59,7 +59,7 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
   "version_info": {
     "orig_version": 3,
     "version": 3,
-    "block_header_version": 2
+    "block_header_version": 1
   },
   "id": "0436430c-2b02-624c-2032-570501212b00",
   "sta": "S1",
@@ -68,7 +68,7 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
   "fee": "1000000",
   "height": "0",
   "lock_height": "0",
-  "ttl_cutoff_height": null,
+  "ttl_cutoff_height": "1440",
   "payment_proof": null,
   "participant_data": [],
   "tx": {
