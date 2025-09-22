@@ -2234,11 +2234,28 @@ fn _tx_finalize_core(
     // Inflate & upgrade slate
     let slate = Slate::deserialize_upgrade_plain(slate_json)?;
 
-    // Finalize (and post via node as configured inside wallet/lib)
+    // Finalize the transaction.
     let owner_api = Owner::new(wallet.clone(), None, None);
     let finalized = owner_api.finalize_tx(keychain_mask.as_ref(), &slate)?;
 
-    // Build the same composite tuple shape as init_send does: (txs_json, slate_json)
+    // Post the finalized transaction to the network via node client.
+    {
+        wallet_lock!(wallet, w);
+        if let Some(ref tx) = finalized.tx {
+            match w.w2n_client().post_tx(tx, true) {
+                Ok(_) => {
+                    debug!("Transaction posted (broadcast) for mining");
+                },
+                Err(e) => {
+                    debug!("Warning: Failed to post (broadcast) transaction to network: {}", e);
+                }
+            }
+        } else {
+            debug!("Warning: Finalized slate does not contain a transaction to post");
+        }
+    }
+
+    // Build the same composite tuple shape as init_send does: (txs_json, slate_json).
     let txs = owner_api.retrieve_txs(
         keychain_mask.as_ref(),
         false,                 // refresh_from_node
