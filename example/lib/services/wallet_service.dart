@@ -538,7 +538,7 @@ class WalletService {
   static Future<String> _getWalletDirectory(String walletName) async {
     if (Platform.isAndroid) {
       return '/data/data/com.example.flutter_libmwc_example/files/wallets/$walletName/';
-    } else if (Platform.isIOS) {
+    } else if (Platform.isIOS || Platform.isMacOS) {
       // Use proper iOS Application Support directory instead of hardcoded path.
       final appSupportDir = await getApplicationSupportDirectory();
       return '${appSupportDir.path}/wallets/$walletName/';
@@ -546,8 +546,6 @@ class WalletService {
       return '/tmp/flutter_libmwc_wallets/$walletName/';
     } else if (Platform.isWindows) {
       return r'C:\temp\flutter_libmwc_wallets\\' + walletName + r'\';
-    } else if (Platform.isMacOS) {
-      return '/tmp/flutter_libmwc_wallets/$walletName/';
     } else {
       return '/tmp/flutter_libmwc_wallets/$walletName/';
     }
