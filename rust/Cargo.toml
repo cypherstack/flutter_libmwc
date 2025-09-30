@@ -26,16 +26,16 @@ android_logger = "0.11.0"
 chrono = "0.4.24"
 ed25519-dalek = "1.0.0-pre.4"
 
-mwc_keychain = "5.3.5"
-mwc_util = "5.3.5"
-mwc_core = "5.3.5"
+mwc_keychain = { git = "https://github.com/cypherstack/mwc-node", subdir = "keychain", tag = "5.3.7" }
+mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util", tag = "5.3.7" }
+mwc_core = { git = "https://github.com/cypherstack/mwc-node", subdir = "core", tag = "5.3.7" }
 
-mwc_wallet_api = "5.3.4"
-mwc_wallet_impls = "5.3.4"
-mwc_wallet_libwallet = "5.3.4"
-mwc_wallet_config= "5.3.4"
-mwc_wallet_util = "5.3.4"
-mwc_wallet_controller = "5.3.4"
+mwc_wallet_api = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "api", branch = "silent" }
+mwc_wallet_impls = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "impls", branch = "silent" }
+mwc_wallet_libwallet = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "libwallet", branch = "silent" }
+mwc_wallet_config = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "config", branch = "silent" }
+mwc_wallet_util = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "util", branch = "silent" }
+mwc_wallet_controller = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "controller", branch = "silent" }
 
 url = "2.1.0"
 futures = "0.3.15"
@@ -55,3 +55,35 @@ crate-type = ["staticlib", "cdylib"]
 [patch.crates-io]
 liblmdb-sys = { git = "https://github.com/i1skn/lmdb-rs" }
 
+[patch."https://github.com/mwcproject/rust-libp2p"]
+mwc-libp2p = { git = "https://github.com/cypherstack/rust-libp2p" }
+
+[patch."https://github.com/mwcproject/wagyu-ethereum"]
+mwc-wagyu-ethereum = { git = "https://github.com/cypherstack/wagyu-ethereum" }
+
+[patch."https://github.com/mwcproject/rust-bch"]
+mwc-bch = { git = "https://github.com/cypherstack/rust-bch" }
+
+[patch."https://github.com/mwcproject/rust-bitcoin"]
+mwc-bitcoin = { git = "https://github.com/cypherstack/rust-bitcoin" }
+
+[patch."https://github.com/mwcproject/wagyu-model"]
+mwc-wagyu-model = { git = "https://github.com/cypherstack/wagyu-model" }
+
+[patch."https://github.com/mwcproject/rust-web3"]
+mwc-web3 = { git = "https://github.com/cypherstack/rust-web3" }
+
+[patch."https://github.com/mwcproject/librustzcash"]
+mwc-zcash_primitives = { git = "https://github.com/cypherstack/librustzcash", subdir = "zcash_primitives" }
+
+[patch."https://github.com/mwcproject/mwc-node"]
+mwc_api = { git = "https://github.com/cypherstack/mwc-node", subdir = "api", tag = "5.3.7" }
+mwc_chain = { git = "https://github.com/cypherstack/mwc-node", subdir = "chain", tag = "5.3.7" }
+mwc_core = { git = "https://github.com/cypherstack/mwc-node", subdir = "core", tag = "5.3.7" }
+mwc_keychain = { git = "https://github.com/cypherstack/mwc-node", subdir = "keychain", tag = "5.3.7" }
+mwc_p2p = { git = "https://github.com/cypherstack/mwc-node", subdir = "p2p", tag = "5.3.7", features = ["libp2p"] }
+mwc_store = { git = "https://github.com/cypherstack/mwc-node", subdir = "store", tag = "5.3.7" }
+mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util", tag = "5.3.7" }
+mwc_config = { git = "https://github.com/cypherstack/mwc-node", subdir = "config", tag = "5.3.7" }
+mwc_pool = { git = "https://github.com/cypherstack/mwc-node", subdir = "pool", tag = "5.3.7" }
+mwc_servers = { git = "https://github.com/cypherstack/mwc-node", subdir = "servers", tag = "5.3.7" }
