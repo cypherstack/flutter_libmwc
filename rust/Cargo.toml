@@ -27,15 +27,15 @@ chrono = "0.4.24"
 ed25519-dalek = "1.0.0-pre.4"
 
 mwc_keychain = "5.3.5"
-mwc_util = "5.3.5"
-mwc_core = "5.3.5"
+mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util" }
+mwc_core = { git = "https://github.com/cypherstack/mwc-node", subdir = "core" }
 
-mwc_wallet_api = "5.3.4"
-mwc_wallet_impls = "5.3.4"
-mwc_wallet_libwallet = "5.3.4"
-mwc_wallet_config= "5.3.4"
-mwc_wallet_util = "5.3.4"
-mwc_wallet_controller = "5.3.4"
+mwc_wallet_api = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "api", package = "grin_wallet_api" }
+mwc_wallet_impls = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "impls", package = "grin_wallet_impls" }
+mwc_wallet_libwallet = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "libwallet", package = "grin_wallet_libwallet" }
+mwc_wallet_config = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "config", package = "grin_wallet_config" }
+mwc_wallet_util = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "util", package = "grin_wallet_util" }
+mwc_wallet_controller = { git = "https://github.com/cypherstack/mwc-wallet", subdir = "controller", package = "grin_wallet_controller" }
 
 url = "2.1.0"
 futures = "0.3.15"
@@ -55,3 +55,35 @@ crate-type = ["staticlib", "cdylib"]
 [patch.crates-io]
 liblmdb-sys = { git = "https://github.com/i1skn/lmdb-rs" }
 
+[patch."https://github.com/mwcproject/rust-libp2p"]
+libp2p = { git = "https://github.com/cypherstack/rust-libp2p", branch = "patch" }
+
+[patch."https://github.com/mwcproject/wagyu-ethereum"]
+wagyu-ethereum = { git = "https://github.com/cypherstack/wagyu-ethereum", branch = "patch" }
+
+[patch."https://github.com/mwcproject/rust-bch"]
+bch = { git = "https://github.com/cypherstack/rust-bch", branch = "patch" }
+
+[patch."https://github.com/mwcproject/rust-bitcoin"]
+bitcoin = { git = "https://github.com/cypherstack/rust-bitcoin", branch = "patch" }
+
+[patch."https://github.com/mwcproject/wagyu-model"]
+wagyu-model = { git = "https://github.com/cypherstack/wagyu-model", branch = "patch" }
+
+[patch."https://github.com/mwcproject/rust-web3"]
+web3 = { git = "https://github.com/cypherstack/rust-web3", branch = "patch" }
+
+[patch."https://github.com/mwcproject/librustzcash"]
+zcash_primitives = { git = "https://github.com/cypherstack/librustzcash", branch = "patch", subdir = "zcash_primitives" }
+
+[patch."https://github.com/mwcproject/mwc-node"]
+grin_api = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "api" }
+grin_chain = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "chain" }
+grin_core = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "core" }
+grin_keychain = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "keychain" }
+grin_p2p = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "p2p", features = ["libp2p"] }
+grin_store = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "store" }
+grin_util = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "util" }
+grin_config = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "config" }
+grin_pool = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "pool" }
+grin_servers = { git = "https://github.com/cypherstack/mwc-node", branch = "patch", subdir = "servers" }
