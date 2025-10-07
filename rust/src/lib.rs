@@ -1610,7 +1610,7 @@ pub fn tx_create(
 
     match owner_api.init_send_tx(keychain_mask.as_ref(), &args, 1) {
         Ok(slate)=> {
-            debug!("SLATE SEND RESPONSE IS  {:?}", slate);
+            // debug!("SLATE SEND RESPONSE IS  {:?}", slate);
             //Get transaction for the slate, we will use type to determing if we should finalize or receive tx
             let txs = match owner_api.retrieve_txs(
                 keychain_mask.as_ref(),

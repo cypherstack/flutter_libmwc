@@ -599,12 +599,12 @@ abstract class Libmwc {
   ///
   /// Private function wrapper for open wallet function
   ///
-  static Future<String> _openWalletWrapper(
+  static String _openWalletWrapper(
     ({
       String config,
       String password,
     }) data,
-  ) async {
+  ) {
     return lib_mwc.openWallet(
       data.config,
       data.password,
@@ -617,15 +617,11 @@ abstract class Libmwc {
   static Future<String> openWallet({
     required String config,
     required String password,
-  }) async {
-    try {
-      return await compute(_openWalletWrapper, (
-        config: config,
-        password: password,
-      ));
-    } catch (e) {
-      throw ("Error opening wallet : ${e.toString()}");
-    }
+  }) {
+    return compute(_openWalletWrapper, (
+      config: config,
+      password: password,
+    ));
   }
 
   ///

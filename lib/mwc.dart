@@ -296,8 +296,32 @@ final OpenWallet _openWallet = mwcNative
     .asFunction();
 
 String openWallet(String config, String password) {
-  return _openWallet(config.toNativeUtf8(), password.toNativeUtf8())
-      .toDartString();
+  final configPointer = config.toNativeUtf8();
+  final passwordPointer = password.toNativeUtf8();
+
+  final handlePointer = _openWallet(configPointer, passwordPointer);
+  malloc.free(configPointer);
+  malloc.free(passwordPointer);
+
+  if (handlePointer == nullptr) {
+    throw Exception("Failed to open wallet: Received null pointer from rust!");
+  }
+
+  final handle = handlePointer.toDartString().trim();
+  malloc.free(handlePointer);
+
+  if (handle.startsWith("[") && handle.endsWith("]")) {
+    final parts = handle.split(",");
+    if (parts.length != 2 ||
+        BigInt.tryParse(parts.first.substring(1)) == null) {
+      throw Exception(handle);
+    }
+
+    return handle;
+  } else {
+    // probably an error
+    throw Exception(handle);
+  }
 }
 
 final TxHttpSend _txHttpSend = mwcNative
