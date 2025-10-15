@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-FLUTTER_PLUGIN_EXPORT void FlutterLibMWCPluginCApiRegisterWithRegistrar(
+FLUTTER_PLUGIN_EXPORT void FlutterLibmwcPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
 #if defined(__cplusplus)
