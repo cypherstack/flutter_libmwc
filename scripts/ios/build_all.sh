@@ -14,6 +14,9 @@ cd build/rust
 
 rustup target add aarch64-apple-ios x86_64-apple-ios
 
+# some people need this apparently
+export PROTOC=/opt/homebrew/bin/protoc
+
 # building
 cbindgen src/lib.rs -l c > libmwc_wallet.h
 cargo lipo --release
