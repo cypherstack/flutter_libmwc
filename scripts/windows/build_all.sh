@@ -26,3 +26,8 @@ else
 fi
 
 cp target/x86_64-pc-windows-gnu/release/mwc_wallet.dll ../libmwc_wallet.dll
+
+# Copy MinGW runtime DLLs required by libmwc_wallet.dll.
+cp /usr/lib/gcc/x86_64-w64-mingw32/13-posix/libstdc++-6.dll ../
+cp /usr/lib/gcc/x86_64-w64-mingw32/13-posix/libgcc_s_seh-1.dll ../
+cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll ../
