@@ -49,10 +49,21 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
+set(MY_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../scripts/windows/build")
+
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
-set(flutter_libmwc_bundled_libraries
-  ""
-  PARENT_SCOPE
-)
+if (EXISTS "${MY_BUILD_DIR}/libstdc++-6.dll")
+    set(flutter_libmwc_bundled_libraries
+            ""
+            "${MY_BUILD_DIR}/libstdc++-6.dll"
+            "${MY_BUILD_DIR}/libgcc_s_seh-1.dll"
+            PARENT_SCOPE
+    )
+else ()
+    set(flutter_libmwc_bundled_libraries
+            ""
+            PARENT_SCOPE
+    )
+endif ()
