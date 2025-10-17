@@ -30,7 +30,7 @@ class FFITestApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        cardTheme: const CardTheme(
+        cardTheme: const CardThemeData(
           elevation: 4,
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
