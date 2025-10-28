@@ -14,6 +14,9 @@ sed -i '' '/\/\*${OS}_VERSION/c\'$'\n''/\*${OS}_VERSION\*\/ const ${OS}_VERSION 
 cp -r ../../rust build/rust
 cd build/rust
 
+# some people need this apparently
+export PROTOC=/opt/homebrew/bin/protoc
+
 # building
 cbindgen src/lib.rs -l c > libmwc_wallet.h
 cargo lipo --release --targets aarch64-apple-darwin
