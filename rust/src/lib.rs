@@ -1303,9 +1303,7 @@ fn get_wallet(config: &Config) -> Result<Wallet, Error> {
         }
     };
     let target_chaintype = wallet_config.chain_type.unwrap_or(ChainTypes::Mainnet);
-    if !global::GLOBAL_CHAIN_TYPE.is_init() {
-        global::init_global_chain_type(target_chaintype)
-    };
+    global::set_global_chain_type(target_chaintype);
     if global::get_chain_type() != target_chaintype {
         global::set_local_chain_type(target_chaintype);
     };
