@@ -1,41 +1,32 @@
 #!/bin/bash
-
-# IOS publish script WIP; doublecheck that they follow patterns in linux/android scripts before running
+set -e
 
 LIB_ROOT=../..
-OS=ios
-IOS_LIBS_DIR=$LIB_ROOT/$OS/libs
-IOS_INCL_DIR=$LIB_ROOT/$OS/include
+REPO="cypherstack/flutter_libmwc"
+BASE_URL="https://github.com/${REPO}/releases/download"
 
-TAG_COMMIT=$(git log -1 --pretty=format:"%H")
+TAG=$(git -C "$LIB_ROOT" describe --tags --exact-match HEAD 2>/dev/null) || {
+    echo "Error: flutter_libmwc is not at a tagged commit."
+    echo "Pin the submodule to a release tag to use download mode."
+    echo "Current commit: $(git -C "$LIB_ROOT" rev-parse HEAD)"
+    exit 1
+}
 
-rm -rf flutter_libmwc_bins
-git clone https://git.cypherstack.com/stackwallet/flutter_libmwc_bins
-if [ -d flutter_libmwc_bins ]; then
-  cd flutter_libmwc_bins
-else
-  echo "Failed to clone flutter_libmwc_bins"
-  exit 1
-fi
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"' EXIT
 
-HEADER=libmwc_wallet.h
-BIN=libmwc_wallet.a
+curl -fSL "${BASE_URL}/${TAG}/checksums.txt" -o "$TMPDIR/checksums.txt"
 
-for TARGET in aarch64-apple-ios
-do
-  ARCH_PATH=$TARGET/release
-  if [ $(git tag -l $TARGET"_$TAG_COMMIT") ]; then
-      git checkout $TARGET"_$TAG_COMMIT"
-      if [ -f "$OS/$ARCH_PATH/$BIN" ]; then
-        mkdir -p ../$IOS_LIBS_DIR
-        mkdir -p ../$IOS_INCL_DIR
-        # TODO verify bin checksum hashes
-        cp -rf "$OS/$ARCH_PATH/$BIN" "../$IOS_LIBS_DIR/$BIN"
-        cp -rf "$OS/$ARCH_PATH/$HEADER" "../$IOS_INCL_DIR/$HEADER"
-      else
-        echo "$TARGET not found!"
-      fi
-  else
-      echo "No precompiled bins for $TARGET found!"
-  fi
-done
+download_and_verify() {
+    local asset="$1"
+    curl -fSL "${BASE_URL}/${TAG}/${asset}" -o "$TMPDIR/${asset}"
+    grep "^[0-9a-f]*  ${asset}$" "$TMPDIR/checksums.txt" | (cd "$TMPDIR" && sha256sum -c)
+}
+
+download_and_verify "libmwc_wallet-ios-aarch64.a"
+mkdir -p "$LIB_ROOT/ios/libs"
+cp "$TMPDIR/libmwc_wallet-ios-aarch64.a" "$LIB_ROOT/ios/libs/libmwc_wallet.a"
+
+download_and_verify "libmwc_wallet.h"
+mkdir -p "$LIB_ROOT/ios/include"
+cp "$TMPDIR/libmwc_wallet.h" "$LIB_ROOT/ios/include/libmwc_wallet.h"
