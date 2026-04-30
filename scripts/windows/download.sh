@@ -23,12 +23,14 @@ download_and_verify() {
     grep "^[0-9a-f]*  ${asset}$" "$TMPDIR/checksums.txt" | (cd "$TMPDIR" && sha256sum -c)
 }
 
-download_and_verify "libmwc_wallet-linux-x86_64.so"
-mkdir -p "$LIB_ROOT/linux/bin/x86_64-unknown-linux-gnu/release"
-cp "$TMPDIR/libmwc_wallet-linux-x86_64.so" \
-   "$LIB_ROOT/linux/bin/x86_64-unknown-linux-gnu/release/libmwc_wallet.so"
+WINLIBS="$LIB_ROOT/windows/libs"
+mkdir -p "$WINLIBS"
 
-download_and_verify "libmwc_wallet-linux-aarch64.so"
-mkdir -p "$LIB_ROOT/linux/bin/aarch64-unknown-linux-gnu/release"
-cp "$TMPDIR/libmwc_wallet-linux-aarch64.so" \
-   "$LIB_ROOT/linux/bin/aarch64-unknown-linux-gnu/release/libmwc_wallet.so"
+download_and_verify "libmwc_wallet-windows-x86_64.dll"
+cp "$TMPDIR/libmwc_wallet-windows-x86_64.dll" "$WINLIBS/libmwc_wallet.dll"
+
+download_and_verify "libstdc++-6.dll"
+cp "$TMPDIR/libstdc++-6.dll" "$WINLIBS/libstdc++-6.dll"
+
+download_and_verify "libgcc_s_seh-1.dll"
+cp "$TMPDIR/libgcc_s_seh-1.dll" "$WINLIBS/libgcc_s_seh-1.dll"
