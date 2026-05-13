@@ -1376,6 +1376,15 @@ pub fn get_chain_height(config: &str) -> Result<u64, Error> {
             return  Err(e);
         }
     };
+    // HTTPNodeClient::get_chain_tip touches MWC code paths that require the
+    // chain type to be set. get_chain_height can run before any wallet-open
+    // path on a fresh process (e.g. via Stack Wallet's chainHeight getter
+    // firing on shouldAutoSync), so we must initialize chain type here too.
+    let target_chaintype = wallet_config.chain_type.unwrap_or(ChainTypes::Mainnet);
+    global::set_global_chain_type(target_chaintype);
+    if global::get_chain_type() != target_chaintype {
+        global::set_local_chain_type(target_chaintype);
+    };
     let node_api_secret = get_first_line(wallet_config.node_api_secret_path.clone());
     let node_client = HTTPNodeClient::new(vec![wallet_config.check_node_api_http_addr], node_api_secret)
         .map_err(|e| Error::ClientCallback(format!("{}", e)))?;
