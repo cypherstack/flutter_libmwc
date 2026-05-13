@@ -110,9 +110,12 @@ static PANIC_HOOK_INIT: Once = Once::new();
 /// leave evidence. Idempotent across calls and threads thanks to `Once`.
 fn install_panic_hook() {
     PANIC_HOOK_INIT.call_once(|| {
+        // Stack Wallet's Linux data dir is ~/.stackwallet (legacy naming),
+        // not the XDG default. Write there so panic logs sit next to wallet
+        // data the user can grab. Fall back to /tmp if HOME is unset.
         let log_path = std::env::var_os("HOME")
             .map(PathBuf::from)
-            .map(|p| p.join(".local/share/stack_wallet/flutter_libmwc-panic.log"))
+            .map(|p| p.join(".stackwallet/flutter_libmwc-panic.log"))
             .unwrap_or_else(|| PathBuf::from("/tmp/flutter_libmwc-panic.log"));
         if let Some(parent) = log_path.parent() {
             let _ = std::fs::create_dir_all(parent);
@@ -529,36 +532,55 @@ pub unsafe extern "C" fn mwc_rust_wallet_scan_outputs(
     start_height: *const c_char,
     number_of_blocks: *const c_char,
 ) -> *const c_char {
-    let wallet_ptr = CStr::from_ptr(wallet);
-    let c_start_height = CStr::from_ptr(start_height);
-    let c_number_of_blocks = CStr::from_ptr(number_of_blocks);
-    let start_height: u64 = c_start_height.to_str().unwrap().to_string().parse().unwrap();
-    let number_of_blocks: u64 = c_number_of_blocks.to_str().unwrap().to_string().parse().unwrap();
+    install_panic_hook();
+    let wallet_ptr_raw = wallet;
+    let start_height_raw = start_height;
+    let number_of_blocks_raw = number_of_blocks;
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let wallet_ptr = CStr::from_ptr(wallet_ptr_raw);
+        let c_start_height = CStr::from_ptr(start_height_raw);
+        let c_number_of_blocks = CStr::from_ptr(number_of_blocks_raw);
+        let start_height: u64 = c_start_height.to_str().unwrap().to_string().parse().unwrap();
+        let number_of_blocks: u64 = c_number_of_blocks.to_str().unwrap().to_string().parse().unwrap();
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
-    let wlt = tuple_wallet_data.0;
-    let sek_key = tuple_wallet_data.1;
+        let wallet_data = wallet_ptr.to_str().unwrap();
+        let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+        let wlt = tuple_wallet_data.0;
+        let sek_key = tuple_wallet_data.1;
 
-    ensure_wallet!(wlt, wallet);
+        ensure_wallet!(wlt, wallet);
 
-    let result = match _wallet_scan_outputs(
-        wallet,
-        sek_key,
-        start_height,
-        number_of_blocks
-    ) {
-        Ok(scan) => {
-            scan
-        }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
-            let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
-            std::mem::forget(error_msg_ptr);
+        match _wallet_scan_outputs(
+            wallet,
+            sek_key,
+            start_height,
+            number_of_blocks
+        ) {
+            Ok(scan) => scan,
+            Err(e) => {
+                let error_msg = format!("Error {}", &e.to_string());
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
+        }
+    }));
+    match result {
+        Ok(ptr) => ptr,
+        Err(_) => {
+            // Panic already captured by install_panic_hook; surface a Dart-side
+            // error so the wallet's _startScans rethrows rather than the host
+            // process aborting on the unwind boundary.
+            let error_msg = CString::new(
+                "Error scanOutputs panicked; see flutter_libmwc-panic.log",
+            )
+            .unwrap();
+            let ptr = error_msg.as_ptr();
+            std::mem::forget(error_msg);
             ptr
         }
-    };
-    result
+    }
 }
 
 fn _wallet_scan_outputs(
