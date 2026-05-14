@@ -1,8 +1,9 @@
 use std::cmp::Ordering;
 use std::os::raw::c_char;
 use std::ffi::{CString, CStr, c_void};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::sync::Once;
 use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -101,6 +102,57 @@ macro_rules! ensure_wallet (
         let $wallet = ($wallet_ptr as *mut Wallet).as_mut().unwrap();
     )
 );
+
+static PANIC_HOOK_INIT: Once = Once::new();
+
+// Appends panics to ~/.stackwallet/flutter_libmwc-panic.log so worker-thread
+// panics that bypass stderr still leave a trail.
+fn install_panic_hook() {
+    PANIC_HOOK_INIT.call_once(|| {
+        let log_path = std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .map(|p| p.join(".stackwallet/flutter_libmwc-panic.log"))
+            .unwrap_or_else(|| PathBuf::from("/tmp/flutter_libmwc-panic.log"));
+        if let Some(parent) = log_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let previous = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            let payload = info.payload();
+            let msg = if let Some(s) = payload.downcast_ref::<&str>() {
+                (*s).to_string()
+            } else if let Some(s) = payload.downcast_ref::<String>() {
+                s.clone()
+            } else {
+                "<non-string panic payload>".to_string()
+            };
+            let location = info.location()
+                .map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()))
+                .unwrap_or_else(|| "<unknown>".to_string());
+            let backtrace = std::backtrace::Backtrace::force_capture();
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+            let thread = std::thread::current();
+            let thread_name = thread.name().unwrap_or("<unnamed>");
+            let entry = format!(
+                "\n=== flutter_libmwc panic at unix={} ===\nthread: {}\nlocation: {}\nmessage: {}\nbacktrace:\n{}\n",
+                timestamp, thread_name, location, msg, backtrace,
+            );
+            if let Ok(mut f) = std::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&log_path)
+            {
+                use std::io::Write;
+                let _ = f.write_all(entry.as_bytes());
+                let _ = f.flush();
+            }
+            previous(info);
+        }));
+    });
+}
 
 
 fn init_logger() {
@@ -276,6 +328,7 @@ pub unsafe extern "C"  fn mwc_rust_open_wallet(
     config: *const c_char,
     password: *const c_char,
 ) -> *const c_char {
+    install_panic_hook();
     //init_logger();
     let result = match _open_wallet(
         config,
@@ -475,36 +528,49 @@ pub unsafe extern "C" fn mwc_rust_wallet_scan_outputs(
     start_height: *const c_char,
     number_of_blocks: *const c_char,
 ) -> *const c_char {
-    let wallet_ptr = CStr::from_ptr(wallet);
-    let c_start_height = CStr::from_ptr(start_height);
-    let c_number_of_blocks = CStr::from_ptr(number_of_blocks);
-    let start_height: u64 = c_start_height.to_str().unwrap().to_string().parse().unwrap();
-    let number_of_blocks: u64 = c_number_of_blocks.to_str().unwrap().to_string().parse().unwrap();
+    install_panic_hook();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        let wallet_ptr = CStr::from_ptr(wallet);
+        let c_start_height = CStr::from_ptr(start_height);
+        let c_number_of_blocks = CStr::from_ptr(number_of_blocks);
+        let start_height: u64 = c_start_height.to_str().unwrap().to_string().parse().unwrap();
+        let number_of_blocks: u64 = c_number_of_blocks.to_str().unwrap().to_string().parse().unwrap();
 
-    let wallet_data = wallet_ptr.to_str().unwrap();
-    let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
-    let wlt = tuple_wallet_data.0;
-    let sek_key = tuple_wallet_data.1;
+        let wallet_data = wallet_ptr.to_str().unwrap();
+        let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
+        let wlt = tuple_wallet_data.0;
+        let sek_key = tuple_wallet_data.1;
 
-    ensure_wallet!(wlt, wallet);
+        ensure_wallet!(wlt, wallet);
 
-    let result = match _wallet_scan_outputs(
-        wallet,
-        sek_key,
-        start_height,
-        number_of_blocks
-    ) {
-        Ok(scan) => {
-            scan
-        }, Err(e ) => {
-            let error_msg = format!("Error {}", &e.to_string());
-            let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
-            std::mem::forget(error_msg_ptr);
+        match _wallet_scan_outputs(
+            wallet,
+            sek_key,
+            start_height,
+            number_of_blocks
+        ) {
+            Ok(scan) => scan,
+            Err(e) => {
+                let error_msg = format!("Error {}", &e.to_string());
+                let error_msg_ptr = CString::new(error_msg).unwrap();
+                let ptr = error_msg_ptr.as_ptr();
+                std::mem::forget(error_msg_ptr);
+                ptr
+            }
+        }
+    }));
+    match result {
+        Ok(ptr) => ptr,
+        Err(_) => {
+            let error_msg = CString::new(
+                "Error scanOutputs panicked; see flutter_libmwc-panic.log",
+            )
+            .unwrap();
+            let ptr = error_msg.as_ptr();
+            std::mem::forget(error_msg);
             ptr
         }
-    };
-    result
+    }
 }
 
 fn _wallet_scan_outputs(
@@ -751,6 +817,7 @@ fn _tx_cancel(
 pub unsafe extern "C" fn mwc_rust_get_chain_height(
     config: *const c_char,
 ) -> *const c_char {
+    install_panic_hook();
     let result = match _get_chain_height(
         config
     ) {
@@ -1376,6 +1443,13 @@ pub fn get_chain_height(config: &str) -> Result<u64, Error> {
             return  Err(e);
         }
     };
+    // get_chain_tip reads chain type; init it here since this entry point
+    // can fire before any get_wallet call.
+    let target_chaintype = wallet_config.chain_type.unwrap_or(ChainTypes::Mainnet);
+    global::set_global_chain_type(target_chaintype);
+    if global::get_chain_type() != target_chaintype {
+        global::set_local_chain_type(target_chaintype);
+    };
     let node_api_secret = get_first_line(wallet_config.node_api_secret_path.clone());
     let node_client = HTTPNodeClient::new(vec![wallet_config.check_node_api_http_addr], node_api_secret)
         .map_err(|e| Error::ClientCallback(format!("{}", e)))?;
@@ -1902,6 +1976,13 @@ impl Task for Listener {
     type Output = usize;
 
     fn run(&self, cancel_tok: &CancellationToken) -> Result<Self::Output, anyhow::Error> {
+        install_panic_hook();
+        // export_task! runs us on a fresh thread; seed CHAIN_TYPE for it.
+        let target_chaintype = ChainTypes::Mainnet;
+        global::set_global_chain_type(target_chaintype);
+        if global::get_chain_type() != target_chaintype {
+            global::set_local_chain_type(target_chaintype);
+        }
         let mut spins = 0;
         let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(&self.wallet_ptr_str)?;
         let wlt = tuple_wallet_data.0;
@@ -1947,6 +2028,7 @@ pub unsafe extern "C" fn mwc_rust_mwcmqs_listener_start(
     wallet: *const c_char,
     mwcmqs_config: *const c_char,
 ) -> *mut c_void {
+    install_panic_hook();
     let wallet_ptr = CStr::from_ptr(wallet);
     let mwcmqs_config = CStr::from_ptr(mwcmqs_config);
     let mwcmqs_config = mwcmqs_config.to_str().unwrap();
