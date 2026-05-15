@@ -23,7 +23,7 @@ download_and_verify() {
     grep "^[0-9a-f]*  ${asset}$" "$TMPDIR/checksums.txt" | (cd "$TMPDIR" && sha256sum -c)
 }
 
-WINLIBS="$LIB_ROOT/windows/libs"
+WINLIBS="$LIB_ROOT/scripts/windows/build"
 mkdir -p "$WINLIBS"
 
 download_and_verify "libmwc_wallet-windows-x86_64.dll"
