@@ -104,6 +104,7 @@ macro_rules! ensure_wallet (
 );
 
 static PANIC_HOOK_INIT: Once = Once::new();
+static MWC_LOGGER_INIT: Once = Once::new();
 
 // Appends panics to ~/.stackwallet/flutter_libmwc-panic.log so worker-thread
 // panics that bypass stderr still leave a trail.
@@ -864,12 +865,18 @@ pub fn _init_logs(config: &str) -> Result<*const c_char, Error> {
         }
     };
 
-    let log = LoggingConfig {
-        file_log_level: Level::Trace,
-        log_file_path: format!("{}/mwc-wallet.log", config.wallet_dir),
-        ..LoggingConfig::default()
-    };
-    let _ = mwc_wallet_init_logger(Some(log), None);
+    // Upstream mwc_util::init_logger does not guard log4rs::init_config against
+    // re-entry; calling it twice panics with SetLoggerError and aborts across
+    // the FFI boundary. Wrap in Once so repeat calls (hot reload, parallel
+    // wallet opens, etc.) are no-ops at the Rust layer.
+    MWC_LOGGER_INIT.call_once(|| {
+        let log = LoggingConfig {
+            file_log_level: Level::Trace,
+            log_file_path: format!("{}/mwc-wallet.log", config.wallet_dir),
+            ..LoggingConfig::default()
+        };
+        let _ = mwc_wallet_init_logger(Some(log), None);
+    });
     let success_msg = CString::new("Logger initialized successfully").unwrap();
     Ok(success_msg.into_raw())
 }
