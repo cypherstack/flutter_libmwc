@@ -30,3 +30,13 @@ cp "$TMPDIR/libmwc_wallet-ios-aarch64.a" "$LIB_ROOT/ios/libs/libmwc_wallet.a"
 download_and_verify "libmwc_wallet.h"
 mkdir -p "$LIB_ROOT/ios/include"
 cp "$TMPDIR/libmwc_wallet.h" "$LIB_ROOT/ios/include/libmwc_wallet.h"
+
+# Release artifacts are device-only; wrap the device slice in an XCFramework
+# so the podspec's vendored_frameworks entry resolves. Simulator consumers
+# must additionally run scripts/ios/build_sim.sh.
+PLUGIN_ROOT="$(cd "$LIB_ROOT" && pwd)"
+rm -rf "$PLUGIN_ROOT/ios/libs/mwc_wallet.xcframework"
+xcodebuild -create-xcframework \
+    -library "$PLUGIN_ROOT/ios/libs/libmwc_wallet.a" \
+    -headers "$PLUGIN_ROOT/ios/include" \
+    -output "$PLUGIN_ROOT/ios/libs/mwc_wallet.xcframework"
