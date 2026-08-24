@@ -1,0 +1,41 @@
+FROM stagex/pallet-rust AS build
+COPY --from=stagex/core-cmake . /
+COPY --from=stagex/core-make . /
+COPY --from=stagex/core-perl . /
+COPY --from=stagex/core-openssl . /
+COPY --from=stagex/user-abseil-cpp . /
+COPY --from=stagex/user-protobuf . /
+ARG VERSION
+ARG TARGETARCH
+ADD fetch/flutter_libmwc-${VERSION}.tar.gz /
+WORKDIR /flutter_libmwc-${VERSION}/rust
+ENV SOURCE_DATE_EPOCH=1
+ENV PROTOC=/usr/bin/protoc
+RUN <<-EOF
+	set -eu
+	# These three patches are recorded as unused. Remove them before fetching so
+	# mutable branch heads which do not contribute to the artifact are excluded.
+	sed -i '/^mwc_config = { git = "https:\/\/github.com\/cypherstack\/mwc-node"/d' Cargo.toml
+	sed -i '/^mwc_servers = { git = "https:\/\/github.com\/cypherstack\/mwc-node"/d' Cargo.toml
+	sed -i '/^mwc-bitcoin = { git = "https:\/\/github.com\/cypherstack\/rust-bitcoin"/d' Cargo.toml
+	# Cargo only removes the now-impossible unused-patch records from Cargo.lock;
+	# the used dependency graph remains pinned and the actual build is frozen.
+	cargo fetch
+EOF
+ENV CARGO_NET_OFFLINE=true
+ENV CXXSTDLIB=c++
+ENV RUSTFLAGS="-C debuginfo=0 -C codegen-units=1 --remap-path-prefix=/flutter_libmwc-${VERSION}=."
+RUN --network=none <<-EOF
+	set -eu
+	cargo build \
+		--frozen \
+		--release \
+		--target "${ARCH}-unknown-linux-musl" \
+		--lib
+	install -Dm755 \
+		"target/${ARCH}-unknown-linux-musl/release/libmwc_wallet.so" \
+		/rootfs/usr/lib/libmwc_wallet.so
+EOF
+
+FROM stagex/core-filesystem AS package
+COPY --from=build /rootfs/ /

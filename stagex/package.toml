@@ -1,0 +1,11 @@
+[package]
+name = "stack-wallet-mwc"
+version = "c8db22aed2c50aa1e95dfc532abb0a4961c543d7"
+description = "Native MWC wallet library used by Stack Wallet"
+license = "NOASSERTION"
+website = "https://github.com/cypherstack/flutter_libmwc"
+
+[sources.flutter-libmwc]
+hash = "fd5ee9961cdd69aa42ed1310db095d842aa99fd9a7c5ffbe18cc7308e23dc2ae"
+file = "flutter_libmwc-{version}.tar.gz"
+mirrors = ["https://github.com/cypherstack/flutter_libmwc/archive/{version}.tar.gz"]
