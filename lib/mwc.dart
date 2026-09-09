@@ -1,20 +1,9 @@
 import 'dart:ffi';
-import 'dart:io' as io;
 
 import 'package:ffi/ffi.dart';
 
-final DynamicLibrary mwcNative = io.Platform.isWindows
-    ? DynamicLibrary.open("libmwc_wallet.dll")
-    : io.Platform.environment.containsKey('FLUTTER_TEST')
-    ? DynamicLibrary.open(
-    'crypto_plugins/flutter_libmwc/scripts/linux/build/libmwc_wallet.so')
-    : io.Platform.isAndroid || io.Platform.isLinux
-    ? DynamicLibrary.open('libmwc_wallet.so')
-    : DynamicLibrary.process();
-
 typedef WalletMnemonic = Pointer<Utf8> Function();
 typedef WalletMnemonicFFI = Pointer<Utf8> Function();
-
 
 typedef InitLogs = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef InitLogsFFI = Pointer<Utf8> Function(Pointer<Utf8>);
@@ -44,8 +33,13 @@ typedef ScanOutPutsFFI = Pointer<Utf8> Function(
 
 typedef CreateTransaction = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
     Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>);
-typedef CreateTransactionFFI = Pointer<Utf8> Function(Pointer<Utf8>,
-    Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>,
+typedef CreateTransactionFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>,
+    Pointer<Int8>,
+    Pointer<Utf8>,
+    Pointer<Int8>,
+    Pointer<Utf8>,
+    Pointer<Int8>,
     Pointer<Utf8>);
 
 typedef MwcMqsListenerStart = Pointer<Void> Function(
@@ -68,10 +62,8 @@ typedef CancelTransactionFFI = Pointer<Utf8> Function(
 typedef GetChainHeight = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef GetChainHeightFFI = Pointer<Utf8> Function(Pointer<Utf8>);
 
-typedef AddressInfo = Pointer<Utf8> Function(
-    Pointer<Utf8>, Pointer<Int8>);
-typedef AddressInfoFFI = Pointer<Utf8> Function(
-    Pointer<Utf8>, Pointer<Int8>);
+typedef AddressInfo = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>);
+typedef AddressInfoFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>);
 
 typedef ValidateAddress = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef ValidateAddressFFI = Pointer<Utf8> Function(Pointer<Utf8>);
@@ -93,7 +85,8 @@ typedef TxHttpSendFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Int8>,
     Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>, Pointer<Utf8>);
 
 typedef EncodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
-typedef EncodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef EncodeSlatepackFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>);
 
 typedef EncodeSlatepackEnhanced = Pointer<Utf8> Function(
     Pointer<Utf8>, Pointer<Utf8>, Pointer<Utf8>);
@@ -103,8 +96,10 @@ typedef EncodeSlatepackEnhancedFFI = Pointer<Utf8> Function(
 typedef DecodeSlatepack = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef DecodeSlatepackFFI = Pointer<Utf8> Function(Pointer<Utf8>);
 
-typedef DecodeSlatepackEnhanced = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
-typedef DecodeSlatepackEnhancedFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef DecodeSlatepackEnhanced = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>);
+typedef DecodeSlatepackEnhancedFFI = Pointer<Utf8> Function(
+    Pointer<Utf8>, Pointer<Utf8>);
 
 typedef TxReceive = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
 typedef TxReceiveFFI = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
@@ -117,62 +112,72 @@ typedef TxInit = Pointer<Utf8> Function(
 typedef TxInitFFI = Pointer<Utf8> Function(
     Pointer<Utf8>, Pointer<Int8>, Pointer<Int8>, Pointer<Utf8>, Pointer<Int8>);
 
-final WalletMnemonic _walletMnemonic = mwcNative
-    .lookup<NativeFunction<WalletMnemonicFFI>>("mwc_get_mnemonic")
-    .asFunction();
+@Native<WalletMnemonicFFI>(symbol: 'mwc_get_mnemonic')
+external Pointer<Utf8> _walletMnemonic();
 
 String walletMnemonic() {
   return _walletMnemonic().toDartString();
 }
 
+@Native<InitLogsFFI>(symbol: 'mwc_rust_init_logs')
+external Pointer<Utf8> _initLogs(Pointer<Utf8> config);
 
-final InitLogs _initLogs = mwcNative
-    .lookup<NativeFunction<InitLogsFFI>>("mwc_rust_init_logs")
-    .asFunction();
-
-String initLogs( String config) {
-  return _initLogs(config.toNativeUtf8())
-      .toDartString();
+String initLogs(String config) {
+  return _initLogs(config.toNativeUtf8()).toDartString();
 }
 
-final WalletInit _initWallet = mwcNative
-    .lookup<NativeFunction<WalletInitFFI>>("mwc_wallet_init")
-    .asFunction();
+@Native<WalletInitFFI>(symbol: 'mwc_wallet_init')
+external Pointer<Utf8> _initWallet(
+  Pointer<Utf8> config,
+  Pointer<Utf8> mnemonic,
+  Pointer<Utf8> password,
+  Pointer<Utf8> name,
+);
 
 String initWallet(
     String config, String mnemonic, String password, String name) {
   return _initWallet(config.toNativeUtf8(), mnemonic.toNativeUtf8(),
-      password.toNativeUtf8(), name.toNativeUtf8())
+          password.toNativeUtf8(), name.toNativeUtf8())
       .toDartString();
 }
 
-final WalletInfo _walletInfo = mwcNative
-    .lookup<NativeFunction<WalletInfoFFI>>("mwc_rust_wallet_balances")
-    .asFunction();
+@Native<WalletInfoFFI>(symbol: 'mwc_rust_wallet_balances')
+external Pointer<Utf8> _walletInfo(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> refresh,
+  Pointer<Int8> min_confirmations,
+);
 
 Future<String> getWalletInfo(
     String wallet, int refreshFromNode, int min_confirmations) async {
   return _walletInfo(
-      wallet.toNativeUtf8(),
-      refreshFromNode.toString().toNativeUtf8().cast<Int8>(),
-      min_confirmations.toString().toNativeUtf8().cast<Int8>())
+          wallet.toNativeUtf8(),
+          refreshFromNode.toString().toNativeUtf8().cast<Int8>(),
+          min_confirmations.toString().toNativeUtf8().cast<Int8>())
       .toDartString();
 }
 
-final RecoverWallet _recoverWallet = mwcNative
-    .lookup<NativeFunction<RecoverWalletFFI>>("mwc_rust_recover_from_mnemonic")
-    .asFunction();
+@Native<RecoverWalletFFI>(symbol: 'mwc_rust_recover_from_mnemonic')
+external Pointer<Utf8> _recoverWallet(
+  Pointer<Utf8> config,
+  Pointer<Utf8> password,
+  Pointer<Utf8> mnemonic,
+  Pointer<Utf8> name,
+);
 
 String recoverWallet(
     String config, String password, String mnemonic, String name) {
   return _recoverWallet(config.toNativeUtf8(), password.toNativeUtf8(),
-      mnemonic.toNativeUtf8(), name.toNativeUtf8())
+          mnemonic.toNativeUtf8(), name.toNativeUtf8())
       .toDartString();
 }
 
-final ScanOutPuts _scanOutPuts = mwcNative
-    .lookup<NativeFunction<ScanOutPutsFFI>>("mwc_rust_wallet_scan_outputs")
-    .asFunction();
+@Native<ScanOutPutsFFI>(symbol: 'mwc_rust_wallet_scan_outputs')
+external Pointer<Utf8> _scanOutPuts(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> start_height,
+  Pointer<Int8> number_of_blocks,
+);
 
 Future<String> scanOutPuts(
     String wallet, int startHeight, int numberOfBlocks) async {
@@ -183,10 +188,11 @@ Future<String> scanOutPuts(
   ).toDartString();
 }
 
-final MwcMqsListenerStart _MwcMqsListenerStart = mwcNative
-    .lookup<NativeFunction<MwcMqsListenerStartFFI>>(
-    "mwc_rust_mwcmqs_listener_start")
-    .asFunction();
+@Native<MwcMqsListenerStartFFI>(symbol: 'mwc_rust_mwcmqs_listener_start')
+external Pointer<Void> _MwcMqsListenerStart(
+  Pointer<Utf8> wallet,
+  Pointer<Utf8> mwcmqs_config,
+);
 
 Pointer<Void> mwcMqsListenerStart(String wallet, String MWCMQSConfig) {
   return _MwcMqsListenerStart(
@@ -195,9 +201,8 @@ Pointer<Void> mwcMqsListenerStart(String wallet, String MWCMQSConfig) {
   );
 }
 
-final MwcMqsListenerStop _MwcMqsListenerStop = mwcNative
-    .lookup<NativeFunction<MwcMqsListenerStopFFI>>("mwc_listener_cancel")
-    .asFunction();
+@Native<MwcMqsListenerStopFFI>(symbol: 'mwc_listener_cancel')
+external Pointer<Utf8> _MwcMqsListenerStop(Pointer<Void> handler);
 
 String mwcMqsListenerStop(Pointer<Void> handler) {
   return _MwcMqsListenerStop(
@@ -205,12 +210,25 @@ String mwcMqsListenerStop(Pointer<Void> handler) {
   ).toDartString();
 }
 
-final CreateTransaction _createTransaction = mwcNative
-    .lookup<NativeFunction<CreateTransactionFFI>>("mwc_rust_create_tx")
-    .asFunction();
+@Native<CreateTransactionFFI>(symbol: 'mwc_rust_create_tx')
+external Pointer<Utf8> _createTransaction(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> amount,
+  Pointer<Utf8> to_address,
+  Pointer<Int8> secret_key_index,
+  Pointer<Utf8> mwcmqs_config,
+  Pointer<Int8> confirmations,
+  Pointer<Utf8> note,
+);
 
-Future<String> createTransaction(String wallet, int amount, String address,
-    int secretKey, String MWCMQSConfig, int minimumConfirmations, String note) async {
+Future<String> createTransaction(
+    String wallet,
+    int amount,
+    String address,
+    int secretKey,
+    String MWCMQSConfig,
+    int minimumConfirmations,
+    String note) async {
   return _createTransaction(
     wallet.toNativeUtf8(),
     amount.toString().toNativeUtf8().cast<Int8>(),
@@ -222,78 +240,85 @@ Future<String> createTransaction(String wallet, int amount, String address,
   ).toDartString();
 }
 
-final GetTransactions _getTransactions = mwcNative
-    .lookup<NativeFunction<GetTransactionsFFI>>("mwc_rust_txs_get")
-    .asFunction();
+@Native<GetTransactionsFFI>(symbol: 'mwc_rust_txs_get')
+external Pointer<Utf8> _getTransactions(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> refresh_from_node,
+);
 
 Future<String> getTransactions(String wallet, int refreshFromNode) async {
   return _getTransactions(wallet.toNativeUtf8(),
-      refreshFromNode.toString().toNativeUtf8().cast<Int8>())
+          refreshFromNode.toString().toNativeUtf8().cast<Int8>())
       .toDartString();
 }
 
-final CancelTransaction _cancelTransaction = mwcNative
-    .lookup<NativeFunction<CancelTransactionFFI>>("mwc_rust_tx_cancel")
-    .asFunction();
+@Native<CancelTransactionFFI>(symbol: 'mwc_rust_tx_cancel')
+external Pointer<Utf8> _cancelTransaction(
+  Pointer<Utf8> wallet,
+  Pointer<Utf8> tx_id,
+);
 
 String cancelTransaction(String wallet, String transactionId) {
   return _cancelTransaction(wallet.toNativeUtf8(), transactionId.toNativeUtf8())
       .toDartString();
 }
 
-final GetChainHeight _getChainHeight = mwcNative
-    .lookup<NativeFunction<GetChainHeightFFI>>("mwc_rust_get_chain_height")
-    .asFunction();
+@Native<GetChainHeightFFI>(symbol: 'mwc_rust_get_chain_height')
+external Pointer<Utf8> _getChainHeight(Pointer<Utf8> config);
 
 int getChainHeight(String config) {
   String latestHeight = _getChainHeight(config.toNativeUtf8()).toDartString();
   return int.parse(latestHeight);
 }
 
-final AddressInfo _addressInfo = mwcNative
-    .lookup<NativeFunction<AddressInfoFFI>>("mwc_rust_get_wallet_address")
-    .asFunction();
+@Native<AddressInfoFFI>(symbol: 'mwc_rust_get_wallet_address')
+external Pointer<Utf8> _addressInfo(Pointer<Utf8> wallet, Pointer<Int8> index);
 
 String getAddressInfo(String wallet, int index) {
   return _addressInfo(
-      wallet.toNativeUtf8(),
-      index.toString().toNativeUtf8().cast<Int8>())
+          wallet.toNativeUtf8(), index.toString().toNativeUtf8().cast<Int8>())
       .toDartString();
 }
 
-final ValidateAddress _validateSendAddress = mwcNative
-    .lookup<NativeFunction<ValidateAddressFFI>>("mwc_rust_validate_address")
-    .asFunction();
+@Native<ValidateAddressFFI>(symbol: 'mwc_rust_validate_address')
+external Pointer<Utf8> _validateSendAddress(Pointer<Utf8> address);
 
 String validateSendAddress(String address) {
   return _validateSendAddress(address.toNativeUtf8()).toDartString();
 }
 
-final TransactionFees _transactionFees = mwcNative
-    .lookup<NativeFunction<TransactionFeesFFI>>("mwc_rust_get_tx_fees")
-    .asFunction();
+@Native<TransactionFeesFFI>(symbol: 'mwc_rust_get_tx_fees')
+external Pointer<Utf8> _transactionFees(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> c_amount,
+  Pointer<Int8> min_confirmations,
+);
 
 Future<String> getTransactionFees(
     String wallet, int amount, int minimumConfirmations) async {
   return _transactionFees(
-      wallet.toNativeUtf8(),
-      amount.toString().toNativeUtf8().cast<Int8>(),
-      minimumConfirmations.toString().toNativeUtf8().cast<Int8>())
+          wallet.toNativeUtf8(),
+          amount.toString().toNativeUtf8().cast<Int8>(),
+          minimumConfirmations.toString().toNativeUtf8().cast<Int8>())
       .toDartString();
 }
 
-final DeleteWallet _deleteWallet = mwcNative
-    .lookup<NativeFunction<DeleteWalletFFI>>("mwc_rust_delete_wallet")
-    .asFunction();
+@Native<DeleteWalletFFI>(symbol: 'mwc_rust_delete_wallet')
+external Pointer<Utf8> _deleteWallet(
+  Pointer<Utf8> _wallet,
+  Pointer<Utf8> config,
+);
 
 Future<String> deleteWallet(String wallet, String config) async {
   return _deleteWallet(wallet.toNativeUtf8(), config.toNativeUtf8())
       .toDartString();
 }
 
-final OpenWallet _openWallet = mwcNative
-    .lookup<NativeFunction<OpenWalletFFI>>("mwc_rust_open_wallet")
-    .asFunction();
+@Native<OpenWalletFFI>(symbol: 'mwc_rust_open_wallet')
+external Pointer<Utf8> _openWallet(
+  Pointer<Utf8> config,
+  Pointer<Utf8> password,
+);
 
 String openWallet(String config, String password) {
   final configPointer = config.toNativeUtf8();
@@ -324,9 +349,15 @@ String openWallet(String config, String password) {
   }
 }
 
-final TxHttpSend _txHttpSend = mwcNative
-    .lookup<NativeFunction<TxHttpSendFFI>>("mwc_rust_tx_send_http")
-    .asFunction();
+@Native<TxHttpSendFFI>(symbol: 'mwc_rust_tx_send_http')
+external Pointer<Utf8> _txHttpSend(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> selection_strategy_is_use_all,
+  Pointer<Int8> minimum_confirmations,
+  Pointer<Utf8> message,
+  Pointer<Int8> amount,
+  Pointer<Utf8> address,
+);
 
 Future<String> txHttpSend(
     String wallet,
@@ -336,99 +367,101 @@ Future<String> txHttpSend(
     int amount,
     String address) async {
   return _txHttpSend(
-      wallet.toNativeUtf8(),
-      selectionStrategyIsAll.toString().toNativeUtf8().cast<Int8>(),
-      minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
-      message.toNativeUtf8(),
-      amount.toString().toNativeUtf8().cast<Int8>(),
-      address.toNativeUtf8())
+          wallet.toNativeUtf8(),
+          selectionStrategyIsAll.toString().toNativeUtf8().cast<Int8>(),
+          minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
+          message.toNativeUtf8(),
+          amount.toString().toNativeUtf8().cast<Int8>(),
+          address.toNativeUtf8())
       .toDartString();
 }
 
-final EncodeSlatepack _encodeSlatepack = mwcNative
-    .lookup<NativeFunction<EncodeSlatepackFFI>>("mwc_rust_encode_slatepack")
-    .asFunction();
+@Native<EncodeSlatepackFFI>(symbol: 'mwc_rust_encode_slatepack')
+external Pointer<Utf8> _encodeSlatepack(
+  Pointer<Utf8> slate_json,
+  Pointer<Utf8> recipient_address,
+);
 
 Future<String> encodeSlatepack(
-    String slateJson,
-    String? recipientAddress) async {
+    String slateJson, String? recipientAddress) async {
   return _encodeSlatepack(
-      slateJson.toNativeUtf8(),
-      (recipientAddress ?? "").toNativeUtf8())
+          slateJson.toNativeUtf8(), (recipientAddress ?? "").toNativeUtf8())
       .toDartString();
 }
 
-final EncodeSlatepackEnhanced _encodeSlatepackEnhanced = mwcNative
-    .lookup<NativeFunction<EncodeSlatepackEnhancedFFI>>("mwc_rust_encode_slatepack_enhanced")
-    .asFunction();
+@Native<EncodeSlatepackEnhancedFFI>(
+    symbol: 'mwc_rust_encode_slatepack_enhanced')
+external Pointer<Utf8> _encodeSlatepackEnhanced(
+  Pointer<Utf8> wallet,
+  Pointer<Utf8> slate_json,
+  Pointer<Utf8> recipient_address,
+);
 
 Future<String> encodeSlatepackEnhanced(
-    String wallet,
-    String slateJson,
-    String recipientAddress) async {
-  return _encodeSlatepackEnhanced(
-      wallet.toNativeUtf8(),
-      slateJson.toNativeUtf8(),
-      recipientAddress.toNativeUtf8())
+    String wallet, String slateJson, String recipientAddress) async {
+  return _encodeSlatepackEnhanced(wallet.toNativeUtf8(),
+          slateJson.toNativeUtf8(), recipientAddress.toNativeUtf8())
       .toDartString();
 }
 
-final DecodeSlatepack _decodeSlatepack = mwcNative
-    .lookup<NativeFunction<DecodeSlatepackFFI>>("mwc_rust_decode_slatepack")
-    .asFunction();
+@Native<DecodeSlatepackFFI>(symbol: 'mwc_rust_decode_slatepack')
+external Pointer<Utf8> _decodeSlatepack(Pointer<Utf8> slatepack_str);
 
 Future<String> decodeSlatepack(String slatepack) async {
-  return _decodeSlatepack(slatepack.toNativeUtf8())
-      .toDartString();
+  return _decodeSlatepack(slatepack.toNativeUtf8()).toDartString();
 }
 
-final DecodeSlatepackEnhanced _decodeSlatepackEnhanced = mwcNative
-    .lookup<NativeFunction<DecodeSlatepackEnhancedFFI>>("mwc_rust_decode_slatepack_enhanced")
-    .asFunction();
+@Native<DecodeSlatepackEnhancedFFI>(
+    symbol: 'mwc_rust_decode_slatepack_enhanced')
+external Pointer<Utf8> _decodeSlatepackEnhanced(
+  Pointer<Utf8> wallet,
+  Pointer<Utf8> slatepack_str,
+);
 
 Future<String> decodeSlatepackEnhanced(String wallet, String slatepack) async {
   return _decodeSlatepackEnhanced(
-      wallet.toNativeUtf8(),
-      slatepack.toNativeUtf8())
+          wallet.toNativeUtf8(), slatepack.toNativeUtf8())
       .toDartString();
 }
 
-final TxReceive _txReceive = mwcNative
-    .lookup<NativeFunction<TxReceiveFFI>>("mwc_rust_tx_receive")
-    .asFunction();
+@Native<TxReceiveFFI>(symbol: 'mwc_rust_tx_receive')
+external Pointer<Utf8> _txReceive(
+  Pointer<Utf8> wallet,
+  Pointer<Utf8> slate_json,
+);
 
 String txReceive(String wallet, String slateJson) {
   return _txReceive(wallet.toNativeUtf8(), slateJson.toNativeUtf8())
       .toDartString();
 }
 
-final TxFinalize _txFinalize = mwcNative
-    .lookup<NativeFunction<TxFinalizeFFI>>("mwc_rust_tx_finalize")
-    .asFunction();
+@Native<TxFinalizeFFI>(symbol: 'mwc_rust_tx_finalize')
+external Pointer<Utf8> _txFinalize(
+  Pointer<Utf8> wallet,
+  Pointer<Utf8> slate_json,
+);
 
 String txFinalize(String wallet, String slateJson) {
   return _txFinalize(wallet.toNativeUtf8(), slateJson.toNativeUtf8())
       .toDartString();
 }
 
-final TxInit _txInit = mwcNative
-    .lookup<NativeFunction<TxInitFFI>>("mwc_rust_tx_init")
-    .asFunction();
+@Native<TxInitFFI>(symbol: 'mwc_rust_tx_init')
+external Pointer<Utf8> _txInit(
+  Pointer<Utf8> wallet,
+  Pointer<Int8> selection_strategy_is_use_all,
+  Pointer<Int8> minimum_confirmations,
+  Pointer<Utf8> message,
+  Pointer<Int8> amount,
+);
 
-Future<String> txInit(
-    String wallet,
-    int selectionStrategyIsAll,
-    int minimumConfirmations,
-    String message,
-    int amount) async {
+Future<String> txInit(String wallet, int selectionStrategyIsAll,
+    int minimumConfirmations, String message, int amount) async {
   return _txInit(
-      wallet.toNativeUtf8(),
-      selectionStrategyIsAll.toString().toNativeUtf8().cast<Int8>(),
-      minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
-      message.toNativeUtf8(),
-      amount.toString().toNativeUtf8().cast<Int8>())
+          wallet.toNativeUtf8(),
+          selectionStrategyIsAll.toString().toNativeUtf8().cast<Int8>(),
+          minimumConfirmations.toString().toNativeUtf8().cast<Int8>(),
+          message.toNativeUtf8(),
+          amount.toString().toNativeUtf8().cast<Int8>())
       .toDartString();
 }
-
-
-
