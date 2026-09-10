@@ -91,7 +91,7 @@ class FFITestService {
         try {
           final mnemonic = Libmwc.getMnemonic();
           if (mnemonic.isEmpty) {
-            throw TestException('Library loaded but basic function returned empty result');
+            throw const TestException('Library loaded but basic function returned empty result');
           }
           return 'Library loaded successfully, basic function operational';
         } catch (e) {
@@ -131,7 +131,7 @@ class FFITestService {
         // Test with known invalid address.
         final invalidResult = Libmwc.validateSendAddress(address: 'invalid_address');
         if (invalidResult) {
-          throw TestException('Invalid address incorrectly validated as valid');
+          throw const TestException('Invalid address incorrectly validated as valid');
         }
         
         return 'Address validation working correctly';
@@ -152,7 +152,7 @@ class FFITestService {
       () async {
         final testConfig = await _getTestWalletConfig();
         if (testConfig.isEmpty) {
-          throw TestException('Failed to create test wallet configuration');
+          throw const TestException('Failed to create test wallet configuration');
         }
         
         // Validate config contains required fields.
@@ -174,7 +174,7 @@ class FFITestService {
       () async {
         final testMnemonic = Libmwc.getMnemonic();
         final testConfig = await _getTestWalletConfig();
-        final testPassword = 'test_password_123';
+        const testPassword = 'test_password_123';
         final walletName = 'ffi_test_wallet_${DateTime.now().millisecondsSinceEpoch}';
         
         try {
@@ -208,7 +208,7 @@ class FFITestService {
       () async {
         final testMnemonic = Libmwc.getMnemonic();
         final testConfig = await _getTestWalletConfig();
-        final testPassword = 'recovery_test_123';
+        const testPassword = 'recovery_test_123';
         final walletName = 'ffi_recovery_test_${DateTime.now().millisecondsSinceEpoch}';
         
         try {
@@ -257,11 +257,11 @@ class FFITestService {
           
           // Handle specific error types with more detail.
           if (errorStr.contains('FormatException') || errorStr.contains('Invalid radix-10')) {
-            throw TestException('Failed to parse chain height response: node may have returned an error message instead of height');
+            throw const TestException('Failed to parse chain height response: node may have returned an error message instead of height');
           } else if (errorStr.contains('connection') || errorStr.contains('network') || errorStr.contains('timeout')) {
             throw TestException('Network connection issue with remote node: ${errorStr.substring(0, 100)}...');
           } else if (errorStr.contains('Cannot m')) {
-            throw TestException('Remote node connection failed - possibly network or SSL issue');
+            throw const TestException('Remote node connection failed - possibly network or SSL issue');
           }
           
           // Re-throw with more context.
@@ -293,7 +293,7 @@ class FFITestService {
             return 'Transaction functions available: address validation working (result: $isValid)';
           }
           
-          throw TestException('Address validation returned unexpected result');
+          throw const TestException('Address validation returned unexpected result');
           
         } catch (e) {
           final errorStr = e.toString();
@@ -316,7 +316,7 @@ class FFITestService {
           if (!testConfig.contains('wallet_dir') || 
               !testConfig.contains('check_node_api_http_addr') ||
               !testConfig.contains('chain')) {
-            throw TestException('Test configuration missing required fields');
+            throw const TestException('Test configuration missing required fields');
           }
           
           // Test basic type validation.
@@ -324,7 +324,7 @@ class FFITestService {
           const minConfirmations = 10;
           
           if (testAmount <= 0 || minConfirmations <= 0) {
-            throw TestException('Transaction parameter validation failed');
+            throw const TestException('Transaction parameter validation failed');
           }
           
           return 'Transaction API structure validation passed: config format and parameter types correct';
@@ -344,21 +344,21 @@ class FFITestService {
           // Test transaction model structure by creating instances.
           // This validates the Dart-side transaction types without calling FFI.
           
-          final testAmount = 1500000; // 0.0015 MWC.
-          final testAddress = 'test_user@mwcmqs.example.com';
-          final testNote = 'FFI integration test transaction';
+          const testAmount = 1500000; // 0.0015 MWC.
+          const testAddress = 'test_user@mwcmqs.example.com';
+          const testNote = 'FFI integration test transaction';
           
           // Validate parameter constraints.
           if (testAmount <= 0) {
-            throw TestException('Transaction amount validation failed');
+            throw const TestException('Transaction amount validation failed');
           }
           
           if (testAddress.isEmpty || !testAddress.contains('@')) {
-            throw TestException('Transaction address validation failed');
+            throw const TestException('Transaction address validation failed');
           }
           
           if (testNote.length > 500) {
-            throw TestException('Transaction note length validation failed');
+            throw const TestException('Transaction note length validation failed');
           }
           
           return 'Transaction model validation passed: amount=$testAmount, address format validated, note length OK';
@@ -388,7 +388,7 @@ class FFITestService {
           // Validate we have error handling patterns for common issues.
           for (final errorPattern in expectedErrors) {
             if (errorPattern.isEmpty) {
-              throw TestException('Empty error pattern in validation list');
+              throw const TestException('Empty error pattern in validation list');
             }
           }
           
@@ -397,7 +397,7 @@ class FFITestService {
           const maxAmount = 21000000 * 1000000000; // Max MWC supply in nanograms.
           
           if (minAmount >= maxAmount) {
-            throw TestException('Transaction amount boundary validation failed');
+            throw const TestException('Transaction amount boundary validation failed');
           }
           
           return 'Transaction error handling validation passed: ${expectedErrors.length} error patterns validated, amount boundaries correct';
@@ -428,21 +428,21 @@ class FFITestService {
           
           // Validate parameter constraints for encoding.
           if (testSlateJson.isEmpty) {
-            throw TestException('Slate JSON validation failed');
+            throw const TestException('Slate JSON validation failed');
           }
           
           if (!testSlateJson.contains('id')) {
-            throw TestException('Slate JSON structure validation failed');
+            throw const TestException('Slate JSON structure validation failed');
           }
           
           // Validate slatepack format structure.
           if (!testSlatepack.contains('BEGINSLATEPACK') || !testSlatepack.contains('ENDSLATEPACK')) {
-            throw TestException('Slatepack format validation failed');
+            throw const TestException('Slatepack format validation failed');
           }
           
           // Validate address format.
           if (testRecipientAddress.isEmpty || !testRecipientAddress.contains('@')) {
-            throw TestException('Recipient address format validation failed');
+            throw const TestException('Recipient address format validation failed');
           }
           
           return 'Slatepack API structure validation passed: slate format, slatepack format, and address format correct';
@@ -533,10 +533,10 @@ class FFITestService {
           // Basic format assertions.
           if (!enc.slatepack.contains('BEGINSLATEPACK') ||
               !enc.slatepack.contains('ENDSLATEPACK')) {
-            throw TestException('Encoded slatepack missing BEGIN/END markers');
+            throw const TestException('Encoded slatepack missing BEGIN/END markers');
           }
           if (enc.wasEncrypted) {
-            throw TestException('Unencrypted encode reported as encrypted');
+            throw const TestException('Unencrypted encode reported as encrypted');
           }
 
           // Decode back to JSON.
@@ -548,13 +548,13 @@ class FFITestService {
             throw TestException('Decoded slate id mismatch or missing: $decodedId');
           }
           if (versionInfo == null || versionInfo['version'] != 3) {
-            throw TestException('Decoded slate version is not v3');
+            throw const TestException('Decoded slate version is not v3');
           }
 
           // Verify encryption detection helper.
           final isEncrypted = await Libmwc.isSlatepackEncrypted(enc.slatepack);
           if (isEncrypted) {
-            throw TestException('isSlatepackEncrypted returned true for unencrypted slatepack');
+            throw const TestException('isSlatepackEncrypted returned true for unencrypted slatepack');
           }
 
           return 'Roundtrip succeeded; id=$decodedId; v4 compact; markers present; not encrypted';
@@ -587,7 +587,7 @@ class FFITestService {
             }
           }
           if (!threw) {
-            throw TestException('Encrypted encode did not throw without wallet context');
+            throw const TestException('Encrypted encode did not throw without wallet context');
           }
           return 'Encrypted encode correctly requires wallet context';
         } catch (e) {
@@ -602,12 +602,12 @@ class FFITestService {
       'Decode invalid slatepack and validate graceful handling',
       () async {
         try {
-          final bogus = 'NOT_A_SLATEPACK';
+          const bogus = 'NOT_A_SLATEPACK';
           try {
             final dec = await Libmwc.decodeSlatepack(slatepack: bogus);
             // High-level API may not throw; validate empty slate JSON returned.
             if (dec.slateJson.isNotEmpty) {
-              throw TestException('Invalid slatepack returned non-empty slate JSON');
+              throw const TestException('Invalid slatepack returned non-empty slate JSON');
             }
             return 'Invalid slatepack handled gracefully (empty slate JSON)';
           } catch (e) {
@@ -680,11 +680,11 @@ class FFITestService {
       () async {
         try {
           // Test decoding parameter validation and expected response structure.
-          final testSlatepack = 'BEGINSLATEPACK. dGVzdCBkYXRh .ENDSLATEPACK';
+          const testSlatepack = 'BEGINSLATEPACK. dGVzdCBkYXRh .ENDSLATEPACK';
           
           // Validate slatepack format.
           if (!testSlatepack.contains('BEGINSLATEPACK') || !testSlatepack.contains('ENDSLATEPACK')) {
-            throw TestException('Test slatepack format validation failed');
+            throw const TestException('Test slatepack format validation failed');
           }
           
           // Define expected decode response structure.
@@ -697,7 +697,7 @@ class FFITestService {
           // Validate we have proper validation for expected response fields.
           for (final field in expectedFields) {
             if (field.isEmpty) {
-              throw TestException('Empty expected field in validation list');
+              throw const TestException('Empty expected field in validation list');
             }
           }
           
@@ -723,7 +723,7 @@ class FFITestService {
             final expectedError = testCase['expectedError'] as String;
             
             if (input.isEmpty && expectedError != 'empty slatepack') {
-              throw TestException('Error test case mismatch: empty input should expect empty slatepack error');
+              throw const TestException('Error test case mismatch: empty input should expect empty slatepack error');
             }
           }
           
@@ -753,8 +753,8 @@ class FFITestService {
           
           // Verify the mwcMqsListenerStart function exists by trying to call it.
           try {
-            final testWallet = '[test_handle]';
-            final testConfig = '{"test":"config"}';
+            const testWallet = '[test_handle]';
+            const testConfig = '{"test":"config"}';
             // This will likely fail but confirms the function is accessible.
             lib_mwc.mwcMqsListenerStart(testWallet, testConfig);
             return 'MWCMQS FFI functions verified: mwcMqsListenerStart accessible and callable';
@@ -789,7 +789,7 @@ class FFITestService {
           if (configData['mwcmqs_domain'] != 'mqs.mwc.mw' ||
               configData['mwcmqs_port'] != 443 ||
               configData['mwcmqs_use_ssl'] != true) {
-            throw TestException('MWCMQS configuration validation failed');
+            throw const TestException('MWCMQS configuration validation failed');
           }
           
           return 'MWCMQS configuration created and validated: $mwcmqsConfig';
@@ -811,8 +811,8 @@ class FFITestService {
           // Test listener start function accessibility.
           try {
             // Use clearly invalid parameters that should trigger a controlled error.
-            final invalidWallet = 'invalid_wallet_handle';
-            final invalidConfig = '{"invalid": "config"}';
+            const invalidWallet = 'invalid_wallet_handle';
+            const invalidConfig = '{"invalid": "config"}';
             
             // This should fail gracefully with a parameter error, not crash.
             final result = lib_mwc.mwcMqsListenerStart(invalidWallet, invalidConfig);
@@ -850,18 +850,6 @@ class FFITestService {
       'Test high-level ListenerManager API for MWCMQS functionality',
       () async {
         try {
-          // Test that Libmwc MWCMQS functions are accessible.
-          // We can't check if methods are null, so we'll try to call them.
-          try {
-            // Try to access the methods - this will throw if they don't exist.
-            final startMethod = Libmwc.startMwcMqsListener;
-            final stopMethod = Libmwc.stopMwcMqsListener;
-            
-            // If we get here, methods exist.
-          } catch (methodError) {
-            throw TestException('Libmwc MWCMQS methods not available: ${methodError.toString()}');
-          }
-          
           // Test high-level API call structure.
           try {
             // This should fail gracefully since we don't have a real wallet/server.
@@ -885,7 +873,7 @@ class FFITestService {
                 apiError.toString().contains('invalid')) {
               return 'MWCMQS high-level API structure validated (expected failure without real wallet): ${apiError.toString().substring(0, 80)}...';
             }
-            throw apiError;
+            rethrow;
           }
           
         } catch (e) {

@@ -1,3 +1,6 @@
+// Preserve existing public API names.
+// ignore_for_file: constant_identifier_names
+
 import 'dart:io';
 
 /*ANDROID_VERSION*/ const ANDROID_VERSION = "";

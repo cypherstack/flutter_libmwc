@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../lib/main.dart';
+import 'package:flutter_libmwc_example/main.dart';
 
 void main() {
   testWidgets('FFI Test App starts up', (WidgetTester tester) async {

@@ -308,6 +308,8 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<int>(
+                      // Retain compatibility with Flutter 3.10.
+                      // ignore: deprecated_member_use
                       value: _s1MinConf,
                       decoration: const InputDecoration(
                         labelText: 'Min confirmations',

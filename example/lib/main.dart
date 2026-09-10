@@ -15,7 +15,7 @@ void main() async {
   await FFITestService.initialize();
   await WalletService.initialize();
 
-  runApp(FFITestApp(testMode: testMode));
+  runApp(const FFITestApp(testMode: testMode));
 }
 
 class FFITestApp extends StatelessWidget {
