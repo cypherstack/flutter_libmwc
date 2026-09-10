@@ -46,10 +46,11 @@ class _CreateWalletViewState extends State<CreateWalletView> {
   Future<void> _createWallet() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (mounted)
+    if (mounted) {
       setState(() {
         _isCreating = true;
       });
+    }
 
     try {
       final result = await WalletService.createWallet(
@@ -66,10 +67,11 @@ class _CreateWalletViewState extends State<CreateWalletView> {
     } catch (e) {
       _showErrorDialog('Failed to create wallet: $e');
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isCreating = false;
         });
+      }
     }
   }
 

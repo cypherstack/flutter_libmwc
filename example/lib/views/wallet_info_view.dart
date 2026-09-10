@@ -65,7 +65,7 @@ class _WalletInfoViewState extends State<WalletInfoView> {
 
   String _formatMwc(double? amount) {
     if (amount == null) return 'N/A';
-    return '${amount!.toStringAsFixed(9)} MWC';
+    return '${amount.toStringAsFixed(9)} MWC';
   }
 
   Widget _buildInfoCard(String title, List<Widget> children) {
@@ -286,24 +286,24 @@ class _WalletInfoViewState extends State<WalletInfoView> {
                             ),
                           ],
                         ),
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Node:',
+                            Text('Node:',
                                 style: TextStyle(fontWeight: FontWeight.w500)),
-                            const Text(
+                            Text(
                               'mwc713.mwc.mw:443',
                               style: TextStyle(
                                   fontFamily: 'monospace', fontSize: 12),
                             ),
                           ],
                         ),
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Chain:',
+                            Text('Chain:',
                                 style: TextStyle(fontWeight: FontWeight.w500)),
-                            const Text(
+                            Text(
                               'Mainnet',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),

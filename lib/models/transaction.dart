@@ -1,3 +1,6 @@
+// Preserve existing public API names.
+// ignore_for_file: constant_identifier_names
+
 /*
  * This file is part of Stack Wallet.
  *

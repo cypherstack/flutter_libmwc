@@ -1099,7 +1099,6 @@ abstract class Libmwc {
 
   static const _beginMarker = 'BEGINSLATEPACK.';
   static const _endMarker = 'ENDSLATEPACK.';
-  static const _sep = ' ';
 
   /// Normalize/canonicalize a slatepack string's armor whitespace.
   /// - Ensures a newline after the begin marker and before the end marker.
@@ -1130,11 +1129,6 @@ abstract class Libmwc {
     sb.write('\n');
     sb.write(after);
     return sb.toString();
-  }
-
-  static String _armorSlateJsonLocally(String slateJson) {
-    final payload = _base58Encode(slateJson.codeUnits);
-    return '$_beginMarker$_sep$payload$_sep$_endMarker';
   }
 
   static String _dearmorSlatepackLocally(String slatepack) {
@@ -1170,37 +1164,6 @@ abstract class Libmwc {
   static final Map<int, int> _alphabetIndex = {
     for (int i = 0; i < _alphabet.length; i++) _alphabet.codeUnitAt(i): i
   };
-
-  static String _base58Encode(List<int> bytes) {
-    if (bytes.isEmpty) return '';
-    int zeros = 0;
-    while (zeros < bytes.length && bytes[zeros] == 0) {
-      zeros++;
-    }
-    final List<int> input = List<int>.from(bytes);
-    final List<int> encoded = [];
-    int start = zeros;
-    while (start < input.length) {
-      int carry = 0;
-      for (int i = start; i < input.length; i++) {
-        int x = (input[i] & 0xff) + (carry << 8);
-        input[i] = x ~/ 58;
-        carry = x % 58;
-      }
-      encoded.add(carry);
-      while (start < input.length && input[start] == 0) {
-        start++;
-      }
-    }
-    final StringBuffer sb = StringBuffer();
-    for (int i = 0; i < zeros; i++) {
-      sb.write('1');
-    }
-    for (int i = encoded.length - 1; i >= 0; i--) {
-      sb.write(_alphabet[encoded[i]]);
-    }
-    return sb.toString();
-  }
 
   static List<int> _base58Decode(String s) {
     if (s.isEmpty) return <int>[];
