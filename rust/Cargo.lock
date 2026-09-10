@@ -7581,18 +7581,3 @@ dependencies = [
  "crc32fast",
  "thiserror",
 ]
-
-[[patch.unused]]
-name = "mwc_config"
-version = "5.3.7"
-source = "git+https://github.com/cypherstack/mwc-node?tag=5.3.7#0dae1d5a4a1a8665bad432f774ca0f0f5277ec7e"
-
-[[patch.unused]]
-name = "mwc_servers"
-version = "5.3.7"
-source = "git+https://github.com/cypherstack/mwc-node?tag=5.3.7#0dae1d5a4a1a8665bad432f774ca0f0f5277ec7e"
-
-[[patch.unused]]
-name = "mwc-bitcoin"
-version = "0.26.0"
-source = "git+https://github.com/cypherstack/rust-bitcoin#e3ca094ce0f130f06014d3895d0b4c4249400f63"

@@ -1,78 +1,28 @@
 # `flutter_libmwc`
-## Dependencies
-### Rust
-Install Rust: https://www.rust-lang.org/tools/install
 
-### `cargo-ndk`
+Requires Dart 3.13+, Flutter 3.47+, and Rust 1.90.0 (pinned in
+`rust/rust-toolchain.toml`). Install Rust with [rustup](https://rustup.rs/)
+and make sure `rustup`, `cargo`, and `rustc` are on `PATH`.
+
+The [build hook](https://dart.dev/tools/hooks) compiles `rust/` with
+[native_toolchain_rust](https://pub.dev/packages/native_toolchain_rust).
+Flutter bundles the resulting native asset, and `lib/mwc.dart` resolves its
+symbols using `@Native`. No manual library copying or build scripts are needed.
+
+Install the native build tools required by the Rust dependencies: a C/C++
+compiler, CMake, libclang, pkg-config, Perl (for vendored OpenSSL), and `protoc`.
+Use Xcode for Apple targets, Android SDK/NDK r27+ for Android, and Visual Studio's
+Desktop development with C++ workload for Windows (MSVC).
+
 ```sh
-cargo install cargo-ndk
+flutter pub get
+cd example
+flutter run
 ```
 
-# Android
-## Add targets to rust
-```sh
-rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android
-```
+The first build downloads Rust targets and Cargo dependencies. Later builds
+reuse the build cache. `flutter test` also runs the hook and needs the native
+build tools.
 
-## Install dependencies
-```sh
-# https://github.com/mwcproject/mwc-node/blob/master/doc/build.md#requirements
-sudo apt install build-essential \
-	cmake \
-	git \
-	libgit2-dev \
-	clang \
-	debhelper \
-	libclang-dev \
-	libncurses5-dev \
-	libncursesw5-dev \
-	zlib1g-dev \
-	pkg-config \
-	llvm \
-	cargo \
-	rustc \
-	opencl-headers \
-	libssl-dev \
-	ocl-icd-opencl-dev \
-	libc6-dev-i386
-```
-
-## Build
-```sh
-cd scripts/android
-./install_ndk.sh
-./build_all.sh
-```
-
-# iOS
-## Add targets to rust
-```sh
-rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
-```
-
-## Install dependencies
-```sh
-cargo install cargo-lipo
-cargo install cbindgen
-```
-
-## Build
-```sh
-cd scripts/ios
-./build_all
-```
-
-# Windows
-## Dependencies
-Run `scripts/windows/deps.sh` (may need to alter permissions like with `chmod +x *.sh`) to install x86_64-w64-mingw32-gcc and clang or run
-```sh
-sudo apt-get install clang gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
-```
-
-## Building for Windows
-Run `scripts/windows/build_all.sh`
-
-Libraries will be output to `scripts/windows/build`
-
-## Building on Windows
-`build_all.ps1` is not confirmed working and may need work eg. may need some missing dependencies added but has been included as a starting point or example for Windows users
+Wallet APIs remain in `lib/lib.dart` and `lib/mwc.dart`. The generated
+`FlutterLibmwc.getPlatformVersion()` API and platform plugin scaffolding are removed.

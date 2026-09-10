@@ -2,6 +2,7 @@
 name = "mwc-wallet"
 version = "0.1.0"
 edition = '2021'
+rust-version = "1.90"
 
 [dependencies]
 clap = { version = "2.31", features = ["yaml"] }
@@ -17,7 +18,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 serde_derive = "1"
 simplelog = "^0.7.4"
-openssl = { version = "0.10", features = ["vendored"] }
 zeroize = { version = "1.1.0", features = ["derive"] }
 rand = "0.6"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
@@ -48,6 +48,13 @@ ffi_helpers = "0.3.0"
 anyhow = "1.0.69"
 
 
+# We never call openssl ourselves. This makes native-tls build OpenSSL from
+# source instead of looking for a system copy, which is what lets Android and
+# iOS cross-compile. Windows is excluded because native-tls uses SChannel
+# there, and building OpenSSL produces paths past Windows' 260-character limit.
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
+
 [lib]
 name = "mwc_wallet"
 crate-type = ["staticlib", "cdylib"]
@@ -63,9 +70,6 @@ mwc-wagyu-ethereum = { git = "https://github.com/cypherstack/wagyu-ethereum" }
 
 [patch."https://github.com/mwcproject/rust-bch"]
 mwc-bch = { git = "https://github.com/cypherstack/rust-bch" }
-
-[patch."https://github.com/mwcproject/rust-bitcoin"]
-mwc-bitcoin = { git = "https://github.com/cypherstack/rust-bitcoin" }
 
 [patch."https://github.com/mwcproject/wagyu-model"]
 mwc-wagyu-model = { git = "https://github.com/cypherstack/wagyu-model" }
@@ -84,6 +88,4 @@ mwc_keychain = { git = "https://github.com/cypherstack/mwc-node", subdir = "keyc
 mwc_p2p = { git = "https://github.com/cypherstack/mwc-node", subdir = "p2p", tag = "5.3.7", features = ["libp2p"] }
 mwc_store = { git = "https://github.com/cypherstack/mwc-node", subdir = "store", tag = "5.3.7" }
 mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util", tag = "5.3.7" }
-mwc_config = { git = "https://github.com/cypherstack/mwc-node", subdir = "config", tag = "5.3.7" }
 mwc_pool = { git = "https://github.com/cypherstack/mwc-node", subdir = "pool", tag = "5.3.7" }
-mwc_servers = { git = "https://github.com/cypherstack/mwc-node", subdir = "servers", tag = "5.3.7" }

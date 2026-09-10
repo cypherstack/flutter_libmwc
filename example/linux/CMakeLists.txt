@@ -116,13 +116,11 @@ install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
-if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../../linux/bin/aarch64-unknown-linux-gnu/release/libmwc_wallet.so" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-          COMPONENT Runtime)
-else()
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../../linux/bin/x86_64-unknown-linux-gnu/release/libmwc_wallet.so" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-          COMPONENT Runtime)
-endif()
+# Copy the native assets provided by build hooks.
+set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
+install(DIRECTORY "${NATIVE_ASSETS_DIR}"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
 
 foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
   install(FILES "${bundled_library}"

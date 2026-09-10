@@ -714,11 +714,6 @@ abstract class Libmwc {
     return await m.protect(() async {
       try {
         final String result = lib_mwc.txReceive(wallet, slateJson);
-        // Debug logging for shape inspection
-        // ignore: avoid_print
-        final _rlen = result.length;
-        final _rprefix = result.substring(0, _rlen > 512 ? 512 : _rlen);
-        print('[WALLET][DEBUG] txReceive raw result: ' + _rprefix + (_rlen > 512 ? '…' : ''));
         if (result.toUpperCase().contains("ERROR")) {
           throw Exception("Error receiving transaction $result");
         }
@@ -726,27 +721,17 @@ abstract class Libmwc {
         // Robustly extract the updated slate JSON from the nested tuple.
         final outer = jsonDecode(result);
         if (outer is! List || outer.isEmpty) {
-          // ignore: avoid_print
-          print('[WALLET][DEBUG] Unexpected receive result shape: ' + result);
           throw Exception('Unexpected receive result shape');
         }
         final first = outer[0];
         if (first == null || first is! String) {
-          // ignore: avoid_print
-          print('[WALLET][DEBUG] Unexpected inner type: ' + first.toString());
           throw Exception('Unexpected receive tuple inner type');
         }
         final inner = jsonDecode(first);
         if (inner is! List || inner.length < 2 || inner[1] == null || inner[1] is! String) {
-          // ignore: avoid_print
-          print('[WALLET][DEBUG] Unexpected inner pair: ' + inner.toString());
           throw Exception('Unexpected receive inner pair shape');
         }
         final updatedSlateJson = inner[1] as String;
-        // ignore: avoid_print
-        final _ulen = updatedSlateJson.length;
-        final _uprefix = updatedSlateJson.substring(0, _ulen > 256 ? 256 : _ulen);
-        print('[WALLET][DEBUG] Updated slate json (prefix): ' + _uprefix + (_ulen > 256 ? '…' : ''));
         final updatedSlate = jsonDecode(updatedSlateJson);
 
         final List<dynamic> outputs =
@@ -775,10 +760,6 @@ abstract class Libmwc {
     return await m.protect(() async {
       try {
         final String result = lib_mwc.txReceive(wallet, slateJson);
-        // ignore: avoid_print
-        final _r2len = result.length;
-        final _r2prefix = result.substring(0, _r2len > 512 ? 512 : _r2len);
-        print('[WALLET][DEBUG] txReceiveDetailed raw result: ' + _r2prefix + (_r2len > 512 ? '…' : ''));
         if (result.toUpperCase().contains("ERROR")) {
           throw Exception("Error receiving transaction $result");
         }
@@ -787,17 +768,9 @@ abstract class Libmwc {
         // where json_pair is a JSON-encoded array: [ txs_json, updated_slate_json ]
         final outer = jsonDecode(result);
         final jsonPairEncoded = outer[0] as String;
-        // ignore: avoid_print
-        final _jlen = jsonPairEncoded.length;
-        final _jprefix = jsonPairEncoded.substring(0, _jlen > 256 ? 256 : _jlen);
-        print('[WALLET][DEBUG] jsonPairEncoded (prefix): ' + _jprefix + (_jlen > 256 ? '…' : ''));
         final pair = jsonDecode(jsonPairEncoded);
         // Extract updated slate JSON (second element)
         final updatedSlateJson = pair[1] as String;
-        // ignore: avoid_print
-        final _ul2 = updatedSlateJson.length;
-        final _up2 = updatedSlateJson.substring(0, _ul2 > 256 ? 256 : _ul2);
-        print('[WALLET][DEBUG] updatedSlateJson (prefix): ' + _up2 + (_ul2 > 256 ? '…' : ''));
         // Parse to fetch ids for convenience from the updated slate
         final updatedSlate = jsonDecode(updatedSlateJson);
 

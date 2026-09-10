@@ -7,7 +7,7 @@ plugins {
 android {
     namespace = "com.example.flutter_libmwc_example"
     compileSdkVersion flutter.compileSdkVersion
-    ndkVersion = "28.0.13004108"
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

@@ -35,6 +35,7 @@ use android_logger::FilterBuilder;
 use mwc_wallet_impls::Subscriber;
 
 mod slatepack;
+mod strings;
 
 /// Fix slate for MWCQT compatibility by ensuring proper version and TTL settings.
 /// This function modifies the slate JSON to:
@@ -340,9 +341,7 @@ pub unsafe extern "C"  fn mwc_rust_open_wallet(
         }, Err(e ) => {
             let error_msg = format!("Error {}", &e.to_string());
             let error_msg_ptr = CString::new(error_msg).unwrap();
-            let ptr = error_msg_ptr.as_ptr(); // Get a pointer to the underlaying memory for s
-            std::mem::forget(error_msg_ptr);
-            ptr
+            error_msg_ptr.into_raw()
         }
     };
     result
@@ -374,9 +373,7 @@ fn _open_wallet(
     };
 
     let s = CString::new(result).unwrap();
-    let p = s.as_ptr(); // Get a pointer to the underlaying memory for s
-    std::mem::forget(s); // Give up the responsibility of cleaning up/freeing s
-    Ok(p)
+    Ok(s.into_raw())
 }
 
 
