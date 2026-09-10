@@ -320,20 +320,24 @@ external Pointer<Utf8> _openWallet(
   Pointer<Utf8> password,
 );
 
+@Native<Void Function(Pointer<Utf8>)>(symbol: 'mwc_string_free')
+external void _freeWalletString(Pointer<Utf8> value);
+
 String openWallet(String config, String password) {
-  final configPointer = config.toNativeUtf8();
-  final passwordPointer = password.toNativeUtf8();
-
-  final handlePointer = _openWallet(configPointer, passwordPointer);
-  malloc.free(configPointer);
-  malloc.free(passwordPointer);
-
-  if (handlePointer == nullptr) {
-    throw Exception("Failed to open wallet: Received null pointer from rust!");
-  }
-
-  final handle = handlePointer.toDartString().trim();
-  malloc.free(handlePointer);
+  final handle = using((arena) {
+    final handlePointer = _openWallet(
+      config.toNativeUtf8(allocator: arena),
+      password.toNativeUtf8(allocator: arena),
+    );
+    if (handlePointer == nullptr) {
+      throw Exception("Failed to open wallet: Received null pointer from rust!");
+    }
+    try {
+      return handlePointer.toDartString().trim();
+    } finally {
+      _freeWalletString(handlePointer);
+    }
+  });
 
   if (handle.startsWith("[") && handle.endsWith("]")) {
     final parts = handle.split(",");
