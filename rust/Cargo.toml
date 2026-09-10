@@ -65,9 +65,6 @@ mwc-wagyu-ethereum = { git = "https://github.com/cypherstack/wagyu-ethereum" }
 [patch."https://github.com/mwcproject/rust-bch"]
 mwc-bch = { git = "https://github.com/cypherstack/rust-bch" }
 
-[patch."https://github.com/mwcproject/rust-bitcoin"]
-mwc-bitcoin = { git = "https://github.com/cypherstack/rust-bitcoin" }
-
 [patch."https://github.com/mwcproject/wagyu-model"]
 mwc-wagyu-model = { git = "https://github.com/cypherstack/wagyu-model" }
 
@@ -85,6 +82,4 @@ mwc_keychain = { git = "https://github.com/cypherstack/mwc-node", subdir = "keyc
 mwc_p2p = { git = "https://github.com/cypherstack/mwc-node", subdir = "p2p", tag = "5.3.7", features = ["libp2p"] }
 mwc_store = { git = "https://github.com/cypherstack/mwc-node", subdir = "store", tag = "5.3.7" }
 mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util", tag = "5.3.7" }
-mwc_config = { git = "https://github.com/cypherstack/mwc-node", subdir = "config", tag = "5.3.7" }
 mwc_pool = { git = "https://github.com/cypherstack/mwc-node", subdir = "pool", tag = "5.3.7" }
-mwc_servers = { git = "https://github.com/cypherstack/mwc-node", subdir = "servers", tag = "5.3.7" }
