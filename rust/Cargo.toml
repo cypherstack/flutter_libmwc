@@ -87,3 +87,5 @@ mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util", t
 mwc_config = { git = "https://github.com/cypherstack/mwc-node", subdir = "config", tag = "5.3.7" }
 mwc_pool = { git = "https://github.com/cypherstack/mwc-node", subdir = "pool", tag = "5.3.7" }
 mwc_servers = { git = "https://github.com/cypherstack/mwc-node", subdir = "servers", tag = "5.3.7" }
+[profile.release]
+strip = "symbols"
