@@ -1,6 +1,6 @@
 name: flutter_libmwc
 description: Dart bindings for the MWC wallet.
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/cypherstack/flutter_libmwc
 
 environment:
