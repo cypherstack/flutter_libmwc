@@ -25,7 +25,13 @@ void main() {
     // openWallet uses Flutter compute(), as real wallet consumers do.
     await expectLater(
       Libmwc.openWallet(config: '{}', password: 'unused'),
-      throwsA(anything),
+      throwsA(
+        isA<Exception>().having(
+          (error) => error.toString(),
+          'message',
+          contains('Unable to get wallet config'),
+        ),
+      ),
     );
   });
 }
