@@ -1,7 +1,7 @@
 name: flutter_libmwc
 description: A new Flutter plugin project.
 version: 0.0.1
-homepage:
+repository: https://github.com/cypherstack/flutter_libmwc
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
