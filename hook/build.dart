@@ -19,13 +19,13 @@ void main(List<String> args) async {
       // native_toolchain_rust 1.0.6 defaults to API 35. Honor Flutter's minimum.
       final (rustTarget, clangTarget) = switch (code.targetArchitecture) {
         Architecture.arm => (
-            'armv7-linux-androideabi',
-            'armv7a-linux-androideabi',
-          ),
+          'armv7-linux-androideabi',
+          'armv7a-linux-androideabi',
+        ),
         Architecture.arm64 => (
-            'aarch64-linux-android',
-            'aarch64-linux-android',
-          ),
+          'aarch64-linux-android',
+          'aarch64-linux-android',
+        ),
         Architecture.x64 => ('x86_64-linux-android', 'x86_64-linux-android'),
         _ => throw UnsupportedError('Unsupported Android architecture'),
       };
@@ -50,7 +50,7 @@ void main(List<String> args) async {
 
     await RustBuilder(
       assetName: 'mwc.dart',
-      extraCargoBuildArgs: ['--lib'],
+      extraCargoBuildArgs: ['--lib', '--locked'],
       extraCargoEnvironmentVariables: environment,
     ).run(input: input, output: output);
     output.dependencies.addAll(
