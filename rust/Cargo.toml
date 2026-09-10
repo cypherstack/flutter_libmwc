@@ -83,3 +83,6 @@ mwc_p2p = { git = "https://github.com/cypherstack/mwc-node", subdir = "p2p", tag
 mwc_store = { git = "https://github.com/cypherstack/mwc-node", subdir = "store", tag = "5.3.7" }
 mwc_util = { git = "https://github.com/cypherstack/mwc-node", subdir = "util", tag = "5.3.7" }
 mwc_pool = { git = "https://github.com/cypherstack/mwc-node", subdir = "pool", tag = "5.3.7" }
+
+[profile.release]
+strip = "symbols"
