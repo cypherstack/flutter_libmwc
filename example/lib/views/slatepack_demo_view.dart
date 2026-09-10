@@ -308,7 +308,7 @@ class _SlatepackDemoViewState extends State<SlatepackDemoView>
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButtonFormField<int>(
-                      value: _s1MinConf,
+                      initialValue: _s1MinConf,
                       decoration: const InputDecoration(
                         labelText: 'Min confirmations',
                         border: OutlineInputBorder(),
