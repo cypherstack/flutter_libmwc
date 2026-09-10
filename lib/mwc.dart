@@ -1,3 +1,6 @@
+// Preserve existing public API names.
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:ffi';
 
 import 'package:ffi/ffi.dart';
@@ -305,7 +308,7 @@ Future<String> getTransactionFees(
 
 @Native<DeleteWalletFFI>(symbol: 'mwc_rust_delete_wallet')
 external Pointer<Utf8> _deleteWallet(
-  Pointer<Utf8> _wallet,
+  Pointer<Utf8> wallet,
   Pointer<Utf8> config,
 );
 

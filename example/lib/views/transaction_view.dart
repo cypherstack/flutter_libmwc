@@ -195,10 +195,10 @@ class _TransactionViewState extends State<TransactionView> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _amountController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Amount (MWC)',
                         hintText: 'Enter amount in MWC',
-                        prefixIcon: const Icon(Icons.monetization_on),
+                        prefixIcon: Icon(Icons.monetization_on),
                         suffixText: 'MWC',
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
