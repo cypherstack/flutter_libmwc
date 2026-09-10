@@ -1,0 +1,86 @@
+name: Native assets
+
+on:
+  pull_request:
+  push:
+    branches: [main, native-assets]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-assets-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux
+          - os: macos-latest
+            target: macos
+          - os: windows-latest
+            target: windows
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+      - name: Install Linux native tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libclang-dev protobuf-compiler perl
+      - name: Install macOS native tools
+        if: runner.os == 'macOS'
+        run: brew install cmake protobuf pkg-config
+      - name: Install Windows native tools
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install nasm strawberryperl protoc llvm -y --no-progress
+          'C:\Program Files\NASM' >> $env:GITHUB_PATH
+          'C:\Strawberry\perl\bin' >> $env:GITHUB_PATH
+          'LIBCLANG_PATH=C:\Program Files\LLVM\bin' >> $env:GITHUB_ENV
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Run native FFI tests
+        run: flutter test
+      - name: Test example
+        working-directory: example
+        run: flutter test
+      - name: Build example release
+        working-directory: example
+        run: flutter build ${{ matrix.target }} --release
+      - name: Check Cargo lockfile stayed unchanged
+        run: git diff --exit-code -- rust/Cargo.lock
+
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+      - name: Install native tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libclang-dev protobuf-compiler perl
+      - name: Build all Android ABIs
+        working-directory: example
+        run: flutter build apk --release
+      - name: Check Cargo lockfile stayed unchanged
+        run: git diff --exit-code -- rust/Cargo.lock
