@@ -12,7 +12,7 @@ symbols using `@Native`. No manual library copying or build scripts are needed.
 Install the native build tools required by the Rust dependencies: a C/C++
 compiler, CMake, libclang, pkg-config, Perl (for vendored OpenSSL), and `protoc`.
 Use Xcode for Apple targets, Android SDK/NDK r27+ for Android, and Visual Studio's
-Desktop development with C++ workload and NASM for Windows (MSVC).
+Desktop development with C++ workload for Windows (MSVC).
 
 ```sh
 flutter pub get
