@@ -9,6 +9,14 @@ void main(List<String> args) async {
     if (!input.config.buildCodeAssets) return;
 
     final code = input.config.code;
+
+    // OpenSSL refuses to build for a non-Windows target using Windows' perl.
+    if (Platform.isWindows && code.targetOS != OS.windows) {
+      throw UnsupportedError(
+        'Cannot build ${code.targetOS} from Windows; use Linux, macOS, or WSL.',
+      );
+    }
+
     final environment = <String, String>{
       if (code.targetOS == OS.iOS)
         'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
