@@ -18,22 +18,28 @@ void main(List<String> args) async {
     }
 
     final environment = <String, String>{
-      if (code.targetOS == OS.iOS)
-        'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
-      if (code.targetOS == OS.macOS)
-        'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0',
+      if (code.targetOS == .iOS)
+        "IPHONEOS_DEPLOYMENT_TARGET": "${code.iOS.targetVersion}.0",
+      if (code.targetOS == .macOS) ...{
+        "MACOSX_DEPLOYMENT_TARGET": "${code.macOS.targetVersion}.0",
+        // LMDB defaults to SysV semaphores on Apple targets, which the App
+        // Sandbox denies (EPERM on mdb_env_open). Keep the lock in lock.mdb via
+        // pthread mutexes instead; macOS has no robust mutexes, so disable those.
+        "CFLAGS_${code.targetArchitecture == .arm64 ? "aarch64" : "x86_64"}_apple_darwin":
+            "-DMDB_USE_POSIX_MUTEX=1 -DMDB_USE_ROBUST=0",
+      },
     };
     if (code.targetOS == OS.android) {
       // native_toolchain_rust 1.0.6 defaults to API 35. Honor Flutter's minimum.
       final (rustTarget, clangTarget) = switch (code.targetArchitecture) {
         Architecture.arm => (
-            'armv7-linux-androideabi',
-            'armv7a-linux-androideabi',
-          ),
+          'armv7-linux-androideabi',
+          'armv7a-linux-androideabi',
+        ),
         Architecture.arm64 => (
-            'aarch64-linux-android',
-            'aarch64-linux-android',
-          ),
+          'aarch64-linux-android',
+          'aarch64-linux-android',
+        ),
         Architecture.x64 => ('x86_64-linux-android', 'x86_64-linux-android'),
         _ => throw UnsupportedError('Unsupported Android architecture'),
       };
