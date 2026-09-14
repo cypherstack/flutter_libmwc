@@ -57,6 +57,9 @@ void main() {
       'flake.lock',
       'reproducible/audit_linux.py',
       'tool/build_nix_prebuilt.dart',
+      'tool/build_macos_prebuilt.dart',
+      'reproducible/macos/package.nix',
+      'reproducible/macos/audit.py',
     ]) {
       final file = File.fromUri(source.uri.resolve(relative));
       await file.parent.create(recursive: true);
@@ -110,6 +113,9 @@ void main() {
       'flake.lock',
       'reproducible/audit_linux.py',
       'tool/build_nix_prebuilt.dart',
+      'tool/build_macos_prebuilt.dart',
+      'reproducible/macos/package.nix',
+      'reproducible/macos/audit.py',
     ]) {
       final before = await sourceSha256(source.uri);
       await File.fromUri(source.uri.resolve(path)).writeAsString('changed');

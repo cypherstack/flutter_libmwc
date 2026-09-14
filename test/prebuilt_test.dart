@@ -305,6 +305,9 @@ void main() {
         'flake.lock',
         'reproducible/audit_linux.py',
         'tool/build_nix_prebuilt.dart',
+        'tool/build_macos_prebuilt.dart',
+        'reproducible/macos/package.nix',
+        'reproducible/macos/audit.py',
       ]..sort();
       final expectedFraming = StringBuffer();
       for (final path in paths) {

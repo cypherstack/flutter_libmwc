@@ -67,7 +67,10 @@
         '';
       };
     in {
-      packages.${system} = {
+      packages = (pkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-darwin" ] (darwinSystem:
+        let darwinPkgs = import nixpkgs { system = darwinSystem; overlays = [ (import rust-overlay) ]; };
+        in import ./reproducible/macos/package.nix { pkgs = darwinPkgs; }
+      )) // { ${system} = {
         default = native;
         native-linux = native;
         cargo-vendor = native.cargoDeps;
@@ -78,7 +81,7 @@
           $CC -Wall -Wextra -Werror ${./reproducible/smoke.c} -ldl -o $out/bin/mwc-native-smoke
           patchelf --remove-rpath --set-interpreter /lib64/ld-linux-x86-64.so.2 $out/bin/mwc-native-smoke
         '';
-      };
+      }; };
       checks.${system}.native-linux = native;
     };
 }

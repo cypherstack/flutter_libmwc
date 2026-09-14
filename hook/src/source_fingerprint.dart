@@ -21,6 +21,9 @@ Future<({String sha256, List<Uri> dependencies})> sourceFingerprint(
     'flake.lock',
     'reproducible/audit_linux.py',
     'tool/build_nix_prebuilt.dart',
+    'tool/build_macos_prebuilt.dart',
+    'reproducible/macos/package.nix',
+    'reproducible/macos/audit.py',
   ]) {
     files[path] = File.fromUri(packageRoot.resolve(path));
   }
