@@ -75,8 +75,9 @@ hashes; keep the fragment alongside the release for additional provenance.
 Use `--output` to choose a fresh destination; existing artifacts are never
 overwritten. A Linux-only manifest cannot satisfy requests for other platforms.
 
-The manual `Reproduce Linux native prebuilts` workflow repeats the build,
-packages the results, and performs the Dart C ABI smoke test on Ubuntu 22.04.
+The `Reproduce Linux native prebuilts` workflow runs on pushes to the reproducibility
+branch or by manual dispatch. It repeats the build independently on Ubuntu 22.04
+and 24.04, packages and smoke-tests the results, and requires matching payloads.
 It uploads workflow artifacts and does not publish a release. It must be run
 from this branch (or a commit containing the recipe). Local workflow validation
 is not evidence of a completed GitHub Actions run.
@@ -105,8 +106,10 @@ depend on that package being available.
 
 ## Next host work
 
-Linux validation should precede the host-specific extensions. After it passes,
-macOS and Windows can proceed independently from this branch:
+Linux local validation has passed. macOS and Windows can proceed independently
+using the committed [host handoffs](reproducible/handoffs/README.md). The acceptance
+criterion for each host is now [matching a real GitHub run](reproducible/HOST_TO_CI.md),
+not only local repeatability:
 
 | Host | First reproducibility target | Inputs and checks |
 | --- | --- | --- |

@@ -2,18 +2,28 @@ name: Reproduce Linux native prebuilts
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - reproducible-native-prebuilts
+      - 'nix-reproducible-native-prebuilts'
 
 permissions:
   contents: read
 
 jobs:
   nix-linux:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
+      - name: Test the artifact comparison protocol
+        run: python3 -m unittest discover -s reproducible -p 'test_ci_artifacts.py' -v
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
         with:
           extra_nix_config: |
@@ -29,15 +39,48 @@ jobs:
       - run: flutter pub get --no-example
       - name: Package the Nix outputs using the release manifest protocol
         run: dart --packages=.dart_tool/package_config.json tool/build_nix_prebuilt.dart
-      - name: Load on Ubuntu 22.04 and exercise the C ABI
+      - name: Load on the runner and exercise the C ABI
         run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/nix-prebuilts/mwc_wallet-x86_64-unknown-linux-gnu-dynamic.so
       - name: Assemble a Linux-only manifest
         run: dart --packages=.dart_tool/package_config.json tool/prebuilt_manifest.dart --artifacts build/nix-prebuilts --output build/nix-release
+      - name: Record the exact GitHub run and payload hashes
+        env:
+          REPRO_RUNNER: ${{ matrix.runner }}
+        run: python3 reproducible/ci_artifacts.py record build/nix-release --runner "$REPRO_RUNNER"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: reproducible-linux-prebuilts
-          path: |
-            build/nix-release/*
-            build/nix-prebuilts/*.json
+          name: reproducible-linux-${{ matrix.runner }}-attempt-${{ github.run_attempt }}
+          path: build/nix-release/*
           if-no-files-found: error
           compression-level: 1
+
+  compare-linux:
+    needs: nix-linux
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          pattern: reproducible-linux-ubuntu-*-attempt-${{ github.run_attempt }}
+          path: build/ci-comparison
+      - name: Require identical payloads on both Ubuntu runners
+        env:
+          REPRO_COMMIT: ${{ github.sha }}
+          REPRO_REPOSITORY: ${{ github.repository }}
+          REPRO_RUN_ID: ${{ github.run_id }}
+          REPRO_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 reproducible/ci_artifacts.py compare \
+            "build/ci-comparison/reproducible-linux-ubuntu-22.04-attempt-$REPRO_RUN_ATTEMPT" \
+            "build/ci-comparison/reproducible-linux-ubuntu-24.04-attempt-$REPRO_RUN_ATTEMPT" \
+            --ci-pair --commit "$REPRO_COMMIT" --repository "$REPRO_REPOSITORY" \
+            --run-id "$REPRO_RUN_ID" --run-attempt "$REPRO_RUN_ATTEMPT" \
+            > build/ci-comparison/match.json
+          cat build/ci-comparison/match.json
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: reproducible-linux-comparison-attempt-${{ github.run_attempt }}
+          path: build/ci-comparison/match.json
+          if-no-files-found: error

@@ -54,7 +54,9 @@ Nix output:
   logs, test output, and Ubuntu/Dart smoke output.
 
 These ignored build outputs and logs are local; the recipes, tests, and this
-report are committed. No branch or artifacts have been pushed/published.
+report are committed. At the time of this initial validation, no branch or
+artifacts had been pushed/published. See [HOST_TO_CI.md](HOST_TO_CI.md) for the
+subsequent transport handoff and the stricter host-to-GitHub acceptance criterion.
 
 ## Limits and next steps
 
@@ -65,7 +67,7 @@ that static consumers were linked/tested, or that wallet transaction behavior
 was tested.
 
 The tag-triggered release workflow still uses its original build path. The new
-manual Nix workflow is opt-in. Promoting it to the tag release should follow
+Nix workflow is opt-in through its feature-branch push/manual triggers. Promoting it to the tag release should follow
 independent reproduction and the remaining platform work.
 
 macOS and Windows work can start independently now; the platform-specific input
