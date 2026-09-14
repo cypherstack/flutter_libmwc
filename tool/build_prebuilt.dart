@@ -110,11 +110,26 @@ Future<Map<String, String>> buildEnvironment(
       throw StateError('Linux releases require a Linux host');
     }
     env['CXXSTDLIB_$key'] = 'static=stdc++';
+    // Rust bundles this archive before linking, without GCC's default paths.
+    final archive = File(
+      (await runCommand(
+        ['c++', '-print-file-name=libstdc++.a'],
+        environment: env,
+        capture: true,
+      ))!,
+    ).absolute;
+    if (!await archive.exists()) {
+      throw StateError(
+        'Missing libstdc++.a; install the C++ development tools',
+      );
+    }
+    rustflags.add('-Lnative=${archive.parent.path}');
   } else if (target.contains('windows') && !Platform.isWindows) {
     throw StateError('Windows MSVC releases require Windows and Visual Studio');
   }
 
-  env['CARGO_TARGET_${key.toUpperCase()}_RUSTFLAGS'] = rustflags.join(' ');
+  // Preserve library paths containing spaces as a single compiler argument.
+  env['CARGO_ENCODED_RUSTFLAGS'] = rustflags.join('\u001f');
   return env;
 }
 

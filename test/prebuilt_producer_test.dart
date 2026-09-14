@@ -261,6 +261,23 @@ void main() {
     expect(process.stdout, contains('--require-all'));
   });
 
+  test('Linux Rust flags locate the actual static C++ archive', () async {
+    final env = await buildEnvironment('x86_64-unknown-linux-gnu');
+    final searchPath = env['CARGO_ENCODED_RUSTFLAGS']!
+        .split('\u001f')
+        .singleWhere((flag) => flag.startsWith('-Lnative='))
+        .substring('-Lnative='.length);
+    final archive = File.fromUri(
+      Directory(searchPath).uri.resolve('libstdc++.a'),
+    );
+    final header = await archive
+        .openRead(0, 8)
+        .expand((bytes) => bytes)
+        .toList();
+    expect(ascii.decode(header), '!<arch>\n');
+    expect(env['CXXSTDLIB_x86_64_unknown_linux_gnu'], 'static=stdc++');
+  }, skip: !Platform.isLinux);
+
   test('Linux metadata audit compares glibc versions numerically', () {
     auditLinuxMetadata(
       'Name: GLIBC_2.9 Name: GLIBC_2.35',
