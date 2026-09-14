@@ -39,7 +39,9 @@ Future<void> main(List<String> arguments) async {
     final architecture = (await runCommand(['uname', '-m'], capture: true))!;
     final target = switch (architecture) {
       'arm64' => 'aarch64-apple-darwin',
-      'x86_64' => 'x86_64-apple-darwin',
+      'x86_64' => throw StateError(
+        'The locked nixpkgs no longer supports Intel macOS; use an independently pinned Intel recipe',
+      ),
       _ => throw StateError('Unsupported macOS architecture: $architecture'),
     };
     final fingerprint = await sourceSha256();

@@ -4,18 +4,16 @@ let
   rustVersion = (builtins.fromTOML (builtins.readFile ../../rust/rust-toolchain.toml)).toolchain.channel;
   toolchain = pkgs.rust-bin.stable.${rustVersion}.minimal;
   sdk = pkgs.apple-sdk_14;
-  libcxxHeaders = (pkgs.darwin.libcxx.override { apple-sdk_26 = sdk; }).overrideAttrs {
-    version = "apple-sdk-${sdk.version}";
-    inherit (sdk) src;
-  };
+  # The processed Nix SDK splits system libraries into separate packages.
+  # Its hash-pinned, complete source SDK keeps the system ABI stubs together.
+  sdkRoot = sdk.src;
   llvm = pkgs.llvmPackages;
   # Use the SDK's system libc++, not nixpkgs' macOS-14 runtime. All tools
   # themselves may require a newer build host; the payload's floor stays 11.
   compiler = name: executable: pkgs.writeShellScriptBin name ''
     exec ${llvm.clang-unwrapped}/bin/${executable} \
-      -isysroot ${sdk.sdkroot} -mmacosx-version-min=11.0 \
-      -L${libcxxHeaders}/lib \
-      ${pkgs.lib.optionalString (executable == "clang++") "-nostdinc++ -isystem ${libcxxHeaders}/include/c++/v1"} \
+      -isysroot ${sdkRoot} -mmacosx-version-min=11.0 \
+      ${pkgs.lib.optionalString (executable == "clang++") "-nostdinc++ -isystem ${sdkRoot}/usr/include/c++/v1"} \
       -fuse-ld=${llvm.lld}/bin/ld64.lld "$@"
   '';
   cc = compiler "mwc-cc" "clang";
@@ -33,8 +31,7 @@ let
     dontFixup = true;
     passthru.pinnedInputs = {
       rust = { version = rustVersion; path = toString toolchain; };
-      sdk = { version = sdk.version; path = toString sdk; };
-      libcxxHeaders = { version = libcxxHeaders.version; path = toString libcxxHeaders; };
+      sdk = { version = sdk.version; path = toString sdkRoot; };
       clang = { version = llvm.clang-unwrapped.version; path = toString llvm.clang-unwrapped; };
       linker = { version = llvm.lld.version; path = toString llvm.lld; };
       archiver = { version = llvm.llvm.version; path = toString llvm.llvm; };
@@ -57,13 +54,18 @@ let
     };
     buildPhase = ''
       runHook preBuild
+      # cc-rs hashes absolute source directories into archive member names
+      # (notably ring's pregenerated assembly). Compile dependencies directly
+      # from their immutable store path instead of the temporary vendor copy.
+      substituteInPlace "$NIX_BUILD_TOP/.cargo/config.toml" \
+        --replace-fail "$NIX_BUILD_TOP/$(stripHash "$cargoDeps")" "$cargoDeps"
       export MACOSX_DEPLOYMENT_TARGET=11.0
-      export SDKROOT=${sdk.sdkroot}
+      export SDKROOT=${sdkRoot}
       export CC=${cc}/bin/mwc-cc CXX=${cxx}/bin/mwc-cxx
       export AR=${llvm.llvm}/bin/llvm-ar RANLIB=${llvm.llvm}/bin/llvm-ranlib
-      export CFLAGS="-DMDB_USE_POSIX_MUTEX=1 -DMDB_USE_ROBUST=0 -ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build -fmacro-prefix-map=$NIX_BUILD_TOP=/build"
+      export CFLAGS="-DMDB_USE_POSIX_MUTEX=1 -DMDB_USE_ROBUST=0 -ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build -fmacro-prefix-map=$NIX_BUILD_TOP=/build -ffile-prefix-map=$cargoDeps=/vendor -fdebug-prefix-map=$cargoDeps=/vendor -fmacro-prefix-map=$cargoDeps=/vendor"
       export CXXFLAGS="$CFLAGS -stdlib=libc++"
-      export RUSTFLAGS="-C debuginfo=0 -C linker=$CC -C link-arg=-Wl,-install_name,@rpath/libmwc_wallet.dylib -C link-arg=-Wl,-no_uuid --remap-path-prefix=$NIX_BUILD_TOP=/build"
+      export RUSTFLAGS="-C debuginfo=0 -C linker=$CC -C link-arg=-Wl,-install_name,@rpath/libmwc_wallet.dylib -C link-arg=-Wl,-no_uuid --remap-path-prefix=$NIX_BUILD_TOP=/build --remap-path-prefix=$cargoDeps=/vendor"
       cargo build --frozen --release --lib --target ${target} --jobs "$NIX_BUILD_CORES"
       runHook postBuild
     '';

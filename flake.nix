@@ -67,7 +67,7 @@
         '';
       };
     in {
-      packages = (pkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-darwin" ] (darwinSystem:
+      packages = (pkgs.lib.genAttrs [ "aarch64-darwin" ] (darwinSystem:
         let darwinPkgs = import nixpkgs { system = darwinSystem; overlays = [ (import rust-overlay) ]; };
         in import ./reproducible/macos/package.nix { pkgs = darwinPkgs; }
       )) // { ${system} = {

@@ -56,6 +56,14 @@ class AuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'timestamp'):
             archive(static_archive(binary(dynamic=False), timestamp=123), TARGET)
 
+    def test_duplicate_names_have_deterministic_sequence(self):
+        member = binary(dynamic=False)
+        valid = static_archive(member, timestamp=1) + static_archive(member, timestamp=2)[8:]
+        self.assertEqual(archive(valid, TARGET), 2)
+        invalid = static_archive(member) + static_archive(member)[8:]
+        with self.assertRaisesRegex(ValueError, 'timestamp'):
+            archive(invalid, TARGET)
+
     def test_rejects_truncated_bytes(self):
         with self.assertRaisesRegex(ValueError, 'Truncated'):
             macho(binary()[:-1], TARGET, True)

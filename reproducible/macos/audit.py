@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Audit shipped Mach-O bytes without depending on the host's Xcode tools."""
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
 import struct
@@ -70,13 +71,14 @@ def archive(data, target):
     if not data.startswith(b'!<arch>\n'):
         raise ValueError('Expected a static archive')
     offset, members = 8, 0
+    timestamps = []
     while offset < len(data):
         header = data[offset:offset + 60]
         if len(header) != 60 or header[58:] != b'`\n':
             raise ValueError('Invalid archive member header')
-        for field in (header[16:28], header[28:34], header[34:40]):
+        for field in (header[28:34], header[34:40]):
             if int(field.strip() or b'0') != 0:
-                raise ValueError('Nonzero archive timestamp, uid, or gid')
+                raise ValueError('Nonzero archive uid or gid')
         size = int(header[48:58])
         start = offset + 60
         if size < 0 or start + size > len(data):
@@ -88,12 +90,22 @@ def archive(data, target):
             if not 0 < length <= size:
                 raise ValueError('Invalid extended archive name')
             name, payload = payload[:length].rstrip(b'\0'), payload[length:]
+        timestamps.append((name, int(header[16:28].strip() or b'0')))
         if not name.startswith(b'__.SYMDEF') and name not in (b'/', b'//', b'/SYM64/'):
             macho(payload, target)
             members += 1
         offset = start + size + (size % 2)
     if offset != len(data) or not members:
         raise ValueError('Empty or malformed static archive')
+    # LLVM's deterministic Darwin writer distinguishes duplicate names with
+    # timestamps 1, 2, ...; unique names have timestamp zero. Keep those bytes.
+    counts = Counter(name for name, _ in timestamps)
+    seen = Counter()
+    for name, timestamp in timestamps:
+        seen[name] += 1
+        expected = seen[name] if counts[name] > 1 else 0
+        if timestamp != expected:
+            raise ValueError('Nondeterministic archive timestamp')
     return members
 
 

@@ -3,14 +3,15 @@
 The `native-macos` flake output pins Rust 1.90.0, LLVM Clang/LLD/archiver,
 Apple SDK 14.4, CMake, protoc, Perl, nasm and the complete Cargo vendor tree.
 `flake.lock` is shared with the established Linux recipe and is unchanged.
-The Rust sources and lockfile are unchanged. Build the host's native target;
-the initial GitHub job covers `aarch64-apple-darwin` only.
+The Rust sources and lockfile are unchanged. This recipe and its GitHub job
+cover `aarch64-apple-darwin` only. The locked nixpkgs 26.11 revision has dropped
+Intel macOS support; Intel needs a separate compatible nixpkgs pin.
 
 The SDK's system libc++ is used with an explicit macOS 11.0 target. The newer
 nixpkgs host-tool deployment floor does not select the payload floor. The
 byte-level audit rejects higher deployment versions in both the dylib and
 static archive, incorrect architecture/install name, dylib UUIDs/RPATHs,
-non-system dylib dependencies, nonzero archive timestamps/owners, and embedded
+non-system dylib dependencies, nondeterministic archive timestamps/owners, and embedded
 host paths. Preserve the LMDB POSIX mutex/no-robust flags. LLD's deterministic
 ad-hoc signature is required to load ARM64 code; no developer signing identity
 or notarization is used.
@@ -34,7 +35,11 @@ nix eval --json .#native-macos.pinnedInputs
 
 The verifier repeats the entire native compilation with `--rebuild`. Darwin
 Nix allocates different temporary build paths; source/debug/macro paths map to
-`/build`, archives use deterministic timestamps, and LLD omits UUIDs. No
+`/build`, archives use deterministic timestamps, and LLD omits UUIDs. Dependencies
+compile directly from the immutable vendor store path; this also stabilizes the
+directory hashes cc-rs puts into ring's assembly member names. LLVM's Darwin
+archive writer uses zero timestamps for unique names and `1, 2, ...` for
+duplicate names; the audit checks this sequence without rewriting it. No
 compiled Cargo cache is reused for the second build. Downloaded source and
 toolchain caches may be reused. Cargo builds with `--frozen` after hash-checked
 vendoring. CI requires `sandbox = true` and `sandbox-fallback = false`.
