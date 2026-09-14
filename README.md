@@ -79,3 +79,8 @@ To test the prebuilt tooling without compiling Rust:
 flutter pub get
 dart --packages=.dart_tool/package_config.json tool/test_prebuilt.dart
 ```
+
+## Reproducible native builds
+
+For the pinned Linux Nix build, rebuild verification, release packaging, and
+StageX experiment, see [REPRODUCIBLE_BUILDS.md](REPRODUCIBLE_BUILDS.md).

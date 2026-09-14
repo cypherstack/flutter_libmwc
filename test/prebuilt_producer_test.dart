@@ -53,6 +53,10 @@ void main() {
       'lib/mwc.dart',
       'tool/build_prebuilt.dart',
       'tool/src/build_support.dart',
+      'flake.nix',
+      'flake.lock',
+      'reproducible/audit_linux.py',
+      'tool/build_nix_prebuilt.dart',
     ]) {
       final file = File.fromUri(source.uri.resolve(relative));
       await file.parent.create(recursive: true);
@@ -97,6 +101,77 @@ void main() {
       await File.fromUri(source.uri.resolve('tool/src/build_support.dart'))
           .writeAsString('new policy');
       expect(await sourceSha256(source.uri), isNot(original));
+    },
+  );
+
+  test('Nix recipe and lock changes invalidate source identity', () async {
+    for (final path in [
+      'flake.nix',
+      'flake.lock',
+      'reproducible/audit_linux.py',
+      'tool/build_nix_prebuilt.dart',
+    ]) {
+      final before = await sourceSha256(source.uri);
+      await File.fromUri(source.uri.resolve(path)).writeAsString('changed');
+      expect(await sourceSha256(source.uri), isNot(before), reason: path);
+    }
+  });
+
+  test(
+    'external producer packages both modes and preserves provenance',
+    () async {
+      final built = await Directory.fromUri(temporary.uri.resolve('built/'))
+          .create();
+      for (final name in ['mwc_wallet.dll', 'mwc_wallet.lib']) {
+        await File.fromUri(built.uri.resolve(name))
+            .writeAsString('fixture $name');
+      }
+      final fingerprint = await sourceSha256(source.uri);
+      await packageBuiltTarget(
+        'x86_64-pc-windows-msvc',
+        output,
+        built.uri,
+        fingerprint: fingerprint,
+        build: {'builder': 'test', 'rust_version': '1.90.0'},
+      );
+      final data = jsonDecode(
+        await File.fromUri(output.uri.resolve('x86_64-pc-windows-msvc.json'))
+            .readAsString(),
+      ) as Map;
+      expect((data['artifacts'] as List).length, 2);
+      expect(data['source_sha256'], fingerprint);
+      expect(data['build']['builder'], 'test');
+      await expectLater(
+        packageBuiltTarget(
+          'x86_64-pc-windows-msvc',
+          output,
+          built.uri,
+          fingerprint: fingerprint,
+          build: {},
+        ),
+        throwsStateError,
+      );
+    },
+  );
+
+  test(
+    'external producer rejects a missing link mode before writing',
+    () async {
+      final built = await Directory.fromUri(temporary.uri.resolve('built/'))
+          .create();
+      await File.fromUri(built.uri.resolve('mwc_wallet.dll'))
+          .writeAsString('fixture');
+      await expectLater(
+        packageBuiltTarget(
+          'x86_64-pc-windows-msvc',
+          output,
+          built.uri,
+          fingerprint: await sourceSha256(source.uri),
+          build: {},
+        ),
+        throwsStateError,
+      );
+      expect(await output.exists(), isFalse);
     },
   );
 

@@ -1,0 +1,31 @@
+# Experimental musl build: NEVER publish as x86_64-unknown-linux-gnu.
+FROM docker.io/stagex/pallet-rust@sha256:59d4d0c9e232a05ecb99348f7216b521af1b914a430059dbdb9130018f2afde1 AS build
+COPY --from=docker.io/stagex/core-cmake@sha256:626a3fdf157efacd00c3ceb0529ae80dde1072d64fa1925aafe9819bebc92047 / /
+COPY --from=docker.io/stagex/core-make@sha256:0402e189b4bc68a4c5c00a2d7c2dc1c93752c850e81bba0ee066cbe796249d05 / /
+COPY --from=docker.io/stagex/core-perl@sha256:ac080ed37031c4e86625cfd2b3abd9df6c0d12fec0339c91b9e82a1c57b85751 / /
+COPY --from=docker.io/stagex/user-abseil-cpp@sha256:76665cfc8b076c8091d1c820e227cd51af4b703682074a50a0ac095dd4cf70dc / /
+COPY --from=docker.io/stagex/user-protobuf@sha256:f8393874930c80d7454de3edd2f55dd2ef8139f2dec3194020b08819efeaa3da / /
+WORKDIR /src/rust
+COPY vendor/ /vendor/
+COPY rust/ /src/rust/
+COPY smoke.c /tmp/smoke.c
+ENV SOURCE_DATE_EPOCH=1 TZ=UTC LC_ALL=C CARGO_HOME=/cargo CARGO_INCREMENTAL=0
+ENV CARGO_NET_OFFLINE=true CARGO_PROFILE_RELEASE_DEBUG=false PROTOC=/usr/bin/protoc
+ENV CXXSTDLIB=c++
+ENV RUSTFLAGS="-C debuginfo=0 -C target-feature=-crt-static --remap-path-prefix=/src=/source --remap-path-prefix=/vendor=/cargo-vendor"
+RUN --network=none <<'BUILD'
+set -eu
+mkdir -p .cargo
+sed 's|@vendor@|/vendor|g' /vendor/.cargo/config.toml > .cargo/config.toml
+cargo build --frozen --release --lib --target x86_64-unknown-linux-musl --jobs 8
+mkdir /out
+cp target/x86_64-unknown-linux-musl/release/libmwc_wallet.so /out/
+cp target/x86_64-unknown-linux-musl/release/libmwc_wallet.a /out/
+cc -Wall -Wextra -Werror /tmp/smoke.c -ldl -o /tmp/smoke
+/tmp/smoke /out/libmwc_wallet.so
+cd /out
+sha256sum libmwc_wallet.a libmwc_wallet.so > SHA256SUMS
+rustc --version > TOOLCHAIN
+BUILD
+FROM scratch AS artifacts
+COPY --from=build /out/ /

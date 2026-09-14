@@ -7,3 +7,6 @@ rust/rust-toolchain.toml text eol=lf
 lib/mwc.dart text eol=lf
 tool/**/*.dart text eol=lf
 tool/*.dart text eol=lf
+flake.nix text eol=lf
+flake.lock text eol=lf
+reproducible/** text eol=lf

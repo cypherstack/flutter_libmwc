@@ -194,7 +194,6 @@ Future<void> buildTarget(
   root ??= packageRoot;
   output = output.absolute;
   targetDirectory = targetDirectory.absolute;
-  final names = libraryNames(target);
   final fingerprint = await sourceSha256(root);
   final channel = await toolchainChannel(root);
   final env = await buildEnvironment(target, ndk: ndk);
@@ -240,7 +239,24 @@ Future<void> buildTarget(
       'Native sources changed during the build; refusing to package',
     );
   }
-  final release = targetDirectory.uri.resolve('$target/release/');
+  await packageBuiltTarget(
+    target,
+    output,
+    targetDirectory.uri.resolve('$target/release/'),
+    fingerprint: fingerprint,
+    build: {'rust_version': channel, 'target': target},
+  );
+}
+
+/// Audit and package outputs from a producer that has already bound its inputs.
+Future<void> packageBuiltTarget(
+  String target,
+  Directory output,
+  Uri release, {
+  required String fingerprint,
+  required Map<String, Object> build,
+}) async {
+  final names = libraryNames(target);
   final minimumGlibc = releaseTargets[target]!['minimum_glibc_version'];
   if (minimumGlibc is String) {
     await auditLinuxLibrary(
@@ -285,13 +301,7 @@ Future<void> buildTarget(
     });
   }
   await fragmentFile.writeAsString(
-    '${indentedJson.convert({
-      'schema_version': 1,
-      'package': 'flutter_libmwc',
-      'source_sha256': fingerprint,
-      'artifacts': artifacts,
-      'build': {'rust_version': channel, 'target': target},
-    })}\n',
+    '${indentedJson.convert({'schema_version': 1, 'package': 'flutter_libmwc', 'source_sha256': fingerprint, 'artifacts': artifacts, 'build': build})}\n',
   );
   stdout.writeln('Packaged $target; source_sha256=$fingerprint');
 }

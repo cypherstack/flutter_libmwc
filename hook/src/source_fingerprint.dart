@@ -17,6 +17,10 @@ Future<({String sha256, List<Uri> dependencies})> sourceFingerprint(
     'lib/mwc.dart',
     'tool/build_prebuilt.dart',
     'tool/src/build_support.dart',
+    'flake.nix',
+    'flake.lock',
+    'reproducible/audit_linux.py',
+    'tool/build_nix_prebuilt.dart',
   ]) {
     files[path] = File.fromUri(packageRoot.resolve(path));
   }

@@ -301,6 +301,10 @@ void main() {
         'hook/build.dart',
         'tool/build_prebuilt.dart',
         'tool/src/build_support.dart',
+        'flake.nix',
+        'flake.lock',
+        'reproducible/audit_linux.py',
+        'tool/build_nix_prebuilt.dart',
       ]..sort();
       final expectedFraming = StringBuffer();
       for (final path in paths) {

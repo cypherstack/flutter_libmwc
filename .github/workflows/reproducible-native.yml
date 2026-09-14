@@ -1,0 +1,43 @@
+name: Reproduce Linux native prebuilts
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nix-linux:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+        with:
+          extra_nix_config: |
+            sandbox = true
+            sandbox-fallback = false
+      - name: Compare a forced clean rebuild of both link modes
+        run: ./reproducible/nix/verify.sh
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version: '3.47.2'
+          cache: true
+      - run: flutter pub get --no-example
+      - name: Package the Nix outputs using the release manifest protocol
+        run: dart --packages=.dart_tool/package_config.json tool/build_nix_prebuilt.dart
+      - name: Load on Ubuntu 22.04 and exercise the C ABI
+        run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/nix-prebuilts/mwc_wallet-x86_64-unknown-linux-gnu-dynamic.so
+      - name: Assemble a Linux-only manifest
+        run: dart --packages=.dart_tool/package_config.json tool/prebuilt_manifest.dart --artifacts build/nix-prebuilts --output build/nix-release
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: reproducible-linux-prebuilts
+          path: |
+            build/nix-release/*
+            build/nix-prebuilts/*.json
+          if-no-files-found: error
+          compression-level: 1
