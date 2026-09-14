@@ -13,10 +13,12 @@ def string_command(command, name):
     return struct.pack('<6I', command, 24 + len(content), 24, 0, 0, 0) + content
 
 
-def binary(minimum=11 << 16, cpu=0x100000c, dynamic=True, extra=b'', dependency='/usr/lib/libSystem.B.dylib'):
+def binary(minimum=11 << 16, cpu=0x100000c, dynamic=True, extra=b'', dependency='/usr/lib/libSystem.B.dylib', uuid=True):
     commands = [struct.pack('<6I', 0x32, 24, 1, minimum, 0xe0400, 0)]
     if dynamic:
         commands += [string_command(0xd, '@rpath/libmwc_wallet.dylib'), string_command(0xc, dependency)]
+        if uuid:
+            commands.append(struct.pack('<II', 0x1b, 24) + bytes(range(16)))
     if extra:
         commands.append(extra)
     return struct.pack('<8I', 0xfeedfacf, cpu, 0, 6 if dynamic else 1,
@@ -47,10 +49,11 @@ class AuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Non-system'):
             macho(binary(dependency='/nix/store/example/lib/libc++.dylib'), TARGET, True)
 
-    def test_rejects_uuid_and_rpath(self):
-        for command in (0x1b, 0x8000001c):
-            with self.subTest(command=command), self.assertRaisesRegex(ValueError, 'UUID'):
-                macho(binary(extra=struct.pack('<II', command, 8)), TARGET, True)
+    def test_requires_uuid_and_rejects_rpath(self):
+        with self.assertRaisesRegex(ValueError, 'UUID'):
+            macho(binary(uuid=False), TARGET, True)
+        with self.assertRaisesRegex(ValueError, 'runtime search path'):
+            macho(binary(extra=struct.pack('<II', 0x8000001c, 8)), TARGET, True)
 
     def test_rejects_timestamp(self):
         with self.assertRaisesRegex(ValueError, 'timestamp'):

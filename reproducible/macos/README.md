@@ -10,7 +10,7 @@ Intel macOS support; Intel needs a separate compatible nixpkgs pin.
 The SDK's system libc++ is used with an explicit macOS 11.0 target. The newer
 nixpkgs host-tool deployment floor does not select the payload floor. The
 byte-level audit rejects higher deployment versions in both the dylib and
-static archive, incorrect architecture/install name, dylib UUIDs/RPATHs,
+static archive, incorrect architecture/install name, missing dylib UUIDs/RPATHs,
 non-system dylib dependencies, nondeterministic archive timestamps/owners, and embedded
 host paths. Preserve the LMDB POSIX mutex/no-robust flags. LLD's deterministic
 ad-hoc signature is required to load ARM64 code; no developer signing identity
@@ -35,7 +35,9 @@ nix eval --json .#native-macos.pinnedInputs
 
 The verifier repeats the entire native compilation with `--rebuild`. Darwin
 Nix allocates different temporary build paths; source/debug/macro paths map to
-`/build`, archives use deterministic timestamps, and LLD omits UUIDs. Dependencies
+`/build`, archives use deterministic timestamps, and LLD generates a UUID from
+the binary contents. Current macOS loaders require that UUID. The byte-for-byte
+comparison includes the UUID and ad-hoc signature. Dependencies
 compile directly from the immutable vendor store path; this also stabilizes the
 directory hashes cc-rs puts into ring's assembly member names. LLVM's Darwin
 archive writer uses zero timestamps for unique names and `1, 2, ...` for

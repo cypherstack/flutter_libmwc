@@ -21,7 +21,7 @@ def macho(data, target, dynamic=False):
     if end > len(data):
         raise ValueError('Truncated load commands')
     offset = 32
-    versions, dependencies, identities = [], [], []
+    versions, dependencies, identities, uuids = [], [], [], []
     for _ in range(count):
         if offset + 8 > end:
             raise ValueError('Truncated load command')
@@ -51,20 +51,26 @@ def macho(data, target, dynamic=False):
                 raise ValueError('Invalid dylib name')
             name = command[start:].split(b'\0', 1)[0].decode()
             (identities if cmd == 0xd else dependencies).append(name)
-        elif cmd in (0x1b, 0x8000001c):  # UUID / RPATH
-            raise ValueError('Unexpected UUID or runtime search path')
+        elif cmd == 0x1b:  # LC_UUID: required by recent Darwin loaders.
+            if length != 24 or command[8:] == bytes(16):
+                raise ValueError('Invalid UUID')
+            uuids.append(command[8:].hex())
+        elif cmd == 0x8000001c:
+            raise ValueError('Unexpected runtime search path')
         offset += length
     if offset != end:
         raise ValueError('Load command count/size mismatch')
     if dynamic:
         if versions != [FLOOR]:
             raise ValueError('The dylib must declare exactly macOS 11.0')
+        if len(uuids) != 1:
+            raise ValueError('The dylib must contain one content-derived LLD UUID')
         if identities != ['@rpath/libmwc_wallet.dylib']:
             raise ValueError('Wrong dylib install name')
         if not dependencies or any(not name.startswith(('/usr/lib/', '/System/Library/Frameworks/'))
                                    for name in dependencies):
             raise ValueError(f'Non-system dynamic dependency: {dependencies}')
-    return {'minimum_versions': sorted(set(versions)), 'dependencies': dependencies}
+    return {'minimum_versions': sorted(set(versions)), 'dependencies': dependencies, 'uuids': uuids}
 
 
 def archive(data, target):
