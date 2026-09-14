@@ -1,0 +1,184 @@
+name: Build native prebuilts
+
+on:
+  push:
+    tags: ['native-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-prebuilts-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: startsWith(github.ref, 'refs/tags/native-') && github.event.deleted != true
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-22.04
+            smoke_library: libmwc_wallet.so
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2022
+            smoke_library: mwc_wallet.dll
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+            smoke_library: libmwc_wallet.dylib
+          - target: aarch64-apple-darwin
+            runner: macos-15
+            smoke_library: libmwc_wallet.dylib
+          - target: armv7-linux-androideabi
+            runner: ubuntu-22.04
+          - target: aarch64-linux-android
+            runner: ubuntu-22.04
+          - target: x86_64-linux-android
+            runner: ubuntu-22.04
+          - target: aarch64-apple-ios
+            runner: macos-15
+          - target: aarch64-apple-ios-sim
+            runner: macos-15
+          - target: x86_64-apple-ios
+            runner: macos-15-intel
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: '3.47.2'
+          cache: true
+      - run: flutter pub get
+      - name: Use short native build and Cargo paths
+        shell: bash
+        run: |
+          echo "CARGO_HOME=$RUNNER_TEMP/mwc-cargo" >> "$GITHUB_ENV"
+          echo "NATIVE_TARGET_DIR=$RUNNER_TEMP/mwc-target" >> "$GITHUB_ENV"
+      - name: Cache Cargo downloads
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ${{ env.CARGO_HOME }}/registry
+            ${{ env.CARGO_HOME }}/git
+          key: cargo-downloads-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('rust/Cargo.lock', 'rust/rust-toolchain.toml') }}
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang libclang-dev cmake pkg-config nasm perl protobuf-compiler
+      - name: Install Apple build dependencies
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install protobuf cmake pkgconf nasm
+          echo "LIBCLANG_PATH=$(dirname "$(xcrun --find clang)")/../lib" >> "$GITHUB_ENV"
+      - name: Install Windows build dependencies
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git config --global core.longpaths true
+          choco install protoc nasm --yes --no-progress
+          "LIBCLANG_PATH=C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Install pinned Android NDK
+        if: contains(matrix.target, 'android')
+        shell: bash
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358'
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      - name: Build and package both link modes
+        env:
+          NATIVE_TARGET: ${{ matrix.target }}
+        shell: bash
+        run: dart --packages=.dart_tool/package_config.json tool/build_prebuilt.dart --target "$NATIVE_TARGET" --target-dir "$NATIVE_TARGET_DIR" --output build/prebuilts
+      - name: Smoke test the desktop C ABI
+        if: matrix.smoke_library != ''
+        env:
+          NATIVE_TARGET: ${{ matrix.target }}
+          SMOKE_LIBRARY: ${{ matrix.smoke_library }}
+        shell: bash
+        run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart "$NATIVE_TARGET_DIR/$NATIVE_TARGET/release/$SMOKE_LIBRARY"
+      - name: Upload verified target artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: prebuilt-${{ matrix.target }}
+          path: build/prebuilts/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 1
+
+  release:
+    name: Publish verified prebuilts
+    needs: build
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: '3.47.2'
+          cache: true
+      - run: flutter pub get
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: prebuilt-*
+          path: build/downloaded
+      - name: Verify artifacts and assemble the manifest
+        run: dart --packages=.dart_tool/package_config.json tool/prebuilt_manifest.dart --artifacts build/downloaded --require-all
+      - name: Keep the complete release as a workflow artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: native-release
+          path: build/native-release/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 1
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^native-[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { echo 'Use a new native-* tag'; exit 1; }
+          source_commit=$(git rev-parse HEAD)
+          git fetch --depth=1 --no-tags origin "refs/tags/$RELEASE_TAG"
+          [[ "$(git rev-parse 'FETCH_HEAD^{commit}')" == "$source_commit" ]] || { echo 'Tag moved since this build started'; exit 1; }
+          read -r manifest_pin _ < build/native-release/manifest.sha256
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF
+          # 🔴 USE AT YOUR OWN RISK
+
+          > [!CAUTION]
+          > These binaries are provided AS IS, without warranty. Automated checks do not guarantee safety or correctness. Bugs may cause loss of funds or data.
+
+          Built from source commit $source_commit. Use the matching package revision.
+
+          Add to your root pubspec:
+
+              hooks:
+                user_defines:
+                  flutter_libmwc:
+                    native_build: prebuilt
+                    prebuilt_manifest_url: "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG/manifest.json"
+                    prebuilt_manifest_sha256: "$manifest_pin"
+
+          Use the same root pubspec settings and normal Flutter commands in CI.
+          Each hook run downloads fresh, verified files. Flutter can reuse its
+          output for incremental builds; flutter clean removes it, so the next
+          build downloads again. In pub workspaces, clean from the workspace root.
+          Omit these settings or use native_build: source to build from source.
+          EOF
+          # gh uploads all assets before publishing, including for immutable releases.
+          gh release create "$RELEASE_TAG" build/native-release/* \
+            --verify-tag --latest=false --title "$RELEASE_TAG" \
+            --notes-file "$RUNNER_TEMP/release-notes.md"
