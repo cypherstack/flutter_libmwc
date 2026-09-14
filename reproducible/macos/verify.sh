@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-args=(--no-link --no-update-lock-file --cores "${NIX_BUILD_CORES:-8}" --max-jobs 2)
+args=(--no-link --no-update-lock-file --keep-failed --cores "${NIX_BUILD_CORES:-8}" --max-jobs 2)
 derivation=$(nix path-info --derivation .#native-macos)
 nix build "$derivation^out" "${args[@]}" -L
 # The Darwin sandbox allocates a fresh temporary root for the second compile.

@@ -65,7 +65,10 @@ let
       export AR=${llvm.llvm}/bin/llvm-ar RANLIB=${llvm.llvm}/bin/llvm-ranlib
       export CFLAGS="-DMDB_USE_POSIX_MUTEX=1 -DMDB_USE_ROBUST=0 -ffile-prefix-map=$NIX_BUILD_TOP=/build -fdebug-prefix-map=$NIX_BUILD_TOP=/build -fmacro-prefix-map=$NIX_BUILD_TOP=/build -ffile-prefix-map=$cargoDeps=/vendor -fdebug-prefix-map=$cargoDeps=/vendor -fmacro-prefix-map=$cargoDeps=/vendor"
       export CXXFLAGS="$CFLAGS -stdlib=libc++"
-      export RUSTFLAGS="-C debuginfo=0 -C linker=$CC -C link-arg=-Wl,-install_name,@rpath/libmwc_wallet.dylib --remap-path-prefix=$NIX_BUILD_TOP=/build --remap-path-prefix=$cargoDeps=/vendor"
+      # Rust strips Darwin debug metadata after linking, but LLD's UUID has
+      # already hashed its temporary N_OSO object paths at that point. Strip
+      # debug metadata in LLD itself, before computing the UUID/signature.
+      export RUSTFLAGS="-C debuginfo=0 -C linker=$CC -C link-arg=-Wl,-S -C link-arg=-Wl,-install_name,@rpath/libmwc_wallet.dylib --remap-path-prefix=$NIX_BUILD_TOP=/build --remap-path-prefix=$cargoDeps=/vendor"
       cargo build --frozen --release --lib --target ${target} --jobs "$NIX_BUILD_CORES"
       runHook postBuild
     '';
