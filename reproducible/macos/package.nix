@@ -6,6 +6,7 @@ let
   sdk = pkgs.apple-sdk_14;
   libcxxHeaders = (pkgs.darwin.libcxx.override { apple-sdk_26 = sdk; }).overrideAttrs {
     version = "apple-sdk-${sdk.version}";
+    inherit (sdk) src;
   };
   llvm = pkgs.llvmPackages;
   # Use the SDK's system libc++, not nixpkgs' macOS-14 runtime. All tools
@@ -13,6 +14,7 @@ let
   compiler = name: executable: pkgs.writeShellScriptBin name ''
     exec ${llvm.clang-unwrapped}/bin/${executable} \
       -isysroot ${sdk.sdkroot} -mmacosx-version-min=11.0 \
+      -L${libcxxHeaders}/lib \
       ${pkgs.lib.optionalString (executable == "clang++") "-nostdinc++ -isystem ${libcxxHeaders}/include/c++/v1"} \
       -fuse-ld=${llvm.lld}/bin/ld64.lld "$@"
   '';
