@@ -1,0 +1,41 @@
+{
+  "archiver": {
+    "path": "/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8",
+    "version": "21.1.8"
+  },
+  "cargoHash": "sha256-gcdRzH3tlgUOdPi3BCez/EqoEtyLBBwHB7RPi3ep8io=",
+  "clang": {
+    "path": "/nix/store/6kn9qvn44svacm5n7w8drhn2ajs539b2-clang-21.1.8",
+    "version": "21.1.8"
+  },
+  "cmake": {
+    "path": "/nix/store/14vj424rhpwk1dgn91qzmpchldc8qyyr-cmake-4.3.4",
+    "version": "4.3.4"
+  },
+  "deploymentTarget": "11.0",
+  "linker": {
+    "path": "/nix/store/d8j4c4937rwc61fha68l44g6rzknsx07-lld-21.1.8",
+    "version": "21.1.8"
+  },
+  "nasm": {
+    "path": "/nix/store/7nkd1cqqa6l2axqxwz6l39j3fh1h10rp-nasm-3.02",
+    "version": "3.02"
+  },
+  "perl": {
+    "path": "/nix/store/c8gn0q3c5zs5l2faj74s92vqhbyfnvcq-perl-5.42.0",
+    "version": "5.42.0"
+  },
+  "protoc": {
+    "path": "/nix/store/ijjgp3p4l8vzcyzh5lgczdqz8sgryj7r-protobuf-21.12",
+    "version": "21.12"
+  },
+  "rust": {
+    "path": "/nix/store/w89i2srj9393m9aq0749ywn4fc7l4xp5-rust-minimal-1.90.0",
+    "version": "1.90.0"
+  },
+  "sdk": {
+    "path": "/nix/store/c3xfmn0gi4zss7yzgh2k969xcjjyv5p0-macOS-SDK-14.4",
+    "version": "14.4"
+  },
+  "target": "aarch64-apple-darwin"
+}

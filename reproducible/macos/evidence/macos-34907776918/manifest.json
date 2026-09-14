@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "package": "flutter_libmwc",
+  "source_sha256": "2548d24bb353d569b7e33faa51ec9e21faa42225178480ba4e19a2c12fbe9bbc",
+  "artifacts": [
+    {
+      "target": "aarch64-apple-darwin",
+      "link_mode": "dynamic",
+      "file": "mwc_wallet-aarch64-apple-darwin-dynamic.dylib",
+      "sha256": "3afad7d4a2b7fd199d0e61cc9cd94b736acae45b67f6fee57ed4c4e6297e75fe",
+      "size": 15569664,
+      "minimum_os_version": 11
+    },
+    {
+      "target": "aarch64-apple-darwin",
+      "link_mode": "static",
+      "file": "mwc_wallet-aarch64-apple-darwin-static.a",
+      "sha256": "b557e9eae847079a8d176723f11adca299b24813d2b7dbc7b3a96b77f5cca153",
+      "size": 96121872,
+      "minimum_os_version": 11
+    }
+  ]
+}

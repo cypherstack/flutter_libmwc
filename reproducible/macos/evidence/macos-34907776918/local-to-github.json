@@ -1,0 +1,17 @@
+{
+  "ci_runner": "macos-15",
+  "comparison": "local-to-ci",
+  "files": {
+    "manifest.json": "faf99589208329a4cdd6b5698fdd61ac3b69cd71c0439f68b4a6e754369021a7",
+    "manifest.sha256": "7fa82a122deb92dd297313ea0bcfe571f9f46f48db6a219202239db32cb9195a",
+    "mwc_wallet-aarch64-apple-darwin-dynamic.dylib": "3afad7d4a2b7fd199d0e61cc9cd94b736acae45b67f6fee57ed4c4e6297e75fe",
+    "mwc_wallet-aarch64-apple-darwin-static.a": "b557e9eae847079a8d176723f11adca299b24813d2b7dbc7b3a96b77f5cca153"
+  },
+  "other_runner": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "repository": "cypherstack/flutter_libmwc",
+  "run_attempt": "1",
+  "run_id": "34907776918",
+  "source_commit": "7f6b599e2c8827b9f9e764acd83e1f83296c02fb",
+  "source_sha256": "2548d24bb353d569b7e33faa51ec9e21faa42225178480ba4e19a2c12fbe9bbc",
+  "status": "match"
+}

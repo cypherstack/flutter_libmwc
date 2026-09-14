@@ -1,0 +1,1 @@
+Static C ABI smoke passed: mnemonic, error response, and 100 frees

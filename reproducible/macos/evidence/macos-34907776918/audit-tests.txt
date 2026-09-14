@@ -1,0 +1,13 @@
+test_duplicate_names_have_deterministic_sequence (test_audit.AuditTests.test_duplicate_names_have_deterministic_sequence) ... ok
+test_rejects_higher_floor_in_either_link_mode (test_audit.AuditTests.test_rejects_higher_floor_in_either_link_mode) ... ok
+test_rejects_non_system_dependency (test_audit.AuditTests.test_rejects_non_system_dependency) ... ok
+test_rejects_timestamp (test_audit.AuditTests.test_rejects_timestamp) ... ok
+test_rejects_truncated_bytes (test_audit.AuditTests.test_rejects_truncated_bytes) ... ok
+test_rejects_wrong_architecture (test_audit.AuditTests.test_rejects_wrong_architecture) ... ok
+test_requires_uuid_and_rejects_rpath (test_audit.AuditTests.test_requires_uuid_and_rejects_rpath) ... ok
+test_valid_dylib_and_archive (test_audit.AuditTests.test_valid_dylib_and_archive) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.001s
+
+OK

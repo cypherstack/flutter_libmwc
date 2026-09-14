@@ -1,0 +1,2 @@
+build/final-macos-release/mwc_wallet-aarch64-apple-darwin-dynamic.dylib: valid on disk
+build/final-macos-release/mwc_wallet-aarch64-apple-darwin-dynamic.dylib: satisfies its Designated Requirement

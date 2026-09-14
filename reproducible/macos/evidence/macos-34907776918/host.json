@@ -1,0 +1,13 @@
+{
+  "architecture": "arm64",
+  "commit": "7f6b599e2c8827b9f9e764acd83e1f83296c02fb",
+  "flutter": "Flutter 3.47.1 \u2022 channel stable \u2022 https://github.com/flutter/flutter.git\nFramework \u2022 revision 6655482ec0 (4 weeks ago) \u2022 2026-08-19 10:07:23 -0700\nEngine \u2022 hash 11d79658c444477b06513d32b52c8c4ccb7276b0 (revision 5d53178869) (26 days ago) \u2022 2026-08-18 23:36:01.000Z\nTools \u2022 Dart 3.13.1 \u2022 DevTools 2.60.0",
+  "hardware": "Mac14,6\n103079215104\nApple M2 Max",
+  "host_clang": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.5.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+  "host_sdk": "26.5",
+  "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t26.5.2\nBuildVersion:\t\t25F84",
+  "nix": "nix (Nix) 2.34.0",
+  "nix_sandbox_policy": "sandbox = false; sandbox-fallback = true (daemon rejects untrusted client overrides)",
+  "xcode": "Xcode 26.6\nBuild version 17F113",
+  "xcode_selection": "/Applications/Xcode.app/Contents/Developer"
+}

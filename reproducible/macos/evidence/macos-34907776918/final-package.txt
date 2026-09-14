@@ -1,0 +1,7 @@
++ git status --porcelain --untracked-files=all
++ uname -m
++ nix build .#native-macos --no-link --print-out-paths --no-update-lock-file --cores 8 --max-jobs 2
++ python3 reproducible/macos/audit.py /nix/store/8s9mm5min1r2sxg2fyg38mriwm773s16-mwc-wallet-native-macos-0.1.0/lib --target aarch64-apple-darwin
+{"archive_members": 2107, "dylib": {"dependencies": ["/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit", "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation", "/usr/lib/libobjc.A.dylib", "/System/Library/Frameworks/Security.framework/Versions/A/Security", "/usr/lib/libc++.1.dylib", "/usr/lib/libiconv.2.dylib", "/usr/lib/libSystem.B.dylib"], "minimum_versions": [720896], "uuids": ["4c4c447955553144a14ea6a224a6d330"]}, "target": "aarch64-apple-darwin"}
+Packaged aarch64-apple-darwin; source_sha256=2548d24bb353d569b7e33faa51ec9e21faa42225178480ba4e19a2c12fbe9bbc
+Manifest SHA-256: faf99589208329a4cdd6b5698fdd61ac3b69cd71c0439f68b4a6e754369021a7

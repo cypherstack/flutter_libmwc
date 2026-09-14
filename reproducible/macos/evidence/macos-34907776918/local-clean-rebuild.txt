@@ -1,0 +1,6 @@
+mwc-wallet-native-macos> buildPhase completed in 8 minutes 11 seconds
+mwc-wallet-native-macos> Running phase: installPhase
+mwc-wallet-native-macos> {"archive_members": 2107, "dylib": {"dependencies": ["/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit", "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation", "/usr/lib/libobjc.A.dylib", "/System/Library/Frameworks/Security.framework/Versions/A/Security", "/usr/lib/libc++.1.dylib", "/usr/lib/libiconv.2.dylib", "/usr/lib/libSystem.B.dylib"], "minimum_versions": [720896], "uuids": ["4c4c447955553144a14ea6a224a6d330"]}, "target": "aarch64-apple-darwin"}
+b557e9eae847079a8d176723f11adca299b24813d2b7dbc7b3a96b77f5cca153  libmwc_wallet.a
+3afad7d4a2b7fd199d0e61cc9cd94b736acae45b67f6fee57ed4c4e6297e75fe  libmwc_wallet.dylib
+Clean rebuild matched: /nix/store/8s9mm5min1r2sxg2fyg38mriwm773s16-mwc-wallet-native-macos-0.1.0

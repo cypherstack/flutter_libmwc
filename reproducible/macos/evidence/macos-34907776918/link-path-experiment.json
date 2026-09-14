@@ -1,0 +1,16 @@
+{
+  "link-time-strip": {
+    "hashes": [
+      "46ce8d1ee91d7ce5e77ab3b9b6459db6c214ab617c21723f3b71dc0eac23b8a1",
+      "46ce8d1ee91d7ce5e77ab3b9b6459db6c214ab617c21723f3b71dc0eac23b8a1"
+    ],
+    "match": true
+  },
+  "post-link-only": {
+    "hashes": [
+      "3307b7937f2c367795587c5d315edd9bf260ae6b7490e502f84ca563b3eec3a6",
+      "b15114f52d9673a129c7e155211d79eaeb66ae96fcfdc3c73d9ffaea1ec1e897"
+    ],
+    "match": false
+  }
+}

@@ -1,0 +1,49 @@
+00:00 +0: loading test/prebuilt_test.dart
+00:00 +0: test/prebuilt_test.dart: consumer settings defaults to source without requiring a manifest
+00:00 +1: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +2: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +3: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +4: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +5: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +6: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +7: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +8: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +9: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +10: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +11: test/prebuilt_producer_test.dart: source identity includes newly added nested Rust files
+00:00 +12: test/prebuilt_test.dart: source fingerprints detect edits, additions, renames, and symlinks
+00:00 +13: test/prebuilt_test.dart: source fingerprints detect edits, additions, renames, and symlinks
+00:00 +14: test/prebuilt_producer_test.dart: Nix recipe and lock changes invalidate source identity
+00:00 +15: test/prebuilt_producer_test.dart: Nix recipe and lock changes invalidate source identity
+00:00 +16: test/prebuilt_producer_test.dart: Nix recipe and lock changes invalidate source identity
+00:00 +17: test/prebuilt_producer_test.dart: Nix recipe and lock changes invalidate source identity
+00:00 +18: test/prebuilt_test.dart: verified downloads never publishes an unverified network response
+00:00 +19: test/prebuilt_producer_test.dart: external producer packages both modes and preserves provenance
+00:00 +20: test/prebuilt_producer_test.dart: external producer packages both modes and preserves provenance
+Packaged x86_64-pc-windows-msvc; source_sha256=c579232a26ee7d0404d525185f4efe7e0206ccda976fd7a0c1429210769ffc34
+00:00 +21: test/prebuilt_test.dart: verified downloads cancels a timed-out download before removing temporary files
+00:00 +22: test/prebuilt_test.dart: verified downloads cancels a timed-out download before removing temporary files
+Manifest SHA-256: e3096ac30258b04fe0bcaff6365e74249763e381bf329c28dd9068f9c1abd143
+00:00 +23: test/prebuilt_test.dart: verified downloads cancels a timed-out download before removing temporary files
+00:00 +24: test/prebuilt_test.dart: verified downloads cancels a timed-out download before removing temporary files
+00:00 +25: test/prebuilt_test.dart: verified downloads cancels a timed-out download before removing temporary files
+00:00 +26: test/prebuilt_producer_test.dart: artifact filename cannot traverse out of its directory
+00:00 +27: test/prebuilt_producer_test.dart: artifact filename cannot traverse out of its directory
+00:00 +28: test/prebuilt_test.dart: resolver downloads into build output and fetches again after build cleanup
+00:00 +29: test/prebuilt_test.dart: resolver downloads into build output and fetches again after build cleanup
+Using verified flutter_libmwc prebuilt for aarch64-apple-darwin/dynamic.
+Using verified flutter_libmwc prebuilt for aarch64-apple-darwin/dynamic.
+Manifest SHA-256: b52e9529039053fd87037d0c732b57e769996d2b1c6d533cdf5fdcf8f8c29b65
+00:00 +30: test/prebuilt_test.dart: resolver downloads into build output and fetches again after build cleanup
+Using verified flutter_libmwc prebuilt for aarch64-apple-darwin/dynamic.
+00:00 +31: test/prebuilt_producer_test.dart: existing release output is never mixed with a new release
+Manifest SHA-256: e3096ac30258b04fe0bcaff6365e74249763e381bf329c28dd9068f9c1abd143
+00:00 +32: test/prebuilt_producer_test.dart: incorrect advertised deployment minimum is rejected
+00:00 +33: test/prebuilt_producer_test.dart: noninteger sizes and unsupported schemas are rejected
+00:00 +34: test/prebuilt_producer_test.dart: artifact symlinks are rejected
+00:00 +35: test/prebuilt_producer_test.dart: build CLI dry-run preserves release policy without invoking Rust
+00:00 +36: test/prebuilt_producer_test.dart: manifest CLI help works without mandatory build inputs
+00:01 +37: test/prebuilt_producer_test.dart: Linux Rust flags locate the actual static C++ archive
+00:01 +37 ~1: test/prebuilt_producer_test.dart: Linux metadata audit compares glibc versions numerically
+00:01 +38 ~1: test/prebuilt_producer_test.dart: Linux metadata audit rejects a dynamic C++ runtime dependency
+00:01 +39 ~1: All tests passed!

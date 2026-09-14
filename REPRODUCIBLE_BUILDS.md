@@ -8,6 +8,11 @@ source/toolchain contract and the existing release manifest protocol.
 release manifest. See the [run and evidence](reproducible/LINUX_HOST_TO_CI_RESULTS.md)
 and [coworker reproduction procedure](reproducible/HOST_TO_CI.md).
 
+**Verified on macOS ARM64:** this host reproduced GitHub Actions `macos-15`
+byte-for-byte for both native link modes and the release manifest. See the
+[macOS result](reproducible/macos/RESULTS.md) and
+[build procedure](reproducible/macos/README.md). Intel macOS and iOS remain unverified.
+
 ## Linux with Nix
 
 Run from a committed checkout with Nix flakes enabled:
@@ -111,7 +116,8 @@ depend on that package being available.
 
 ## Next host work
 
-Linux workstation-to-GitHub validation has passed. macOS and Windows can proceed independently
+Linux and macOS ARM64 workstation-to-GitHub validation have passed. The remaining
+macOS targets and Windows can proceed independently
 using the committed [host handoffs](reproducible/handoffs/README.md). The acceptance
 criterion for each host is now [matching a real GitHub run](reproducible/HOST_TO_CI.md),
 not only local repeatability:

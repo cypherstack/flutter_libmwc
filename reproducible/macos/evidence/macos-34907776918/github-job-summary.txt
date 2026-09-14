@@ -1,0 +1,7 @@
+2026-09-14T23:12:44.6896340Z Version: 20260828.587
+2026-09-14T23:12:44.6902090Z Image: macos-15-arm64
+2026-09-14T23:12:44.6903940Z Version: 20260907.0337.1
+2026-09-14T23:33:06.2480930Z b557e9eae847079a8d176723f11adca299b24813d2b7dbc7b3a96b77f5cca153  libmwc_wallet.a
+2026-09-14T23:33:06.3157850Z 3afad7d4a2b7fd199d0e61cc9cd94b736acae45b67f6fee57ed4c4e6297e75fe  libmwc_wallet.dylib
+2026-09-14T23:33:06.3178590Z Clean rebuild matched: /nix/store/8s9mm5min1r2sxg2fyg38mriwm773s16-mwc-wallet-native-macos-0.1.0
+2026-09-14T23:34:33.6085180Z Native library loaded; mnemonic and error/free ABI checks passed

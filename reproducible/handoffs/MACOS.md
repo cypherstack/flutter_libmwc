@@ -1,5 +1,14 @@
 # macOS agent handoff
 
+## Current result
+
+ARM64 macOS host-to-GitHub reproduction is verified, including local and CI
+clean rebuilds, both link modes and the release manifest. See
+[RESULTS.md](../macos/RESULTS.md) for the exact commit, successful run and evidence.
+The work is in `cypherstack/flutter_libmwc#macos-reproducible-native-prebuilts`,
+based on that repository's `reproducible-native-prebuilts` branch. Intel and iOS
+remain follow-up targets. The instructions below retain the original handoff context.
+
 ## Objective and branch
 
 Make this macOS host reproduce the exact unsigned native libraries emitted by
@@ -63,7 +72,7 @@ the deployment floor or SDK to match the host's defaults.
    Use the actual runner label and upload the whole release directory. Add a push
    trigger for `macos-reproducible-native-prebuilts` so the workflow can first run
    from a feature branch. GitHub credentials/publication may be supplied by the
-   user from this host; no GitHub run existed for this work at handoff time.
+   user from this host. The completed ARM64 run is linked in the current result above.
 5. Follow the download/comparison procedure in HOST_TO_CI.md, substituting the
    macOS workflow's artifact name and local output directory. Both `.a` and
    `.dylib` must match a real run at the exact same commit.

@@ -1,5 +1,8 @@
 # macOS host-to-GitHub reproduction
 
+**Verified on ARM64:** local clean rebuilds and real GitHub Actions output match
+byte-for-byte. See [RESULTS.md](RESULTS.md) for the tested commit, run and evidence.
+
 The `native-macos` flake output pins Rust 1.90.0, LLVM Clang/LLD/archiver,
 Apple SDK 14.4, CMake, protoc, Perl, nasm and the complete Cargo vendor tree.
 `flake.lock` is shared with the established Linux recipe and is unchanged.

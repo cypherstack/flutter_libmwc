@@ -1,0 +1,38 @@
+{
+  "/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8": {
+    "narHash": "sha256-tqEZSYbwEZy6+O1OMit7OJRL7VpDfghomMB+lEE0FkM=",
+    "narSize": 104468184
+  },
+  "/nix/store/14vj424rhpwk1dgn91qzmpchldc8qyyr-cmake-4.3.4": {
+    "narHash": "sha256-FpkZPL3JRYwC6scgSAA52eO1465xzIjYGzs8hgZCQ24=",
+    "narSize": 65424512
+  },
+  "/nix/store/6kn9qvn44svacm5n7w8drhn2ajs539b2-clang-21.1.8": {
+    "narHash": "sha256-Pobz51ntW4TyXU51iTVU5Cn3LgqxfavXaPIBroL9Buc=",
+    "narSize": 46584224
+  },
+  "/nix/store/7nkd1cqqa6l2axqxwz6l39j3fh1h10rp-nasm-3.02": {
+    "narHash": "sha256-OwzR8uK/aqKgFF9GYA5VC/o1hu7kPP3K7bfCWC3oJaU=",
+    "narSize": 2971152
+  },
+  "/nix/store/c3xfmn0gi4zss7yzgh2k969xcjjyv5p0-macOS-SDK-14.4": {
+    "narHash": "sha256-QozDiwY0Czc0g45vPD7G4v4Ra+3DujCJbSads3fJjjM=",
+    "narSize": 389446848
+  },
+  "/nix/store/c8gn0q3c5zs5l2faj74s92vqhbyfnvcq-perl-5.42.0": {
+    "narHash": "sha256-oxkE5nB38Fvn+CKOdVKSd/z5SWGNXslK4vwKkdQUYj0=",
+    "narSize": 52134768
+  },
+  "/nix/store/d8j4c4937rwc61fha68l44g6rzknsx07-lld-21.1.8": {
+    "narHash": "sha256-GGWtTmgGSA0KTqaCrOSz61lC60UHaIA3dAf96gBhgcY=",
+    "narSize": 33282784
+  },
+  "/nix/store/ijjgp3p4l8vzcyzh5lgczdqz8sgryj7r-protobuf-21.12": {
+    "narHash": "sha256-wGbDkC7DwXmm3sXz90ZMKYPFOy3vH2JWQIdKVQ6CARM=",
+    "narSize": 9089160
+  },
+  "/nix/store/w89i2srj9393m9aq0749ywn4fc7l4xp5-rust-minimal-1.90.0": {
+    "narHash": "sha256-oJxgq7P/vIuMHSpCYmHRsX7ed0Goa2FihAwdytu6gXU=",
+    "narSize": 199249000
+  }
+}
