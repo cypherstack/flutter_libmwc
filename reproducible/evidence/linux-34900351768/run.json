@@ -1,0 +1,38 @@
+{
+  "conclusion": "success",
+  "created_at": "2026-09-14T21:43:12Z",
+  "head_sha": "4b3862f6312125b0eb1d9213ad2b341c9b157a72",
+  "host": {
+    "ci_run_url": "https://github.com/cypherstack/flutter_libmwc/actions/runs/34900351768",
+    "nix_version": "nix (Determinate Nix 3.17.0) 2.33.3",
+    "os_release": {
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "ID": "ubuntu",
+      "ID_LIKE": "debian",
+      "LOGO": "ubuntu-logo",
+      "NAME": "Ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "UBUNTU_CODENAME": "noble",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "VERSION_ID": "24.04"
+    },
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+    "source_commit": "4b3862f6312125b0eb1d9213ad2b341c9b157a72"
+  },
+  "html_url": "https://github.com/cypherstack/flutter_libmwc/actions/runs/34900351768",
+  "id": 34900351768,
+  "local_comparison_exit_codes": {
+    "ubuntu-22.04": 0,
+    "ubuntu-24.04": 0
+  },
+  "local_rebuild_result": "Clean rebuild matched: /nix/store/0zq1p7wziqahlj5zz0d8wbfa4qczfrq8-mwc-wallet-native-0.1.0",
+  "path": ".github/workflows/reproducible-native.yml",
+  "run_attempt": 1,
+  "run_started_at": "2026-09-14T21:43:12Z",
+  "status": "completed",
+  "updated_at": "2026-09-14T21:58:43Z"
+}

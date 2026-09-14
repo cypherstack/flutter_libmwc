@@ -1,0 +1,23 @@
+[
+  {
+    "artifact_id": 10370863026,
+    "name": "reproducible-linux-ubuntu-24.04-attempt-1",
+    "github_api_digest": "sha256:26c1926155b652a12af844e0caf1d2ca33e802f36a81bacd1cd5447ad1c2dc82",
+    "download_digest": "sha256:26c1926155b652a12af844e0caf1d2ca33e802f36a81bacd1cd5447ad1c2dc82",
+    "download_url": "https://nightly.link/cypherstack/flutter_libmwc/actions/artifacts/10370863026.zip"
+  },
+  {
+    "artifact_id": 10370463108,
+    "name": "reproducible-linux-ubuntu-22.04-attempt-1",
+    "github_api_digest": "sha256:9e4eb470a2c955b84312107ba6fc6ea6a0178071276431d102b3585b5d3f038f",
+    "download_digest": "sha256:9e4eb470a2c955b84312107ba6fc6ea6a0178071276431d102b3585b5d3f038f",
+    "download_url": "https://nightly.link/cypherstack/flutter_libmwc/actions/artifacts/10370463108.zip"
+  },
+  {
+    "artifact_id": 10370223974,
+    "name": "reproducible-linux-comparison-attempt-1",
+    "github_api_digest": "sha256:9b41eb1cd9e0f012b26be83111898c1e8f155551bd1dcef722eca1c725d9c64a",
+    "download_digest": "sha256:9b41eb1cd9e0f012b26be83111898c1e8f155551bd1dcef722eca1c725d9c64a",
+    "download_url": "https://nightly.link/cypherstack/flutter_libmwc/actions/artifacts/10370223974.zip"
+  }
+]

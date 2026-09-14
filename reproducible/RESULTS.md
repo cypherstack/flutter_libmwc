@@ -1,5 +1,9 @@
 # Linux validation results — 2026-09-14
 
+This is the initial local-validation report. The subsequent
+[host-to-GitHub result](LINUX_HOST_TO_CI_RESULTS.md) establishes byte-identical
+workstation output against both GitHub Ubuntu runners at commit `4b3862f`.
+
 Implementation commit: `fb2c15384ac13cfc4454ec817776e605b10fceac`. Base branch: `origin/native-prebuilts`
 (`9b6f1d5`). Branch: `reproducible-native-prebuilts`.
 

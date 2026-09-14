@@ -3,6 +3,11 @@
 This branch extends `native-prebuilts` at `9b6f1d5`. It keeps the Rust 1.90.0
 source/toolchain contract and the existing release manifest protocol.
 
+**Verified on Ubuntu 24.04:** this workstation reproduced both GitHub Ubuntu
+22.04 and 24.04 builds byte-for-byte, including both native link modes and the
+release manifest. See the [run and evidence](reproducible/LINUX_HOST_TO_CI_RESULTS.md)
+and [coworker reproduction procedure](reproducible/HOST_TO_CI.md).
+
 ## Linux with Nix
 
 Run from a committed checkout with Nix flakes enabled:
@@ -16,8 +21,8 @@ nix build .#native-linux
 `result/lib` contains both `libmwc_wallet.a` and `libmwc_wallet.so`. The verifier
 forces an uncached rebuild of the derivation and Nix compares the complete
 output, including both libraries. This demonstrates repeatability on the test
-host; a second independent Linux builder should compare the printed SHA-256s
-before release. Cached toolchains/dependencies are reused; the native compile
+host. Independent GitHub runners have matched this recipe's output; repeat that
+comparison after any recipe change before release. Cached toolchains/dependencies are reused; the native compile
 is repeated from scratch. It does not rebuild the entire Nix bootstrap chain.
 
 The implementation pins:
@@ -106,7 +111,7 @@ depend on that package being available.
 
 ## Next host work
 
-Linux local validation has passed. macOS and Windows can proceed independently
+Linux workstation-to-GitHub validation has passed. macOS and Windows can proceed independently
 using the committed [host handoffs](reproducible/handoffs/README.md). The acceptance
 criterion for each host is now [matching a real GitHub run](reproducible/HOST_TO_CI.md),
 not only local repeatability:

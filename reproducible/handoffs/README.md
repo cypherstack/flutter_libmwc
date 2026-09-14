@@ -27,10 +27,12 @@ git remote add github git@github.com:cypherstack/flutter_libmwc.git
 
 In PowerShell, use the same `git clone` command on one line (no Bash backslash).
 The transport branch holds both handoffs, the Nix implementation, the StageX
-experiment, and CI comparison tooling. Linux payload validation from the prior
-session is recorded in [RESULTS.md](../RESULTS.md); it is not a GitHub match claim.
+experiment, and CI comparison tooling. Linux workstation-to-GitHub reproduction
+has now passed on both Ubuntu runners; see the
+[results and evidence](../LINUX_HOST_TO_CI_RESULTS.md). The reference build is
+commit `4b3862f6312125b0eb1d9213ad2b341c9b157a72`, run `34900351768`, attempt `1`.
 
-When the common branch is pushed to GitHub as `reproducible-native-prebuilts`,
+The common branch is also pushed to GitHub as `reproducible-native-prebuilts`;
 its push trigger starts the Linux comparison workflow even before the workflow
 is present on the default branch. A push to the transport server does not
 execute GitHub Actions. Each host agent should add an equivalent push trigger

@@ -18,11 +18,20 @@ them. A separate local download-and-compare step establishes workstation-to-CI
 reproduction. Identical local builds or a green CI build alone do not establish
 that final claim.
 
-## Current evidence and pending gate
+## Verified Linux result
 
-This workstation is **Ubuntu 24.04.5 LTS, x86_64**. The previous Linux result
-([RESULTS.md](RESULTS.md)) proves local Nix repeatability and runtime compatibility
-on a pinned Ubuntu 22.04 container. It does not prove a GitHub match.
+This **Ubuntu 24.04.5 LTS, x86_64** workstation reproduced both GitHub Ubuntu
+22.04 and 24.04 outputs from successful
+[run 34900351768, attempt 1](https://github.com/cypherstack/flutter_libmwc/actions/runs/34900351768),
+at commit `4b3862f6312125b0eb1d9213ad2b341c9b157a72`. Both downloaded-artifact
+comparisons exited 0 with `"status": "match"`. See the
+[results and committed evidence](LINUX_HOST_TO_CI_RESULTS.md).
+
+The earlier [local validation](RESULTS.md) also established runtime compatibility
+with the pinned Ubuntu 22.04 container. The coworker's host should now run the
+procedure below at the same tested commit and obtain its own matching report.
+
+## Older release is a different recipe
 
 The successful existing GitHub release run
 [34892214334](https://github.com/cypherstack/flutter_libmwc/actions/runs/34892214334)
@@ -40,12 +49,6 @@ recipes and source fingerprints differ. These are not equivalent builds and
 must not be claimed to match. The objective is to run the new pinned recipe
 on GitHub and reproduce its output locally, not to promise reproduction of the
 old unpinned binaries.
-
-**Host-to-GitHub status: unverified, awaiting an actual run of the new workflow.**
-At preparation time this session had no authenticated GitHub CLI access, and
-the new workflow had not been published on GitHub. The user is transporting the
-branch through the specified server and will arrange GitHub publication from
-the other hosts. Pushing to that server does not run GitHub Actions.
 
 ## Start the reference run
 
@@ -75,9 +78,9 @@ Set values from the actual successful run, not from a local fixture:
 
 ```sh
 CI_REPOSITORY=cypherstack/flutter_libmwc # change if the run is in a fork
-CI_RUN_ID=REPLACE_WITH_RUN_ID
+CI_RUN_ID=34900351768
 CI_ATTEMPT=1
-CI_COMMIT=REPLACE_WITH_FULL_40_CHARACTER_RUN_HEAD_SHA
+CI_COMMIT=4b3862f6312125b0eb1d9213ad2b341c9b157a72
 
 gh run view "$CI_RUN_ID" -R "$CI_REPOSITORY" \
   --json headSha,conclusion,url,attempt
@@ -122,6 +125,17 @@ job already establishes equality between the two runner outputs when green.
 Keep the run URL, evidence JSON, and local comparison report in the host's results
 commit. Do not compare the Actions ZIP's checksum: ZIP/container timestamps and
 run provenance are not shipped native-library bytes.
+
+An archive checksum can separately authenticate a download. Without `gh` login,
+public artifacts can be downloaded using the URLs in the
+[verified download record](evidence/linux-34900351768/download-verification.json).
+These use nightly.link to redirect to GitHub storage. Before extraction, require
+the ZIP SHA-256 to match the `digest` returned directly by
+`https://api.github.com/repos/cypherstack/flutter_libmwc/actions/artifacts/ARTIFACT_ID`.
+Also check the artifact's run ID and head SHA against the chosen successful run.
+Then use the same payload comparator above. Do not treat the redirect service
+or a ZIP checksum alone as proof of local native reproducibility. If artifacts
+have expired, run the workflow again and use the new run's metadata and downloads.
 
 ## macOS and Windows
 

@@ -1,0 +1,17 @@
+{
+  "ci_runner": "ubuntu-22.04",
+  "comparison": "ci-to-ci",
+  "files": {
+    "manifest.json": "4f366dfb616f4798aba515b260f61649f935af808139a2a37edc3a28515a7bfb",
+    "manifest.sha256": "a2eb59dc473441d3f8d38b1c3d43df850ab63c6842aca5535d9910f2bc055864",
+    "mwc_wallet-x86_64-unknown-linux-gnu-dynamic.so": "32e5f329d5aa9b288660ba7f418ad6c4b3f9353f441447c3aba65d0095676b7b",
+    "mwc_wallet-x86_64-unknown-linux-gnu-static.a": "5b0fea362e1d7ef39dd6d61cf439a088d4108f7a179a271d8048bcd35134123a"
+  },
+  "other_runner": "ubuntu-24.04",
+  "repository": "cypherstack/flutter_libmwc",
+  "run_attempt": "1",
+  "run_id": "34900351768",
+  "source_commit": "4b3862f6312125b0eb1d9213ad2b341c9b157a72",
+  "source_sha256": "341abcc1821405924296b5a6865f5d05ca05d301a3517260b8e957608a7beb72",
+  "status": "match"
+}
