@@ -6,12 +6,13 @@ import 'package:args/args.dart';
 
 import 'build_prebuilt.dart';
 import 'src/build_support.dart';
+import '../hook/src/windows_builder.dart';
 
 Future<void> main(List<String> arguments) async {
   final parser = ArgParser()
-    ..addOption('work', mandatory: true)
-    ..addOption('cache', mandatory: true)
-    ..addOption('python', defaultsTo: 'python')
+    ..addOption('work')
+    ..addOption('cache')
+    ..addFlag('clean', negatable: false)
     ..addOption('output', defaultsTo: 'build/windows-prebuilts');
   try {
     final args = parser.parse(arguments);
@@ -33,21 +34,16 @@ Future<void> main(List<String> arguments) async {
       'HEAD',
     ], capture: true);
     final fingerprint = await sourceSha256();
-    final work = Directory(args.option('work')!).absolute;
-    await runCommand([
-      'powershell.exe',
-      '-NoProfile',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-File',
-      'reproducible/windows/build.ps1',
-      '-Work',
-      work.path,
-      '-Cache',
-      Directory(args.option('cache')!).absolute.path,
-      '-Python',
-      args.option('python')!,
-    ]);
+    final artifacts = await buildWindowsNative(
+      Directory.current.uri,
+      work: args.option('work') == null
+          ? null
+          : Directory(args.option('work')!),
+      cache: args.option('cache') == null
+          ? null
+          : Directory(args.option('cache')!),
+      clean: args.flag('clean'),
+    );
     if (await sourceSha256() != fingerprint ||
         await runCommand(['git', 'rev-parse', 'HEAD'], capture: true) !=
             commit ||
@@ -61,13 +57,13 @@ Future<void> main(List<String> arguments) async {
     }
     const target = 'x86_64-pc-windows-msvc';
     final evidence = jsonDecode(
-      await File.fromUri(work.uri.resolve('build-evidence.json'))
+      await File.fromUri(artifacts.uri.resolve('build-evidence.json'))
           .readAsString(),
     ) as Map<String, dynamic>;
     await packageBuiltTarget(
       target,
       Directory(args.option('output')!).absolute,
-      work.uri.resolve('target/$target/release/'),
+      artifacts.uri,
       fingerprint: fingerprint,
       build: {
         'builder': 'pinned-windows-msvc',

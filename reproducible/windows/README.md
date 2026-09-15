@@ -5,33 +5,51 @@ not use the host's Visual Studio installation or SDK. Compilation uses Cargo's
 checked-in lockfile and `--frozen` after fetching dependencies. OpenSSL remains
 excluded on Windows; native TLS uses SChannel.
 
-## Run locally
+## Default Flutter builds
 
-Use Windows x64, Git, Python 3.13.7, and Flutter 3.47.3. Python and Dart
-orchestrate, package and test; native tools come from `tools.lock.json`.
-Choose new short work/output directories each time. Drive **R:** must be free;
-the recipe refuses an occupied drive and removes its temporary mapping on exit.
+On Windows x64 with Flutter's normal Windows desktop prerequisites, applications
+consuming this package use the pinned native builder automatically:
+
+```powershell
+flutter pub get
+flutter build windows --release
+```
+
+The hook provisions its own verified Python runtime and native toolchain. It
+requires no reserved drive letter, manual native-tool installation, or chosen
+work path. Flutter still needs its own supported Visual Studio desktop tools to
+build the application. Git is needed to fetch the locked Rust dependencies.
+
+The normal source hook supports edited sources and packages without `.git`.
+Release packaging additionally requires committed, clean inputs and checks them
+again after building. Both DLL and static LIB use the same release recipe.
+The existing explicit prebuilt-download mode retains its integrity checks.
+
+## Package or verify a clean build
 
 ```powershell
 flutter pub get --no-example
-dart --packages=.dart_tool/package_config.json tool/build_windows_prebuilt.dart --work C:\mwc-build-a --cache C:\mwc-downloads --output build/windows-a
+dart --packages=.dart_tool/package_config.json tool/build_windows_prebuilt.dart --clean --output build/windows-a
 dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/windows-a/mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll
 dart --packages=.dart_tool/package_config.json tool/prebuilt_manifest.dart --artifacts build/windows-a --output build/windows-release-a
 ```
 
-The packager requires committed, clean inputs and checks them again after the
-build. `--python C:\path\python.exe` selects a particular Python installation.
-Downloaded archives can be cached; every use checks their SHA-256. Each build
-extracts its own native tools and fetches its own Cargo sources into a fresh
-directory. It never reuses compiled Cargo output. Cargo registry checksums and
-Git revisions are bound by `rust/Cargo.lock`.
+The default cache is `%LOCALAPPDATA%\flutter_libmwc`. Cached libraries are keyed
+by the shared source/recipe fingerprint and verified by full SHA-256 before
+reuse. An operating-system file lock serializes builders sharing that cache and
+is released if a process terminates. Incomplete staging directories are never
+reused as completed outputs. Each fresh build extracts verified native tools
+and fetches its own Cargo sources. Cargo checksums and Git revisions are bound
+by `rust/Cargo.lock`. Source changes invalidate cached output.
 
-The PowerShell entry point can also build and audit raw libraries during recipe
-development (it does not create release manifests):
+`--clean` forces an independent native build. Optional `--work C:\some-path`
+retains a fresh work directory, including compiler inspection reports; optional
+`--cache C:\some-cache` selects a cache. Neither option is needed normally.
+Python is provisioned automatically by the shared Dart entry point.
 
-```powershell
-powershell -NoProfile -File reproducible/windows/build.ps1 -Work C:\mwc-experiment -Cache C:\mwc-downloads -Python C:\path\python.exe
-```
+The lower-level PowerShell/Python entry points remain available for recipe
+development; these intentionally accept explicit work/cache paths and a Python
+interpreter. They are not the ordinary Flutter interface.
 
 ## Pinned inputs
 
@@ -62,13 +80,17 @@ The recipe uses a restricted environment, explicit compiler/linker paths,
 fixed release settings, disabled incremental/debug output, `/Brepro`,
 `/INCREMENTAL:NO`, Rust path remapping, and MSVC `/pathmap` with
 `/experimental:deterministic`. It fixes the epoch, timezone and tool language.
-The build's temporary R: mapping makes Cargo/native archive member paths stable
-across different physical checkout and work directories.
+Archive production removes directories from COFF member names before packaging,
+while preserving basenames, object payloads, member order, duplicate members,
+and both linker symbol-to-member mappings. Offset relocation is verified by
+restoring and comparing the original index bytes. Full output files are hashed
+and compared without masking bytes. The build also links and runs a real C
+consumer of the resulting static library.
 
-This mapping is necessary: the initial experiment produced identical DLLs and
-identical individual COFF object payloads, but the static archive's long-name
-table retained 77 absolute paths. The recipe preserves the original full
-archive and its symbol tables. It does not mask bytes during comparison.
+Basenames are significant: an experiment replacing them with ordinals produced
+matching archives but a crashing MSVC consumer. Retaining basenames passed the
+same consumer. The old fixed-drive evidence in [RESULTS.md](RESULTS.md) remains
+historical evidence; the revised default path needs its own host-to-CI baseline.
 
 `build-evidence.json` records hashes and audits. `headers.txt`, `dependents.txt`
 and `exports.txt` retain the linker inspection reports. The audit checks x64

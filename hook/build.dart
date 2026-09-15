@@ -5,6 +5,8 @@ import 'package:hooks/hooks.dart';
 import 'package:native_toolchain_rust/native_toolchain_rust.dart';
 
 import 'src/prebuilt.dart';
+import 'src/source_fingerprint.dart';
+import 'src/windows_builder.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
@@ -12,6 +14,34 @@ void main(List<String> args) async {
     if (await usePrebuilt(input, output)) return;
 
     final code = input.config.code;
+
+    if (code.targetOS == OS.windows &&
+        code.targetArchitecture == Architecture.x64) {
+      final target = PrebuiltTarget.fromConfig(code);
+      final artifacts = await buildWindowsNative(input.packageRoot);
+      final directory = Directory.fromUri(input.outputDirectory);
+      await directory.create(recursive: true);
+      final library =
+          await File.fromUri(
+            artifacts.uri.resolve(target.libraryFileName),
+          ).copy(
+            input.outputDirectory.resolve(target.libraryFileName).toFilePath(),
+          );
+      output.assets.code.add(
+        CodeAsset(
+          package: input.packageName,
+          name: 'mwc.dart',
+          file: library.uri,
+          linkMode: target.linkMode == 'static'
+              ? StaticLinking()
+              : DynamicLoadingBundled(),
+        ),
+      );
+      output.dependencies.addAll(
+        (await sourceFingerprint(input.packageRoot)).dependencies,
+      );
+      return;
+    }
 
     // OpenSSL refuses to build for a non-Windows target using Windows' perl.
     if (Platform.isWindows && code.targetOS != OS.windows) {

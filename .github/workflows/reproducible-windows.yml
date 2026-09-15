@@ -33,10 +33,12 @@ jobs:
           python -m unittest discover -s reproducible -p test_ci_artifacts.py -v
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m unittest discover -s reproducible/windows -p test_recipe.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s reproducible/windows -p test_archive.py -v
       - name: Build and package using the shared pinned recipe
         shell: pwsh
         run: |
-          dart --packages=.dart_tool/package_config.json tool/build_windows_prebuilt.dart --work C:\mwc-build --cache C:\mwc-downloads
+          dart --packages=.dart_tool/package_config.json tool/build_windows_prebuilt.dart --clean --work C:\mwc-build
       - name: Smoke test the Windows C ABI
         run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/windows-prebuilts/mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll
       - name: Assemble the Windows manifest

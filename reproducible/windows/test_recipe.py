@@ -22,9 +22,14 @@ class ProvisionTests(unittest.TestCase):
                 'id': 'tool', 'archive': 'tool.zip', 'sha256': '0' * 64,
                 'kind': 'cmake', 'url': 'https://example.invalid/unused',
             }]))
-            with mock.patch.object(provision, '__file__', str(root / 'provision.py')):
-                with self.assertRaisesRegex(ValueError, 'Cache digest mismatch'):
+            def bad_download(url, destination):
+                Path(destination).write_bytes(b'also corrupt')
+            with mock.patch.object(provision, '__file__', str(root / 'provision.py')), mock.patch.object(
+                    provision.urllib.request, 'urlretrieve', side_effect=bad_download):
+                with self.assertRaisesRegex(ValueError, 'Download digest mismatch'):
                     provision.provision(root / 'output', root)
+            self.assertEqual((root / 'tool.zip').read_bytes(), b'corrupt')
+            self.assertEqual(list(root.glob('*.download')), [])
 
     def test_archive_cannot_escape_tool_directory(self):
         with tempfile.TemporaryDirectory() as temporary:

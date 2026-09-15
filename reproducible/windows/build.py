@@ -1,6 +1,5 @@
 """Build both MSVC link modes with an isolated, pinned native toolchain."""
 import argparse
-import ctypes
 import json
 import os
 from pathlib import Path
@@ -12,6 +11,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from provision import provision, sha256
 from audit import audit
+from archive import canonical_archive
 
 TARGET = 'x86_64-pc-windows-msvc'
 
@@ -26,23 +26,11 @@ def build(root, work, cache):
     root, work, cache = root.resolve(), work.resolve(), cache.resolve()
     if work.exists():
         raise ValueError(f'Build directory must be fresh: {work}')
-    if ' ' in str(work) or len(str(work)) > 65:
-        raise ValueError('Use a short build directory without spaces')
-    # MSVC archives retain absolute member names even when all object bytes
-    # match. A fixed virtual drive preserves the original archive and its symbol
-    # indexes without binary postprocessing. Never commandeer an occupied drive.
-    if ctypes.windll.kernel32.GetLogicalDrives() & (1 << (ord('R') - ord('A'))):
-        raise ValueError('R: must be unused for the canonical Windows build')
     work.mkdir(parents=True)
-    subst = Path(os.environ['SystemRoot']) / 'System32/subst.exe'
-    subprocess.run([str(subst), 'R:', str(work)], check=True)
-    try:
-        build_mapped(root, Path('R:/'), cache)
-    finally:
-        subprocess.run([str(subst), 'R:', '/D'], check=True)
+    build_native(root, work, cache)
 
 
-def build_mapped(root, work, cache):
+def build_native(root, work, cache):
     for parent in [work, *work.parents]:
         if any((parent / '.cargo' / name).exists() for name in ['config', 'config.toml']):
             raise ValueError(f'Unexpected ambient Cargo configuration in {parent}')
@@ -108,7 +96,9 @@ def build_mapped(root, work, cache):
     cflags = ['/Brepro', '/experimental:deterministic']
     for source, destination in mappings:
         cflags.append(f'/pathmap:{source}={destination}')
-    env['CFLAGS'] = env['CXXFLAGS'] = ' '.join(cflags)
+    # Let cl parse its own quoted flags; cc crate's CFLAGS tokenization varies
+    # across dependency versions and can split /pathmap arguments with spaces.
+    env['CL'] = subprocess.list2cmdline(cflags)
     env['ARFLAGS'] = '/Brepro'
     (work / 'environment.json').write_text(json.dumps(env, indent=2) + '\n')
     cargo = rust / 'cargo.exe'
@@ -120,11 +110,24 @@ def build_mapped(root, work, cache):
     if sha256(root / 'rust/Cargo.lock') != lock_before:
         raise ValueError('Cargo.lock changed')
     release = target / TARGET / 'release'
+    archive_evidence = canonical_archive(release / 'mwc_wallet.lib', release / 'mwc_wallet.canonical.lib')
+    (release / 'mwc_wallet.canonical.lib').replace(release / 'mwc_wallet.lib')
+    consumer = work / 'static-smoke.exe'
+    run([binary / 'cl.exe', '/nologo', '/MD', '/O2',
+         root / 'reproducible/windows/static-smoke.c',
+         '/Fe:' + str(consumer), '/Fo:' + str(work / 'static-smoke.obj'),
+         '/link', release / 'mwc_wallet.lib',
+         *[name + '.lib' for name in (
+             'advapi32 bcrypt crypt32 dbghelp dnsapi gdi32 iphlpapi kernel32 '
+             'ncrypt netapi32 ntdll ole32 oleaut32 pdh powrprof propsys psapi '
+             'secur32 shell32 user32 userenv version ws2_32').split()]], env, work)
+    run([consumer], env, work)
+    archive_evidence['static_consumer_passed'] = True
     inventory = {
         'target': TARGET, 'rust_version': run([rust / 'rustc.exe', '-vV'], env, work, True),
         'host': platform.platform(), 'python_version': platform.python_version(),
         'git_version': run([git, '--version'], env, root, True).strip(),
-        'source_commit': run([git, 'rev-parse', 'HEAD'], env, root, True).strip(),
+        'archive': archive_evidence,
         'tools_lock_sha256': sha256(tools / 'tools.lock.json'),
         'cargo_lock_sha256': lock_before,
         'artifacts': {name: sha256(release / name) for name in ['mwc_wallet.dll', 'mwc_wallet.lib']},

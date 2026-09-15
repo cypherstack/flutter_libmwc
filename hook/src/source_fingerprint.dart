@@ -25,6 +25,8 @@ Future<({String sha256, List<Uri> dependencies})> sourceFingerprint(
     'reproducible/windows/build.ps1',
     'reproducible/windows/build.py',
     'reproducible/windows/audit.py',
+    'reproducible/windows/archive.py',
+    'reproducible/windows/static-smoke.c',
     'reproducible/windows/provision.py',
     'reproducible/windows/tools.lock.json',
   ]) {

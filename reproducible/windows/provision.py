@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import shutil
 import tarfile
+import tempfile
 import urllib.request
 import zipfile
 
@@ -22,13 +23,18 @@ def provision(destination, cache):
     pins = json.loads(lock)
     for pin in pins:
         archive = cache / pin['archive']
-        if not archive.exists():
+        if not archive.exists() or sha256(archive) != pin['sha256']:
             print(f"Downloading {pin['id']}", flush=True)
-            temporary = archive.with_suffix('.download')
-            urllib.request.urlretrieve(pin['url'], temporary)
-            if sha256(temporary) != pin['sha256']:
-                raise ValueError(f"Download digest mismatch: {pin['id']}")
-            temporary.rename(archive)
+            with tempfile.NamedTemporaryFile(dir=cache, prefix=pin['id'] + '-',
+                                             suffix='.download', delete=False) as file:
+                temporary = Path(file.name)
+            try:
+                urllib.request.urlretrieve(pin['url'], temporary)
+                if sha256(temporary) != pin['sha256']:
+                    raise ValueError(f"Download digest mismatch: {pin['id']}")
+                temporary.replace(archive)
+            finally:
+                temporary.unlink(missing_ok=True)
         if sha256(archive) != pin['sha256']:
             raise ValueError(f"Cache digest mismatch: {pin['id']}")
         print(f"Extracting {pin['id']}", flush=True)
