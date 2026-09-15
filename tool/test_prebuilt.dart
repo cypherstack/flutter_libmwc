@@ -32,6 +32,7 @@ Future<void> main(List<String> args) async {
         'test/prebuilt_test.dart',
         'test/prebuilt_producer_test.dart',
         'test/windows_builder_test.dart',
+        'test/doctor_test.dart',
       ] else
         ...args,
     ],

@@ -7,11 +7,11 @@ excluded on Windows; native TLS uses SChannel.
 
 ## Check a Windows host first
 
-From the repository root, run the standalone preflight (no Python or Dart
+From the repository root, run the Dart preflight (Dart 3.13+; no Python or pub
 packages required):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File reproducible/windows/doctor.ps1 -Network -Release
+dart tool/doctor.dart --network --release
 ```
 
 It checks Windows x64, Git, Flutter/Dart versions against this checkout and CI,
@@ -22,19 +22,23 @@ they do not need to be installed beforehand. No `R:` drive is required.
 
 Options:
 
-- `-Flutter C:\path\to\flutter\bin\flutter.bat` selects the SDK to check.
+- `--flutter C:\path\to\flutter\bin\flutter.bat` selects the SDK to check.
   Use that same SDK for subsequent builds.
-- `-Cache C:\cache` and `-Work C:\fresh-work` check paths you intend to pass to
+- `--cache C:\cache` and `--work C:\fresh-work` check paths you intend to pass to
   the producer. The work path must not already exist.
-- `-Release` additionally requires a clean Git checkout for release packaging;
+- `--release` additionally requires a clean Git checkout for release packaging;
   omit it for source-hook development.
-- `-Network` checks pinned download URLs and package endpoints. Without it,
+- `--network` checks pinned download URLs and package endpoints. Without it,
   network readiness is explicitly untested. HEAD requests do not verify full
   downloads or every Cargo dependency; the builder checks archive hashes.
-- `-Desktop` also checks Visual Studio through `flutter doctor -v` for building
+- `--desktop` also checks Visual Studio through `flutter doctor -v` for building
   a Flutter application. Visual Studio is unnecessary for native-only production.
-- `-Json` emits a structured report. Exit 1 means blocked; exit 0 means no
+- `--json` emits a structured report. Exit 1 means blocked; exit 0 means no
   blocking checks failed, but inspect warnings (including low disk space).
+
+The shared entry point currently supports Windows x64 only; other host modules
+can use the same CLI and report contract. See the [platform extension guide](../../tool/src/doctor/README.md).
+This replaces the former `reproducible/windows/doctor.ps1` command.
 
 The check installs nothing and uses only a temporary storage probe, which it
 removes. Flutter commands may initialize their own SDK cache. A passing preflight
