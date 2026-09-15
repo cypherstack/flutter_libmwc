@@ -4,11 +4,13 @@
 /// tool/build_prebuilt.dart` after `flutter pub get` to bypass native build hooks.
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
 
 import 'src/build_support.dart';
+import '../hook/src/windows_builder.dart';
 
 Future<Map<String, String>> buildEnvironment(
   String target, {
@@ -124,8 +126,8 @@ Future<Map<String, String>> buildEnvironment(
       );
     }
     rustflags.add('-Lnative=${archive.parent.path}');
-  } else if (target.contains('windows') && !Platform.isWindows) {
-    throw StateError('Windows MSVC releases require Windows and Visual Studio');
+  } else if (target.contains('windows')) {
+    throw StateError('Windows uses the isolated pinned builder');
   }
 
   // Preserve library paths containing spaces as a single compiler argument.
@@ -184,6 +186,81 @@ void auditLinuxMetadata(
   }
 }
 
+/// Package Windows through the same isolated builder used by the Flutter hook.
+Future<void> buildWindowsTarget(
+  Directory output, {
+  Uri? root,
+  Directory? work,
+  Directory? cache,
+  Directory? targetDirectory,
+  bool clean = false,
+}) async {
+  if (!Platform.isWindows)
+    throw StateError('Windows MSVC releases require Windows');
+  root ??= packageRoot;
+  final status = await runCommand(
+    ['git', 'status', '--porcelain', '--untracked-files=all'],
+    capture: true,
+    workingDirectory: root,
+  );
+  if (status!.isNotEmpty) {
+    throw StateError('Commit the source and recipe before packaging');
+  }
+  final commit = await runCommand(
+    ['git', 'rev-parse', 'HEAD'],
+    capture: true,
+    workingDirectory: root,
+  );
+  final fingerprint = await sourceSha256(root);
+  final artifacts = await buildWindowsNative(
+    root,
+    work: work,
+    cache: cache,
+    clean: clean,
+  );
+  if (await sourceSha256(root) != fingerprint ||
+      await runCommand(
+            ['git', 'rev-parse', 'HEAD'],
+            capture: true,
+            workingDirectory: root,
+          ) !=
+          commit ||
+      (await runCommand(
+        ['git', 'status', '--porcelain', '--untracked-files=all'],
+        capture: true,
+        workingDirectory: root,
+      ))!.isNotEmpty) {
+    throw StateError('Source or recipe changed during the build');
+  }
+  const target = windowsTarget;
+  final evidence = jsonDecode(
+    await File.fromUri(artifacts.uri.resolve('build-evidence.json'))
+        .readAsString(),
+  ) as Map<String, dynamic>;
+  await packageBuiltTarget(
+    target,
+    output.absolute,
+    artifacts.uri,
+    fingerprint: fingerprint,
+    build: {
+      'builder': 'pinned-windows-msvc',
+      'target': target,
+      'rust_version': await toolchainChannel(root),
+      'tools_lock_sha256': evidence['tools_lock_sha256'] as String,
+    },
+  );
+  if (targetDirectory != null) {
+    final release = Directory.fromUri(
+      targetDirectory.absolute.uri.resolve('$windowsTarget/release/'),
+    );
+    await release.create(recursive: true);
+    for (final name in libraryNames(windowsTarget).values) {
+      await File.fromUri(artifacts.uri.resolve(name))
+          .copy(release.uri.resolve(name).toFilePath());
+    }
+  }
+}
+
 Future<void> buildTarget(
   String target,
   Directory output,
@@ -194,6 +271,14 @@ Future<void> buildTarget(
   root ??= packageRoot;
   output = output.absolute;
   targetDirectory = targetDirectory.absolute;
+  if (target == windowsTarget) {
+    await buildWindowsTarget(
+      output,
+      root: root,
+      targetDirectory: targetDirectory,
+    );
+    return;
+  }
   final fingerprint = await sourceSha256(root);
   final channel = await toolchainChannel(root);
   final env = await buildEnvironment(target, ndk: ndk);
@@ -346,10 +431,11 @@ Future<void> main(List<String> arguments) async {
           'source_sha256': await sourceSha256(),
           'rust_version': await toolchainChannel(),
           'target': target,
+          if (target == windowsTarget) 'builder': 'pinned-windows-msvc',
           'cargo_arguments': [
             'build',
             '--release',
-            '--locked',
+            target == windowsTarget ? '--frozen' : '--locked',
             '--lib',
             '--target',
             target,

@@ -121,7 +121,7 @@ jobs:
           cache: true
       - run: flutter pub get --no-example
       - name: Build and package both Windows link modes
-        run: dart --packages=.dart_tool/package_config.json tool/build_windows_prebuilt.dart --clean --output build/prebuilts
+        run: dart --packages=.dart_tool/package_config.json tool/build_prebuilt.dart --target x86_64-pc-windows-msvc --output build/prebuilts
       - name: Smoke test the Windows C ABI
         run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/prebuilts/mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f

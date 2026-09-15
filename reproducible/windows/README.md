@@ -51,6 +51,11 @@ retains a fresh work directory, including compiler inspection reports; optional
 `--cache C:\some-cache` selects a cache. Neither option is needed normally.
 Python is provisioned automatically by the shared Dart entry point.
 
+The generic `tool/build_prebuilt.dart --target x86_64-pc-windows-msvc` command
+uses the same Windows producer, including its clean-source checks and verified
+cache. Its `--target-dir` also receives the two canonical library files for
+callers that consume the usual Cargo release-directory layout.
+
 The lower-level PowerShell/Python entry points remain available for recipe
 development; these intentionally accept explicit work/cache paths and a Python
 interpreter. They are not the ordinary Flutter interface.

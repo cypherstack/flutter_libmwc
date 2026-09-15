@@ -31,10 +31,20 @@ Use the same root pubspec settings and normal Flutter commands in CI, such as
 
 ## Build from source
 
-Omit the prebuilt settings or set `native_build: source`. Install Rust 1.90.0 via
+Omit the prebuilt settings or set `native_build: source`.
+
+On **Windows x64**, run `flutter pub get` and `flutter build windows --release`
+with Flutter's normal Windows desktop prerequisites. The hook automatically
+downloads verified, pinned native tools and Python, and reuses verified build
+outputs. No reserved drive letter, manual Rust installation, or special build
+directory is required. Flutter still needs its own Visual Studio C++ workload
+to build the application. See the [Windows recipe](reproducible/windows/README.md)
+for clean-build verification, caching, and prerequisites.
+
+On other platforms, install Rust 1.90.0 via
 [rustup](https://rustup.rs/), a C/C++ compiler, CMake, libclang, pkg-config, Perl,
-and `protoc`. Use Xcode for Apple, Android SDK/NDK r27+ for Android, and Visual
-Studio's C++ workload for Windows. Run Flutter normally; the hook compiles Rust
+and `protoc`. Use Xcode for Apple and Android SDK/NDK r27+ for Android.
+Run Flutter normally; the hook compiles Rust
 with `--locked`.
 
 ## Build releases
@@ -62,7 +72,8 @@ Both static and dynamic libraries are built:
 | iOS | arm64 device; arm64/x64 simulator | iOS 13 |
 
 Linux deployments must meet the glibc minimum. Sanitized runtimes are unsupported.
-For local builds, run from this repository's root with the native tools installed:
+For local builds, run from this repository's root. Windows tools are provisioned
+automatically; other platforms need the native tools installed:
 
 ```sh
 flutter pub get
