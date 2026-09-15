@@ -8,6 +8,11 @@ source/toolchain contract and the existing release manifest protocol.
 release manifest. See the [run and evidence](reproducible/LINUX_HOST_TO_CI_RESULTS.md)
 and [coworker reproduction procedure](reproducible/HOST_TO_CI.md).
 
+**Verified on Windows 11:** two clean workstation builds reproduced the
+Windows Server 2022 GitHub output byte-for-byte, including the MSVC DLL,
+static LIB and release manifest. See the [Windows results and evidence](reproducible/windows/RESULTS.md)
+and [pinned Windows build procedure](reproducible/windows/README.md).
+
 ## Linux with Nix
 
 Run from a committed checkout with Nix flakes enabled:
@@ -111,7 +116,7 @@ depend on that package being available.
 
 ## Next host work
 
-Linux workstation-to-GitHub validation has passed. macOS and Windows can proceed independently
+Linux and Windows workstation-to-GitHub validation have passed. macOS can proceed independently
 using the committed [host handoffs](reproducible/handoffs/README.md). The acceptance
 criterion for each host is now [matching a real GitHub run](reproducible/HOST_TO_CI.md),
 not only local repeatability:
