@@ -1,0 +1,9 @@
+# Source fingerprints must be identical on Windows and Unix checkouts.
+hook/** text eol=lf
+rust/src/** text eol=lf
+rust/Cargo.toml text eol=lf
+rust/Cargo.lock text eol=lf
+rust/rust-toolchain.toml text eol=lf
+lib/mwc.dart text eol=lf
+tool/**/*.dart text eol=lf
+tool/*.dart text eol=lf

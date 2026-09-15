@@ -4,9 +4,12 @@ import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 import 'package:native_toolchain_rust/native_toolchain_rust.dart';
 
+import 'src/prebuilt.dart';
+
 void main(List<String> args) async {
   await build(args, (input, output) async {
     if (!input.config.buildCodeAssets) return;
+    if (await usePrebuilt(input, output)) return;
 
     final code = input.config.code;
 
@@ -64,7 +67,7 @@ void main(List<String> args) async {
 
     await RustBuilder(
       assetName: 'mwc.dart',
-      extraCargoBuildArgs: ['--lib'],
+      extraCargoBuildArgs: ['--lib', '--locked'],
       extraCargoEnvironmentVariables: environment,
     ).run(input: input, output: output);
     output.dependencies.addAll(

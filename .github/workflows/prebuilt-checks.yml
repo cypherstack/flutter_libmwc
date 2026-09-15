@@ -1,0 +1,31 @@
+name: Prebuilt integrity checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: '3.47.2'
+          cache: true
+      - run: flutter pub get
+      - name: Analyze the hook and release tooling
+        run: dart analyze hook tool test/prebuilt_test.dart test/prebuilt_producer_test.dart
+      - name: Test release tooling and the resolver without compiling Rust
+        run: dart --packages=.dart_tool/package_config.json tool/test_prebuilt.dart
+      - name: Check native build planning
+        run: dart --packages=.dart_tool/package_config.json tool/build_prebuilt.dart --target x86_64-unknown-linux-gnu --dry-run
