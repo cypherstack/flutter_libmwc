@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 from pathlib import Path
 import struct
@@ -14,6 +15,45 @@ from audit import audit
 
 
 class ProvisionTests(unittest.TestCase):
+    def test_corrupt_cache_is_repaired_from_verified_download(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            contents = io.BytesIO()
+            with zipfile.ZipFile(contents, 'w') as output:
+                output.writestr('bin/tool.exe', b'verified tool')
+            payload = contents.getvalue()
+            (root / 'tool.zip').write_bytes(b'corrupt cache')
+            (root / 'tools.lock.json').write_text(json.dumps([{
+                'id': 'tool', 'archive': 'tool.zip',
+                'sha256': hashlib.sha256(payload).hexdigest(),
+                'kind': 'cmake', 'url': 'https://example.invalid/tool.zip',
+            }]))
+            def download(url, destination):
+                Path(destination).write_bytes(payload)
+            with mock.patch.object(provision, '__file__', str(root / 'provision.py')), mock.patch.object(
+                    provision.urllib.request, 'urlretrieve', side_effect=download):
+                provision.provision(root / 'output', root)
+            self.assertEqual((root / 'tool.zip').read_bytes(), payload)
+            self.assertEqual((root / 'output/cmake/bin/tool.exe').read_bytes(), b'verified tool')
+            self.assertEqual(list(root.glob('*.download')), [])
+
+    def test_interrupted_download_does_not_publish_partial_cache(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'tools.lock.json').write_text(json.dumps([{
+                'id': 'tool', 'archive': 'tool.zip', 'sha256': '0' * 64,
+                'kind': 'cmake', 'url': 'https://example.invalid/tool.zip',
+            }]))
+            def interrupted(url, destination):
+                Path(destination).write_bytes(b'partial download')
+                raise OSError('simulated interruption')
+            with mock.patch.object(provision, '__file__', str(root / 'provision.py')), mock.patch.object(
+                    provision.urllib.request, 'urlretrieve', side_effect=interrupted):
+                with self.assertRaisesRegex(OSError, 'simulated interruption'):
+                    provision.provision(root / 'output', root)
+            self.assertFalse((root / 'tool.zip').exists())
+            self.assertEqual(list(root.glob('*.download')), [])
+
     def test_corrupt_cached_tools_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

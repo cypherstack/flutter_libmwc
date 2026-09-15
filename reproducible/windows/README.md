@@ -42,6 +42,10 @@ reused as completed outputs. Each fresh build extracts verified native tools
 and fetches its own Cargo sources. Cargo checksums and Git revisions are bound
 by `rust/Cargo.lock`. Source changes invalidate cached output.
 
+Temporary-file cleanup retries Windows access/sharing failures. If Windows
+still refuses removal, the build reports the retained directory and keeps the
+verified result usable. Retained staging is never accepted as cached output.
+
 `--clean` forces an independent native build. Optional `--work C:\some-path`
 retains a fresh work directory, including compiler inspection reports; optional
 `--cache C:\some-cache` selects a cache. Neither option is needed normally.

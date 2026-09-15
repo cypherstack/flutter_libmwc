@@ -13,6 +13,28 @@ const _pythonSha =
     'f6cca216a359be84797cabb54149ce5e062afb16cc7567eb7fc51cacb2d86b65';
 const _outputs = ['mwc_wallet.dll', 'mwc_wallet.lib', 'build-evidence.json'];
 
+/// Windows scanners can retain handles briefly after tools exit. Staging is
+/// never a cache entry, so failure to reclaim it must not invalidate a verified
+/// build or hide the original build error. Dart already clears read-only file
+/// attributes during recursive deletion; retry transient sharing/access errors.
+Future<bool> cleanupWindowsStaging(Directory directory) async {
+  for (var attempt = 0; attempt < 3; attempt++) {
+    try {
+      if (await directory.exists()) await directory.delete(recursive: true);
+      return true;
+    } on FileSystemException {
+      if (attempt < 2) {
+        await Future<void>.delayed(Duration(milliseconds: 250 * (attempt + 1)));
+      }
+    }
+  }
+  stderr.writeln(
+    'flutter_libmwc: temporary files remain in ${directory.path}; '
+    'Windows could not remove them. They will not be reused as build output.',
+  );
+  return false;
+}
+
 Future<String> _hash(File file) async =>
     (await crypto.sha256.bind(file.openRead()).first).toString();
 
@@ -206,9 +228,11 @@ Future<Directory> buildWindowsNative(
     await staged.rename(output.path);
     return output;
   } finally {
-    if (temporary != null && await temporary.exists())
-      await temporary.delete(recursive: true);
-    await lock.unlock();
-    await lock.close();
+    try {
+      if (temporary != null) await cleanupWindowsStaging(temporary);
+    } finally {
+      await lock.unlock();
+      await lock.close();
+    }
   }
 }

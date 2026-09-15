@@ -31,6 +31,7 @@ Future<void> main(List<String> args) async {
       if (args.isEmpty) ...[
         'test/prebuilt_test.dart',
         'test/prebuilt_producer_test.dart',
+        'test/windows_builder_test.dart',
       ] else
         ...args,
     ],
