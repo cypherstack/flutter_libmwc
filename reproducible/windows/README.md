@@ -34,7 +34,8 @@ dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/wi
 dart --packages=.dart_tool/package_config.json tool/prebuilt_manifest.dart --artifacts build/windows-a --output build/windows-release-a
 ```
 
-The default cache is `%LOCALAPPDATA%\flutter_libmwc`. Cached libraries are keyed
+The default cache is `%LOCALAPPDATA%\flutter_libmwc`. Use an NTFS work/cache
+volume; Cargo cannot extract some locked crates correctly on exFAT. Cached libraries are keyed
 by the shared source/recipe fingerprint and verified by full SHA-256 before
 reuse. An operating-system file lock serializes builders sharing that cache and
 is released if a process terminates. Incomplete staging directories are never
@@ -128,4 +129,5 @@ python reproducible/ci_artifacts.py compare build/github-windows build/windows-r
 Require exit 0 and `"status": "match"`. Keep the actual GitHub URL, attempt,
 artifact download verification, and comparison report. Two local matching
 builds do not establish host-to-CI reproduction. See [RESULTS.md](RESULTS.md)
-for the current verification status.
+for the historical fixed-drive result. The [default-path validation](DEFAULT-PATH-VALIDATION.md)
+records the current verified recipe and its host-to-CI comparisons.
