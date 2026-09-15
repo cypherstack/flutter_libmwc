@@ -305,6 +305,12 @@ void main() {
         'flake.lock',
         'reproducible/audit_linux.py',
         'tool/build_nix_prebuilt.dart',
+        'tool/build_windows_prebuilt.dart',
+        'reproducible/windows/build.ps1',
+        'reproducible/windows/build.py',
+        'reproducible/windows/audit.py',
+        'reproducible/windows/provision.py',
+        'reproducible/windows/tools.lock.json',
       ]..sort();
       final expectedFraming = StringBuffer();
       for (final path in paths) {
