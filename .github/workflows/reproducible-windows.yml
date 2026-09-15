@@ -1,0 +1,60 @@
+name: Reproduce Windows native prebuilts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [windows-reproducible-native-prebuilts]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.13.7'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version: '3.47.3'
+          cache: true
+      - run: flutter pub get --no-example
+      - name: Check release integrity tooling
+        shell: pwsh
+        run: |
+          dart --packages=.dart_tool/package_config.json tool/test_prebuilt.dart
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s reproducible -p test_ci_artifacts.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s reproducible/windows -p test_recipe.py -v
+      - name: Build and package using the shared pinned recipe
+        shell: pwsh
+        run: |
+          dart --packages=.dart_tool/package_config.json tool/build_windows_prebuilt.dart --work C:\mwc-build --cache C:\mwc-downloads
+      - name: Smoke test the Windows C ABI
+        run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/windows-prebuilts/mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll
+      - name: Assemble the Windows manifest
+        run: dart --packages=.dart_tool/package_config.json tool/prebuilt_manifest.dart --artifacts build/windows-prebuilts --output build/windows-release
+      - name: Record GitHub run provenance
+        run: python reproducible/ci_artifacts.py record build/windows-release --runner windows-2022
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: reproducible-windows-attempt-${{ github.run_attempt }}
+          path: build/windows-release/*
+          if-no-files-found: error
+          compression-level: 1
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: windows-build-audit-attempt-${{ github.run_attempt }}
+          path: |
+            C:\mwc-build\build-evidence.json
+            C:\mwc-build\headers.txt
+            C:\mwc-build\dependents.txt
+            C:\mwc-build\exports.txt
+          if-no-files-found: error
