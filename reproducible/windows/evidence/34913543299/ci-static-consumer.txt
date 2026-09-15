@@ -1,0 +1,5 @@
+Static C consumer passed: mnemonic and 100 error/free calls
+static-smoke.c
+   Creating library C:\src\mwc-repro-tools\archive-experiment\ci-5e14cd5-static.lib and object C:\src\mwc-repro-tools\archive-experiment\ci-5e14cd5-static.exp
+
+run status 0

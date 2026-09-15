@@ -1,0 +1,56 @@
+{
+  "artifacts": {
+    "mwc_wallet.dll": "f2912a0a9ab81cd3c039e448c08330178c5ef1891d84523bef6d362bf78a6165",
+    "mwc_wallet.lib": "f29ac124a1f2941c895f84224974e2fa69cc4723aa574ba716a6f3fff4a986f8"
+  },
+  "audit": {
+    "archive_timestamps": "zero",
+    "coff_objects": 3893,
+    "imports": [
+      "advapi32.dll",
+      "api-ms-win-core-synch-l1-2-0.dll",
+      "api-ms-win-crt-heap-l1-1-0.dll",
+      "api-ms-win-crt-math-l1-1-0.dll",
+      "api-ms-win-crt-runtime-l1-1-0.dll",
+      "api-ms-win-crt-stdio-l1-1-0.dll",
+      "api-ms-win-crt-string-l1-1-0.dll",
+      "bcrypt.dll",
+      "bcryptprimitives.dll",
+      "crypt32.dll",
+      "iphlpapi.dll",
+      "kernel32.dll",
+      "msvcp140.dll",
+      "netapi32.dll",
+      "ntdll.dll",
+      "ole32.dll",
+      "oleaut32.dll",
+      "pdh.dll",
+      "powrprof.dll",
+      "psapi.dll",
+      "secur32.dll",
+      "shell32.dll",
+      "vcruntime140.dll",
+      "ws2_32.dll"
+    ],
+    "machine": "x64",
+    "nonzero_object_timestamps": 77,
+    "pe_repro_marker": true
+  },
+  "cargo_lock_sha256": "b236e35c628d7fdf251e9516cb9a43460663af84b8cf8682481b6e1e3e947c06",
+  "git_version": "git version 2.55.0.windows.5",
+  "host": "Windows-2022Server-10.0.20348-SP0",
+  "python_version": "3.13.7",
+  "rust_version": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-pc-windows-msvc\nrelease: 1.90.0\nLLVM version: 20.1.8\n",
+  "source_commit": "ccd335017739cff255b578bae6a1b35159b79fab",
+  "target": "x86_64-pc-windows-msvc",
+  "tool_hashes": {
+    "cmake\\cmake-3.31.8-windows-x86_64\\bin\\cmake.exe": "c2767a203088761c41b7568d0d5864d1e6be82c18e155aba5c64b9b8c8bebb0e",
+    "protoc\\bin\\protoc.exe": "6edb2a02f51f65b3e2e8086a643aac5254b11d71d7d9f55387b475af696c76e5",
+    "rust\\bin\\cargo.exe": "5615085f39570e13b4abd6f23e3302521a0ec570b2dd5182e39a98a87e5e9584",
+    "rust\\bin\\rustc.exe": "1a9f8c489a90009ce5db828d0a7436a1354789c42590d73ff5cc8b4e53695612",
+    "vs\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\cl.exe": "16002b095afb4bb1b4d522b53381935fe1f8d94e8487406e4428523793307ca9",
+    "vs\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\lib.exe": "bdd288f8d3eb2a3ef085e505c425589673aa4248cfba92c78883bb0ac8c21682",
+    "vs\\VC\\Tools\\MSVC\\14.44.35207\\bin\\Hostx64\\x64\\link.exe": "7dfbd20848af94fb8c51772a7caf2829622849d236aaeadb8d818edc4b309d40"
+  },
+  "tools_lock_sha256": "d8ec365fd9b7a21d579ce120ef00e61ff26d8cf60f4a7b00472823c7bd6b092b"
+}

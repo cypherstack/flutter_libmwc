@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "package": "flutter_libmwc",
+  "source_sha256": "e447fd4849f91108e0bde71d9b40f0b600086b6212f9e8068ff6405f07cfde72",
+  "artifacts": [
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "link_mode": "dynamic",
+      "file": "mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll",
+      "sha256": "af02ec6d3885250735184de2df45bdf30b95eef9e48a9b4807d5aa3702efdb1f",
+      "size": 14719488
+    },
+    {
+      "target": "x86_64-pc-windows-msvc",
+      "link_mode": "static",
+      "file": "mwc_wallet-x86_64-pc-windows-msvc-static.lib",
+      "sha256": "fdbb264e9b7d874218013c7a6b00dc2e77d5a0dc78f5c4dcd168d25e73b65f76",
+      "size": 164360026
+    }
+  ]
+}

@@ -308,6 +308,14 @@ void main() {
         'tool/build_macos_prebuilt.dart',
         'reproducible/macos/package.nix',
         'reproducible/macos/audit.py',
+        'tool/build_windows_prebuilt.dart',
+        'reproducible/windows/build.ps1',
+        'reproducible/windows/build.py',
+        'reproducible/windows/audit.py',
+        'reproducible/windows/archive.py',
+        'reproducible/windows/static-smoke.c',
+        'reproducible/windows/provision.py',
+        'reproducible/windows/tools.lock.json',
       ]..sort();
       final expectedFraming = StringBuffer();
       for (final path in paths) {

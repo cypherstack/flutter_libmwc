@@ -1,0 +1,14 @@
+{
+  "comparison": "local-to-local",
+  "files": {
+    "manifest.json": "cdd8d410799d32789e61748925dc8041b0b9abe9bf681ddb05e369f54fa24d53",
+    "manifest.sha256": "10eedfa2a278267e1ebed2ef554069bab7fc4afe1c57a6384d9ae0dc4b41d682",
+    "mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll": "f2912a0a9ab81cd3c039e448c08330178c5ef1891d84523bef6d362bf78a6165",
+    "mwc_wallet-x86_64-pc-windows-msvc-static.lib": "f29ac124a1f2941c895f84224974e2fa69cc4723aa574ba716a6f3fff4a986f8"
+  },
+  "first_work": "C:\\src\\mwc-w4",
+  "second_work": "C:\\src\\mwc-w5",
+  "source_commit": "ccd335017739cff255b578bae6a1b35159b79fab",
+  "source_sha256": "0d61d8b22b24c6e5fb2aeb169ef8435c0e768a6d6077e65fa618d660774c5a73",
+  "status": "match"
+}

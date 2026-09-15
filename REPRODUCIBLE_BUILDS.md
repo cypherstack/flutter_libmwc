@@ -13,6 +13,16 @@ byte-for-byte for both native link modes and the release manifest. See the
 [macOS result](reproducible/macos/RESULTS.md) and
 [build procedure](reproducible/macos/README.md). Intel macOS and iOS remain unverified.
 
+**Verified on Windows 11:** two clean workstation builds reproduced the
+Windows Server 2022 GitHub output byte-for-byte, including the MSVC DLL,
+static LIB and release manifest. See the [Windows results and evidence](reproducible/windows/DEFAULT-PATH-VALIDATION.md)
+and [pinned Windows build procedure](reproducible/windows/README.md).
+
+These results apply to the exact commits recorded in each report. The shared
+branch combines the platform recipes, so its source fingerprint and release
+manifest differ from those historical builds. Validate newly produced artifacts
+against CI at the same combined revision.
+
 ## Linux with Nix
 
 Run from a committed checkout with Nix flakes enabled:
@@ -116,8 +126,8 @@ depend on that package being available.
 
 ## Next host work
 
-Linux and macOS ARM64 workstation-to-GitHub validation have passed. The remaining
-macOS targets and Windows can proceed independently
+Linux, macOS ARM64, and Windows workstation-to-GitHub validation have passed.
+The remaining macOS targets can proceed independently
 using the committed [host handoffs](reproducible/handoffs/README.md). The acceptance
 criterion for each host is now [matching a real GitHub run](reproducible/HOST_TO_CI.md),
 not only local repeatability:

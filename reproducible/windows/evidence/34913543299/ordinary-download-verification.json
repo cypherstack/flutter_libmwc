@@ -1,0 +1,18 @@
+{
+  "run_url": "https://github.com/cypherstack/flutter_libmwc/actions/runs/34913594040",
+  "head_sha": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+  "run_attempt": 1,
+  "conclusion": "success",
+  "artifacts": [
+    {
+      "artifact_id": 10376055111,
+      "name": "prebuilt-x86_64-pc-windows-msvc",
+      "api_digest": "sha256:888146be71b407cecd74979aa474165ae1ec63bf388365693662b615c987e59c",
+      "download_sha256": "888146be71b407cecd74979aa474165ae1ec63bf388365693662b615c987e59c",
+      "run_id": 34913594040,
+      "run_attempt": 1,
+      "head_sha": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+      "api_url": "https://api.github.com/repos/cypherstack/flutter_libmwc/actions/artifacts/10376055111"
+    }
+  ]
+}

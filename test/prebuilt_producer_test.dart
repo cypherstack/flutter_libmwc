@@ -60,6 +60,14 @@ void main() {
       'tool/build_macos_prebuilt.dart',
       'reproducible/macos/package.nix',
       'reproducible/macos/audit.py',
+      'tool/build_windows_prebuilt.dart',
+      'reproducible/windows/build.ps1',
+      'reproducible/windows/build.py',
+      'reproducible/windows/audit.py',
+      'reproducible/windows/archive.py',
+      'reproducible/windows/static-smoke.c',
+      'reproducible/windows/provision.py',
+      'reproducible/windows/tools.lock.json',
     ]) {
       final file = File.fromUri(source.uri.resolve(relative));
       await file.parent.create(recursive: true);
@@ -116,6 +124,14 @@ void main() {
       'tool/build_macos_prebuilt.dart',
       'reproducible/macos/package.nix',
       'reproducible/macos/audit.py',
+      'tool/build_windows_prebuilt.dart',
+      'reproducible/windows/build.ps1',
+      'reproducible/windows/build.py',
+      'reproducible/windows/audit.py',
+      'reproducible/windows/archive.py',
+      'reproducible/windows/static-smoke.c',
+      'reproducible/windows/provision.py',
+      'reproducible/windows/tools.lock.json',
     ]) {
       final before = await sourceSha256(source.uri);
       await File.fromUri(source.uri.resolve(path)).writeAsString('changed');

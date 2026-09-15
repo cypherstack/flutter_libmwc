@@ -1,0 +1,34 @@
+{
+  "source_commit": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+  "source_sha256": "e447fd4849f91108e0bde71d9b40f0b600086b6212f9e8068ff6405f07cfde72",
+  "local_host": "Windows 11 build 26200, Intel Core i7-11800H",
+  "flutter": "3.47.3",
+  "dart": "3.13.3",
+  "local_a": {
+    "source": "D:\\mwc package final (Git-free exact native-input snapshot)",
+    "invocation": "flutter pub get; flutter build windows --release",
+    "work": "Automatically selected under LOCALAPPDATA on NTFS",
+    "cache_was_absent": true,
+    "packaging": "Generic Windows prebuilt CLI, verified cache reuse"
+  },
+  "local_b": {
+    "source": "C:\\src\\flutter_libmwc-repro",
+    "invocation": "tool/build_windows_prebuilt.dart --clean --work C:\\src\\mwc ntfs verified B",
+    "raw_library_files_compared_to_ci": true,
+    "ambient_flags_excluded": true
+  },
+  "consumers": {
+    "git_dependency_commit": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+    "path_and_git_apps_build_and_run": true,
+    "bundled_dll_sha256": "af02ec6d3885250735184de2df45bdf30b95eef9e48a9b4807d5aa3702efdb1f",
+    "static_hook_library_sha256": "fdbb264e9b7d874218013c7a6b00dc2e77d5a0dc78f5c4dcd168d25e73b65f76",
+    "ci_dll_and_static_consumer_passed": true
+  },
+  "tests": {
+    "dart_passed": 39,
+    "dart_platform_skips": 2,
+    "windows_python_passed": 8,
+    "provenance_python_passed": 8
+  },
+  "filesystem_limit": "Cargo fetch on exFAT failed setting a crate mtime (Windows error 87); use an NTFS work/cache volume. Source files on exFAT succeeded with NTFS work."
+}

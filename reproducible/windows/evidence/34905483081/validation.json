@@ -1,0 +1,24 @@
+{
+  "dart_tests": {
+    "passed": 38,
+    "platform_skips": 2
+  },
+  "artifact_protocol_tests": {
+    "passed": 8
+  },
+  "windows_recipe_tests": {
+    "passed": 4
+  },
+  "abi_smoke": {
+    "local_a": "passed",
+    "local_b": "passed",
+    "github_job": "passed",
+    "downloaded_github_dll_on_host": "passed"
+  },
+  "comparison_exit_codes": {
+    "local_a_to_ci": 0,
+    "local_b_to_ci": 0,
+    "local_to_local": 0
+  },
+  "source_commit": "ccd335017739cff255b578bae6a1b35159b79fab"
+}

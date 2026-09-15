@@ -1,0 +1,18 @@
+{
+  "files": {
+    "manifest.json": "8faf1dc955227f2cce271d13dde20745b06376383b1786b6de4b8ded506fe701",
+    "manifest.sha256": "3821f1d60bb53dd5d713e2de094ff80481c09151f7269b58767360fe56a03dc7",
+    "mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll": "af02ec6d3885250735184de2df45bdf30b95eef9e48a9b4807d5aa3702efdb1f",
+    "mwc_wallet-x86_64-pc-windows-msvc-static.lib": "fdbb264e9b7d874218013c7a6b00dc2e77d5a0dc78f5c4dcd168d25e73b65f76"
+  },
+  "repository": "cypherstack/flutter_libmwc",
+  "run_attempt": "1",
+  "run_id": "34913543299",
+  "runner": "windows-2022",
+  "runner_image_version": "20260907.297.1",
+  "schema_version": 1,
+  "source_commit": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+  "source_sha256": "e447fd4849f91108e0bde71d9b40f0b600086b6212f9e8068ff6405f07cfde72",
+  "workflow_ref": "cypherstack/flutter_libmwc/.github/workflows/reproducible-windows.yml@refs/heads/windows-reproducible-native-prebuilts",
+  "workflow_sha": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c"
+}

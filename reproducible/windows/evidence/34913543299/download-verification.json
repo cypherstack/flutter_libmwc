@@ -1,0 +1,28 @@
+{
+  "run_url": "https://github.com/cypherstack/flutter_libmwc/actions/runs/34913543299",
+  "head_sha": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+  "run_attempt": 1,
+  "conclusion": "success",
+  "artifacts": [
+    {
+      "artifact_id": 10375232896,
+      "name": "windows-build-audit-attempt-1",
+      "api_digest": "sha256:8897732b099da010052246806ecf9f618d5016e5e33b8aade27167778ec8328c",
+      "download_sha256": "8897732b099da010052246806ecf9f618d5016e5e33b8aade27167778ec8328c",
+      "run_id": 34913543299,
+      "run_attempt": 1,
+      "head_sha": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+      "api_url": "https://api.github.com/repos/cypherstack/flutter_libmwc/actions/artifacts/10375232896"
+    },
+    {
+      "artifact_id": 10374779014,
+      "name": "reproducible-windows-attempt-1",
+      "api_digest": "sha256:af8fb8cd2be2ceccb0b548d06f95de2eca8f65e8410e633094530b8ae635a8cf",
+      "download_sha256": "af8fb8cd2be2ceccb0b548d06f95de2eca8f65e8410e633094530b8ae635a8cf",
+      "run_id": 34913543299,
+      "run_attempt": 1,
+      "head_sha": "5e14cd56264a776c9bbc55eaff05cc8786bc8b7c",
+      "api_url": "https://api.github.com/repos/cypherstack/flutter_libmwc/actions/artifacts/10374779014"
+    }
+  ]
+}

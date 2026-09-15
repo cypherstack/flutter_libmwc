@@ -1,0 +1,8 @@
+{
+  "corruption_triggered_rebuild": true,
+  "interrupted_process_exit": 1,
+  "lock_recovered": true,
+  "incomplete_staging_ignored": true,
+  "cache_key": "e447fd4849f91108e0bde71d9b40f0b600086b6212f9e8068ff6405f07cfde72",
+  "scope": "Real cached libraries; rebuild intentionally interrupted after startup, then original verified bytes restored to test lock recovery."
+}

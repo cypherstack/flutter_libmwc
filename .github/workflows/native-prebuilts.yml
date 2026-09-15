@@ -25,9 +25,6 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             runner: ubuntu-22.04
             smoke_library: libmwc_wallet.so
-          - target: x86_64-pc-windows-msvc
-            runner: windows-2022
-            smoke_library: mwc_wallet.dll
           - target: x86_64-apple-darwin
             runner: macos-15-intel
             smoke_library: libmwc_wallet.dylib
@@ -79,13 +76,6 @@ jobs:
         run: |
           brew install protobuf cmake pkgconf nasm
           echo "LIBCLANG_PATH=$(dirname "$(xcrun --find clang)")/../lib" >> "$GITHUB_ENV"
-      - name: Install Windows build dependencies
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          git config --global core.longpaths true
-          choco install protoc nasm --yes --no-progress
-          "LIBCLANG_PATH=C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: Install pinned Android NDK
         if: contains(matrix.target, 'android')
         shell: bash
@@ -113,9 +103,39 @@ jobs:
           retention-days: 14
           compression-level: 1
 
+  windows:
+    # Dispatch validates this exact release route without creating a tag or
+    # publishing. Other target jobs continue to run only for release tags.
+    if: github.event.deleted != true
+    name: x86_64-pc-windows-msvc
+    runs-on: windows-2022
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version: '3.47.3'
+          cache: true
+      - run: flutter pub get --no-example
+      - name: Build and package both Windows link modes
+        run: dart --packages=.dart_tool/package_config.json tool/build_prebuilt.dart --target x86_64-pc-windows-msvc --output build/prebuilts
+      - name: Smoke test the Windows C ABI
+        run: dart --packages=.dart_tool/package_config.json tool/smoke_prebuilt.dart build/prebuilts/mwc_wallet-x86_64-pc-windows-msvc-dynamic.dll
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: prebuilt-x86_64-pc-windows-msvc
+          path: build/prebuilts/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 1
+
   release:
     name: Publish verified prebuilts
-    needs: build
+    needs: [build, windows]
+    if: startsWith(github.ref, 'refs/tags/native-') && github.event.deleted != true
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     permissions:

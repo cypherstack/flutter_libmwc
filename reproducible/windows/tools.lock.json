@@ -1,0 +1,91 @@
+[
+    {
+        "id":  "Microsoft.VC.14.44.17.14.CRT.Headers.base",
+        "version":  "14.44.35211",
+        "archive":  "Microsoft.VC.14.44.17.14.CRT.Headers.base.vsix",
+        "sha256":  "bf77970fe0291576546b5089c5be421d82f43f418cfd389459c663661fa519ce",
+        "url":  "https://download.visualstudio.microsoft.com/download/pr/45d3b8dd-bced-4b37-9974-142f748d710c/bf77970fe0291576546b5089c5be421d82f43f418cfd389459c663661fa519ce/Microsoft.VC.14.44.17.14.CRT.Headers.base.vsix",
+        "kind":  "vsix"
+    },
+    {
+        "id":  "Microsoft.VC.14.44.17.14.CRT.x64.Desktop.base",
+        "version":  "14.44.35211",
+        "archive":  "Microsoft.VC.14.44.17.14.CRT.x64.Desktop.base.vsix",
+        "sha256":  "a7d50521b72a5ed186a3b4055bb44825c9267bfb6eebe17cdfe65c7669ba7472",
+        "url":  "https://download.visualstudio.microsoft.com/download/pr/45d3b8dd-bced-4b37-9974-142f748d710c/a7d50521b72a5ed186a3b4055bb44825c9267bfb6eebe17cdfe65c7669ba7472/Microsoft.VC.14.44.17.14.CRT.x64.Desktop.base.vsix",
+        "kind":  "vsix"
+    },
+    {
+        "id":  "Microsoft.VC.14.44.17.14.CRT.x64.Store.base",
+        "version":  "14.44.35211",
+        "archive":  "Microsoft.VC.14.44.17.14.CRT.x64.Store.base.vsix",
+        "sha256":  "e688fe5c4fde7ff710679a9df83ac18a49dff2daacb4d95dec5203cfe1f94dec",
+        "url":  "https://download.visualstudio.microsoft.com/download/pr/45d3b8dd-bced-4b37-9974-142f748d710c/e688fe5c4fde7ff710679a9df83ac18a49dff2daacb4d95dec5203cfe1f94dec/Microsoft.VC.14.44.17.14.CRT.x64.Store.base.vsix",
+        "kind":  "vsix"
+    },
+    {
+        "id":  "Microsoft.VC.14.44.17.14.Tools.HostX64.TargetX64.base",
+        "version":  "14.44.35214",
+        "archive":  "Microsoft.VC.14.44.17.14.Tools.HostX64.TargetX64.base.vsix",
+        "sha256":  "3b62ca016a366b680d56b05ddd7255982c46fbe7ac095d38c24b85422243c28f",
+        "url":  "https://download.visualstudio.microsoft.com/download/pr/3253cfdf-4b6e-4753-bf1c-1e466fcdee53/3b62ca016a366b680d56b05ddd7255982c46fbe7ac095d38c24b85422243c28f/Microsoft.VC.14.44.17.14.Tools.HostX64.TargetX64.base.vsix",
+        "kind":  "vsix"
+    },
+    {
+        "id":  "Microsoft.VC.14.44.17.14.Tools.HostX64.TargetX64.Res.base",
+        "version":  "14.44.35214",
+        "archive":  "Microsoft.VC.14.44.17.14.Tools.HostX64.TargetX64.Res.base.enu.vsix",
+        "sha256":  "1df9bc03252dbf4172aec58e4d1241148f39ba8ac081d1b5933336faab08c83f",
+        "url":  "https://download.visualstudio.microsoft.com/download/pr/3253cfdf-4b6e-4753-bf1c-1e466fcdee53/1df9bc03252dbf4172aec58e4d1241148f39ba8ac081d1b5933336faab08c83f/Microsoft.VC.14.44.17.14.Tools.HostX64.TargetX64.Res.base.enu.vsix",
+        "kind":  "vsix"
+    },
+    {
+        "id":  "sdk",
+        "archive":  "sdk.zip",
+        "sha256":  "e4efe1768ea61f4f999dbef61b09895320629f975f9ceed8290a9633e0c31623",
+        "url":  "https://api.nuget.org/v3-flatcontainer/microsoft.windows.sdk.cpp/10.0.22621.3233/microsoft.windows.sdk.cpp.10.0.22621.3233.nupkg",
+        "kind":  "sdk"
+    },
+    {
+        "id":  "sdk-x64",
+        "archive":  "sdk-x64.zip",
+        "sha256":  "f8475cf8654763dd5d5db050b99788ef3ceae4436a2fba8fe4ea3b022c656e19",
+        "url":  "https://api.nuget.org/v3-flatcontainer/microsoft.windows.sdk.cpp.x64/10.0.22621.3233/microsoft.windows.sdk.cpp.x64.10.0.22621.3233.nupkg",
+        "kind":  "sdk-x64"
+    },
+    {
+        "id":  "cmake",
+        "archive":  "cmake.zip",
+        "sha256":  "81aa9964dbabd71fe02e7ec50472fd3ad56138c49944515ece9001efbff8d719",
+        "url":  "https://github.com/Kitware/CMake/releases/download/v3.31.8/cmake-3.31.8-windows-x86_64.zip",
+        "kind":  "cmake"
+    },
+    {
+        "id":  "protoc",
+        "archive":  "protoc.zip",
+        "sha256":  "71852a30cf62975358edfcbbff93086e8857a079c8e4d6904881aa968d65c7f9",
+        "url":  "https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protoc-21.12-win64.zip",
+        "kind":  "protoc"
+    },
+    {
+        "id":  "rustc",
+        "archive":  "rustc.tar.xz",
+        "sha256":  "a18b3912905f154c34a7572954dda9e9849ac6411a1e02fa390bf742f918fbcb",
+        "url":  "https://static.rust-lang.org/dist/rustc-1.90.0-x86_64-pc-windows-msvc.tar.xz",
+        "kind":  "rust"
+    },
+    {
+        "id":  "cargo",
+        "archive":  "cargo.tar.xz",
+        "sha256":  "a238d6a87cb0935e4f1bf0b4d093cbac3833d2f8b04413417bb622779669bec5",
+        "url":  "https://static.rust-lang.org/dist/cargo-1.90.0-x86_64-pc-windows-msvc.tar.xz",
+        "kind":  "rust"
+    },
+    {
+        "id":  "rust-std",
+        "archive":  "rust-std.tar.xz",
+        "sha256":  "3b8c22f81c93c7e914369433430792bd6c06403806ae25b0b95f3cfc540a8b48",
+        "url":  "https://static.rust-lang.org/dist/rust-std-1.90.0-x86_64-pc-windows-msvc.tar.xz",
+        "kind":  "rust"
+    }
+]
