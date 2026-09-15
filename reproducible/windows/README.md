@@ -5,7 +5,43 @@ not use the host's Visual Studio installation or SDK. Compilation uses Cargo's
 checked-in lockfile and `--frozen` after fetching dependencies. OpenSSL remains
 excluded on Windows; native TLS uses SChannel.
 
-## Default Flutter builds
+## Check a Windows host first
+
+From the repository root, run the standalone preflight (no Python or Dart
+packages required):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File reproducible/windows/doctor.ps1 -Network -Release
+```
+
+It checks Windows x64, Git, Flutter/Dart versions against this checkout and CI,
+Windows PowerShell extraction support, recipe inputs, writable NTFS storage,
+file locking, old file timestamps, available space, and ambient Cargo config.
+Pinned Python and native compilers are automatically provisioned by the builder;
+they do not need to be installed beforehand. No `R:` drive is required.
+
+Options:
+
+- `-Flutter C:\path\to\flutter\bin\flutter.bat` selects the SDK to check.
+  Use that same SDK for subsequent builds.
+- `-Cache C:\cache` and `-Work C:\fresh-work` check paths you intend to pass to
+  the producer. The work path must not already exist.
+- `-Release` additionally requires a clean Git checkout for release packaging;
+  omit it for source-hook development.
+- `-Network` checks pinned download URLs and package endpoints. Without it,
+  network readiness is explicitly untested. HEAD requests do not verify full
+  downloads or every Cargo dependency; the builder checks archive hashes.
+- `-Desktop` also checks Visual Studio through `flutter doctor -v` for building
+  a Flutter application. Visual Studio is unnecessary for native-only production.
+- `-Json` emits a structured report. Exit 1 means blocked; exit 0 means no
+  blocking checks failed, but inspect warnings (including low disk space).
+
+The check installs nothing and uses only a temporary storage probe, which it
+removes. Flutter commands may initialize their own SDK cache. A passing preflight
+establishes host readiness, not matching hashes: build and compare against a
+successful CI run at the same revision using the procedure below.
+
+## Build a Flutter application
 
 On Windows x64 with Flutter's normal Windows desktop prerequisites, applications
 consuming this package use the pinned native builder automatically:
