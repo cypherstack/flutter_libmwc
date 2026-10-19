@@ -31,7 +31,7 @@ Use the same root pubspec settings and normal Flutter commands in CI, such as
 
 ## Build from source
 
-Omit the prebuilt settings or set `native_build: source`. Install Rust 1.90.0 via
+Omit the prebuilt settings or set `native_build: source`. Install Rust 1.99.1 via
 [rustup](https://rustup.rs/), a C/C++ compiler, CMake, libclang, pkg-config, Perl,
 and `protoc`. Use Xcode for Apple, Android SDK/NDK r27+ for Android, and Visual
 Studio's C++ workload for Windows. Run Flutter normally; the hook compiles Rust
