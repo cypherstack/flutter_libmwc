@@ -178,7 +178,20 @@ jobs:
           build downloads again. In pub workspaces, clean from the workspace root.
           Omit these settings or use native_build: source to build from source.
           EOF
-          # gh uploads all assets before publishing, including for immutable releases.
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            is_draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')"
+          
+            if [[ "$is_draft" == "true" ]]; then
+                echo "Draft release exists for $RELEASE_TAG; deleting stale draft and recreating it."
+                gh release delete "$RELEASE_TAG" --yes
+              else
+                echo "Published release already exists for $RELEASE_TAG; refusing to overwrite."
+                exit 1
+            fi
+          fi
+
+          # only create if the release does not already exist
           gh release create "$RELEASE_TAG" build/native-release/* \
             --verify-tag --latest=false --title "$RELEASE_TAG" \
             --notes-file "$RUNNER_TEMP/release-notes.md"
