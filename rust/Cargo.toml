@@ -48,11 +48,10 @@ ffi_helpers = "0.3.0"
 anyhow = "1.0.69"
 
 
-# We never call openssl ourselves. This makes native-tls build OpenSSL from
-# source instead of looking for a system copy, which is what lets Android and
-# iOS cross-compile. Windows is excluded because native-tls uses SChannel
-# there, and building OpenSSL produces paths past Windows' 260-character limit.
-[target.'cfg(not(target_os = "windows"))'.dependencies]
+# We never call openssl ourselves. Built from source where native-tls uses
+# OpenSSL (Linux, Android) instead of looking for a system copy; Apple and
+# Windows use their own TLS and never link it.
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
 
 [lib]
