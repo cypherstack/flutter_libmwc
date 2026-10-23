@@ -1,16 +1,16 @@
 {
-  "release": "fa0d223adae4",
-  "date": "2026-10-22",
+  "release": "c50d3097347e",
+  "date": "2026-10-23",
   "files": {
-    "aarch64-apple-darwin/libmwc_wallet.dylib": "3b77d160ea9a574c941b69745eee94a85dd97f7d6728c6b50c27d0a06130b27c",
-    "aarch64-apple-ios-sim/libmwc_wallet.dylib": "abaf2be17f304dcfff8009a3f6634c7465d9a270c0023773828105678c4cb421",
-    "aarch64-apple-ios/libmwc_wallet.dylib": "b8ac640a488ab1bce7d2eb1144c3957f46bf1c0d0206cbdfaec6aac3053c0fa8",
-    "aarch64-linux-android/libmwc_wallet.so": "8b945b20e0a0428e865a589caa5b78c39843ceb7e32da22e9375ff9a44720419",
-    "armv7-linux-androideabi/libmwc_wallet.so": "86c5e372856cfdbf21210405431635d36da9b6312b92fdf3c2c8b49e1fe553b3",
+    "aarch64-apple-darwin/libmwc_wallet.dylib": "499899e7208f813e5504e5f6b8c30bb8453083d58347819288f627aee6217828",
+    "aarch64-apple-ios-sim/libmwc_wallet.dylib": "1118f3b853eca86f29379462ced5112f11632503a3e4f50ebdeaa67c692e127b",
+    "aarch64-apple-ios/libmwc_wallet.dylib": "7e0fbbb0a5bc79456a716f043f29fedb0e6fa8c0a1690c9eda5239b74c7f12cf",
+    "aarch64-linux-android/libmwc_wallet.so": "cb361758267530c2b454f3aee1bdd0665b48d1da52beb956d9f76db6e57bd4f7",
+    "armv7-linux-androideabi/libmwc_wallet.so": "29cc0dd76d762ac72ac80cb368d0c322453301a8c98005e6315455a09173a6b4",
     "x86_64-apple-darwin/libmwc_wallet.dylib": "9318bffc19ac4685db4d66edf713f794f1e6f55bb640ac7a556d4110143deae7",
     "x86_64-apple-ios/libmwc_wallet.dylib": "77bf055d942b3444c6da8a4b11d5bf059882fb2b4be02f146a78a4d87a658412",
-    "x86_64-linux-android/libmwc_wallet.so": "16b547953fadcb97daddc27819d1579b5ac8d35527068888ca666b305e279eb6",
-    "x86_64-pc-windows-msvc/mwc_wallet.dll": "e4726f9588f3b08b4253ea639ed87ecc240a6dc0c8488cd9910e735582be4ad8",
-    "x86_64-unknown-linux-gnu/libmwc_wallet.so": "4bcd009278dd3bfdc7ec0d873dcb7c9a7f022d31365ced5064a54882cb1394a5"
+    "x86_64-linux-android/libmwc_wallet.so": "9009fa19513ec49c04e7f032d3b47f046122446d99facf97067ea1e3ae188b24",
+    "x86_64-pc-windows-msvc/mwc_wallet.dll": "1592d57fcfb478820110a2a04f06adae3229635b2495646de60e310fd726edb4",
+    "x86_64-unknown-linux-gnu/libmwc_wallet.so": "f366361b59307190de1e999f7fabdfeaa7b85ba72e869a384d0d4130515fe0a0"
   }
 }
