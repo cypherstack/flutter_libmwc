@@ -38,7 +38,7 @@ Only dynamic libraries are provided, without sanitizers:
 | Windows | x64 | MSVC runtime |
 | macOS | arm64, x64 | macOS 11 |
 | Android | armv7, arm64, x64 | API 21; C++ runtime linked statically |
-| iOS | arm64 device; arm64/x64 simulator | iOS 13 |
+| iOS | arm64 device; arm64/x64 simulator | iOS 13; arm64 simulator 14 |
 
 The floors, the Rust and Xcode versions, the location of the Rust workspace,
 and the LMDB flags for Apple targets live in `dnix.json`.
