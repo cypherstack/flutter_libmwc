@@ -34,7 +34,7 @@ Only dynamic libraries are provided, without sanitizers:
 
 | Platform | Targets | Minimum |
 | --- | --- | --- |
-| Linux | x64 | glibc 2.28; no musl/Alpine |
+| Linux | arm64, x64 | glibc 2.28; no musl/Alpine |
 | Windows | x64 | MSVC runtime |
 | macOS | arm64, x64 | macOS 11 |
 | Android | armv7, arm64, x64 | API 21; C++ runtime linked statically |

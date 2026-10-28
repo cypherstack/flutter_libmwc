@@ -1,11 +1,12 @@
 {
-  "release": "c50d3097347e",
-  "date": "2026-10-23",
+  "release": "41ce961e0a4b",
+  "date": "2026-10-28",
   "files": {
     "aarch64-apple-darwin/libmwc_wallet.dylib": "499899e7208f813e5504e5f6b8c30bb8453083d58347819288f627aee6217828",
     "aarch64-apple-ios-sim/libmwc_wallet.dylib": "1118f3b853eca86f29379462ced5112f11632503a3e4f50ebdeaa67c692e127b",
     "aarch64-apple-ios/libmwc_wallet.dylib": "7e0fbbb0a5bc79456a716f043f29fedb0e6fa8c0a1690c9eda5239b74c7f12cf",
     "aarch64-linux-android/libmwc_wallet.so": "cb361758267530c2b454f3aee1bdd0665b48d1da52beb956d9f76db6e57bd4f7",
+    "aarch64-unknown-linux-gnu/libmwc_wallet.so": "62928987451dfa14184bb818664100a792606a507129fb2eeedd8b96a908420b",
     "armv7-linux-androideabi/libmwc_wallet.so": "29cc0dd76d762ac72ac80cb368d0c322453301a8c98005e6315455a09173a6b4",
     "x86_64-apple-darwin/libmwc_wallet.dylib": "9318bffc19ac4685db4d66edf713f794f1e6f55bb640ac7a556d4110143deae7",
     "x86_64-apple-ios/libmwc_wallet.dylib": "77bf055d942b3444c6da8a4b11d5bf059882fb2b4be02f146a78a4d87a658412",

@@ -6,11 +6,10 @@
   SHA-256; with the `build` user define set to `source` it builds the same
   library with Nix, on Linux or an Apple Silicon Mac. The `native_build`,
   `prebuilt_manifest_url` and `prebuilt_manifest_sha256` user defines are
-  no longer read: pinning this package's commit pins its libraries. Linux
-  arm64 is not supported in any build mode; before, it could only be built
-  from source.
+  no longer read: pinning this package's commit pins its libraries.
 * Every change is built on four hosts, which must produce the bytes
   `dnix.lock` records; the default branch publishes the release it names.
+* A Linux arm64 library, which before could only be built from source.
 
 ## 0.0.1
 
