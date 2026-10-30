@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, xcode-27, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+      # The hook builds through the Nix flake; before the first native
+      # release that is the only path, and it is unavailable on Windows.
+      - uses: DeterminateSystems/nix-installer-action@3138316df39ed29be04236d7ffc686fa525866aa # v23
+        if: runner.os != 'Windows'
+      - run: flutter pub get
+      - run: dart analyze hook tool test
+      # Prebuilt libraries exist once the lock's release is published from the
+      # default branch of the repository dnix.json names; until then only
+      # hosts with Nix can build them.
+      - name: Check whether the lock's release is published
+        id: release
+        shell: bash
+        run: |
+          repository=$(jq -r .repository dnix.json | sed 's/\.git$//; s#/$##')
+          tag="native-$(jq -r .release dnix.lock)"
+          echo "published=$([ "$(curl -s -o /dev/null -w '%{http_code}' "$repository/releases/tag/$tag")" = 200 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - name: Choose the build mode
+        shell: bash
+        run: echo '${{ steps.release.outputs.published == 'true' && 'prebuilt' || 'source' }}' > .dnix-build
+      - name: Run flutter test
+        if: runner.os != 'Windows' || steps.release.outputs.published == 'true'
+        shell: bash
+        run: |
+          if ! flutter test 2>&1 | tee test.log; then
+            echo "::error::$(tail -c 1500 test.log | tr '\n' ' ')"
+            exit 1
+          fi
+

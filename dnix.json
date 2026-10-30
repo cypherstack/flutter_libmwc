@@ -1,0 +1,52 @@
+{
+  "name": "flutter_libmwc",
+  "repository": "https://github.com/cypherstack/flutter_libmwc",
+  "library": "mwc_wallet",
+  "asset": "mwc.dart",
+  "rust": {
+    "workspace": "rust",
+    "crate": "mwc-wallet",
+    "cflags": {
+      "aarch64-apple-darwin": [
+        "-DMDB_USE_POSIX_MUTEX=1",
+        "-DMDB_USE_ROBUST=0"
+      ],
+      "x86_64-apple-darwin": [
+        "-DMDB_USE_POSIX_MUTEX=1",
+        "-DMDB_USE_ROBUST=0"
+      ]
+    },
+    "env": {
+      "CXXSTDLIB_aarch64_linux_android": "static:-bundle=c++",
+      "CXXSTDLIB_armv7_linux_androideabi": "static:-bundle=c++",
+      "CXXSTDLIB_x86_64_linux_android": "static:-bundle=c++",
+      "PROTOC": "protoc"
+    },
+    "tools": [
+      "protobuf"
+    ]
+  },
+  "toolchains": {
+    "rust": "1.99.1",
+    "xcode": "27.0"
+  },
+  "floors": {
+    "macos": 11,
+    "ios": 13,
+    "android": 21,
+    "glibc": "2.28"
+  },
+  "targets": [
+    "aarch64-apple-darwin",
+    "x86_64-apple-darwin",
+    "aarch64-apple-ios",
+    "aarch64-apple-ios-sim",
+    "x86_64-apple-ios",
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "x86_64-linux-android",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc"
+  ]
+}

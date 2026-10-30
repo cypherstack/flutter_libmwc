@@ -1,4 +1,5 @@
-# Source fingerprints must be identical on Windows and Unix checkouts.
+# Line endings stay LF on every checkout, Windows included, so every host
+# builds from the same bytes.
 hook/** text eol=lf
 rust/src/** text eol=lf
 rust/Cargo.toml text eol=lf
