@@ -493,12 +493,17 @@ abstract class Libmwc {
                     .toBigInt()
                     .toInt();
             var amountSending = amount - largestSatoshiFee;
-            //Get fees for this new amount
-            fees = await compute(_transactionFeesWrapper, (
-              wallet: wallet,
-              amount: amountSending,
-              minimumConfirmations: minimumConfirmations,
-            ));
+            // When the balance does not cover the fee there is nothing left
+            // to send. Keep the "Not enough funds" error rather than asking
+            // the native side for a negative amount, which aborts the app.
+            if (amountSending > 0) {
+              //Get fees for this new amount
+              fees = await compute(_transactionFeesWrapper, (
+                wallet: wallet,
+                amount: amountSending,
+                minimumConfirmations: minimumConfirmations,
+              ));
+            }
           }
         }
 

@@ -1100,18 +1100,32 @@ pub unsafe extern "C" fn mwc_rust_validate_address(
     p
 }
 
+/// Hands an error message to the caller the same way the Err branches do.
+fn error_c_string(msg: &str) -> *const c_char {
+    let s = CString::new(msg).unwrap();
+    let p = s.as_ptr();
+    std::mem::forget(s);
+    p
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn mwc_rust_get_tx_fees(
     wallet: *const c_char,
     c_amount: *const c_char,
     min_confirmations: *const c_char,
 ) -> *const c_char {
-    let minimum_confirmations = CStr::from_ptr(min_confirmations);
-    let minimum_confirmations: u64 = minimum_confirmations.to_str().unwrap().to_string().parse().unwrap();
+    // A negative or malformed amount must come back as an error string, not
+    // a panic: a panic here aborts the whole app.
+    let minimum_confirmations: u64 = match CStr::from_ptr(min_confirmations).to_str().ok().and_then(|s| s.parse().ok()) {
+        Some(v) => v,
+        None => return error_c_string("Error Invalid minimum confirmations"),
+    };
     let wallet_ptr = CStr::from_ptr(wallet);
 
-    let amount = CStr::from_ptr(c_amount);
-    let amount: u64 = amount.to_str().unwrap().to_string().parse().unwrap();
+    let amount: u64 = match CStr::from_ptr(c_amount).to_str().ok().and_then(|s| s.parse().ok()) {
+        Some(v) => v,
+        None => return error_c_string("Error Invalid amount"),
+    };
 
     let wallet_data = wallet_ptr.to_str().unwrap();
     let tuple_wallet_data: (u64, Option<SecretKey>) = serde_json::from_str(wallet_data).unwrap();
@@ -2574,4 +2588,27 @@ unsafe fn _decode_slatepack(
     let ptr = result.as_ptr();
     std::mem::forget(result);
     Ok(ptr)
+}
+
+#[cfg(test)]
+mod fee_input_tests {
+    use super::*;
+
+    unsafe fn fees(amount: &str, min_conf: &str) -> String {
+        let wallet = CString::new("[0,null]").unwrap();
+        let amount = CString::new(amount).unwrap();
+        let min_conf = CString::new(min_conf).unwrap();
+        let out = mwc_rust_get_tx_fees(wallet.as_ptr(), amount.as_ptr(), min_conf.as_ptr());
+        CStr::from_ptr(out).to_str().unwrap().to_string()
+    }
+
+    #[test]
+    fn negative_amount_is_an_error_not_a_panic() {
+        assert_eq!(unsafe { fees("-5", "10") }, "Error Invalid amount");
+    }
+
+    #[test]
+    fn malformed_minimum_confirmations_is_an_error() {
+        assert_eq!(unsafe { fees("5", "ten") }, "Error Invalid minimum confirmations");
+    }
 }
