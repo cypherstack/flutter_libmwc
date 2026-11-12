@@ -872,10 +872,13 @@ class FFITestService {
           // We can't check if methods are null, so we'll try to call them.
           try {
             // Try to access the methods - this will throw if they don't exist.
-            final startMethod = Libmwc.startMwcMqsListener;
-            final stopMethod = Libmwc.stopMwcMqsListener;
-            
-            // If we get here, methods exist.
+            final methods = <Function>[
+              Libmwc.startMwcMqsListener,
+              Libmwc.stopMwcMqsListener,
+            ];
+            if (methods.length != 2) {
+              throw TestException('Libmwc MWCMQS methods not available');
+            }
           } catch (methodError) {
             throw TestException('Libmwc MWCMQS methods not available: ${methodError.toString()}');
           }
