@@ -502,25 +502,43 @@ class FFITestService {
       'Encode compact slate JSON to slatepack and decode back via FFI',
       () async {
         try {
-          // Construct a minimal compact slate JSON.
-          // Use version 3 + compact_slate flag to satisfy current lib expectations.
+          // A compact slate from the MWC integration docs. Encoding requires
+          // both the transaction body and the participant data.
           const compactSlateJson = '{\n'
-              '  "version_info": {\n'
-              '    "orig_version": 3,\n'
-              '    "version": 3,\n'
-              '    "block_header_version": 1\n'
-              '  },\n'
-              '  "id": "0436430c-2b02-624c-2032-570501212b00",\n'
-              '  "sta": "S1",\n'
-              '  "num_participants": 2,\n'
-              '  "amount": "1000000000",\n'
-              '  "fee": "1000000",\n'
-              '  "height": "0",\n'
-              '  "lock_height": "0",\n'
-              '  "ttl_cutoff_height": "1440",\n'
-              '  "payment_proof": null,\n'
+              '  "amount": "200000000",\n'
+              '  "coin_type": "mwc",\n'
               '  "compact_slate": true,\n'
-              '  "participant_data": []\n'
+              '  "fee": "7000000",\n'
+              '  "height": "2793169",\n'
+              '  "id": "e2757000-4a03-47f9-b6fe-ed91dc2ceb9f",\n'
+              '  "lock_height": "0",\n'
+              '  "network_type": "mainnet",\n'
+              '  "num_participants": 2,\n'
+              '  "participant_data": [\n'
+              '    {\n'
+              '      "id": "0",\n'
+              '      "message": null,\n'
+              '      "message_sig": null,\n'
+              '      "part_sig": null,\n'
+              '      "public_blind_excess": "028d440ffa605a04cc92ca9e77b6be3295042fdc088b12565c73ae3bb4c7fbabae",\n'
+              '      "public_nonce": "0309338aec074b65e82e6077aab0e5a9b052df9948207e047bbedca1477f17a6cd"\n'
+              '    }\n'
+              '  ],\n'
+              '  "payment_proof": null,\n'
+              '  "ttl_cutoff_height": "2794609",\n'
+              '  "tx": {\n'
+              '    "body": {\n'
+              '      "inputs": [],\n'
+              '      "kernels": [],\n'
+              '      "outputs": []\n'
+              '    },\n'
+              '    "offset": "0000000000000000000000000000000000000000000000000000000000000000"\n'
+              '  },\n'
+              '  "version_info": {\n'
+              '    "block_header_version": 2,\n'
+              '    "orig_version": 3,\n'
+              '    "version": 3\n'
+              '  }\n'
               '}';
 
           // Encode to slatepack (unencrypted) — recipientAddress null.
@@ -531,8 +549,8 @@ class FFITestService {
           );
 
           // Basic format assertions.
-          if (!enc.slatepack.contains('BEGINSLATEPACK') ||
-              !enc.slatepack.contains('ENDSLATEPACK')) {
+          if (!enc.slatepack.contains('BEGINSLATE') ||
+              !enc.slatepack.contains('ENDSLATE')) {
             throw TestException('Encoded slatepack missing BEGIN/END markers');
           }
           if (enc.wasEncrypted) {
@@ -544,7 +562,7 @@ class FFITestService {
           final decoded = jsonDecode(dec.slateJson) as Map<String, dynamic>;
           final decodedId = decoded['id'] as String?;
           final versionInfo = decoded['version_info'] as Map<String, dynamic>?;
-          if (decodedId != '0436430c-2b02-624c-2032-570501212b00') {
+          if (decodedId != 'e2757000-4a03-47f9-b6fe-ed91dc2ceb9f') {
             throw TestException('Decoded slate id mismatch or missing: $decodedId');
           }
           if (versionInfo == null || versionInfo['version'] != 3) {
@@ -573,7 +591,7 @@ class FFITestService {
           bool threw = false;
           try {
             await Libmwc.encodeSlatepack(
-              slateJson: '{"id":"abc","version_info":{"version":3,"block_header_version":1}}',
+              slateJson: '{"amount":"200000000","coin_type":"mwc","compact_slate":true,"fee":"7000000","height":"2793169","id":"e2757000-4a03-47f9-b6fe-ed91dc2ceb9f","lock_height":"0","network_type":"mainnet","num_participants":2,"participant_data":[{"id":"0","message":null,"message_sig":null,"part_sig":null,"public_blind_excess":"028d440ffa605a04cc92ca9e77b6be3295042fdc088b12565c73ae3bb4c7fbabae","public_nonce":"0309338aec074b65e82e6077aab0e5a9b052df9948207e047bbedca1477f17a6cd"}],"payment_proof":null,"ttl_cutoff_height":"2794609","tx":{"body":{"inputs":[],"kernels":[],"outputs":[]},"offset":"0000000000000000000000000000000000000000000000000000000000000000"},"version_info":{"block_header_version":2,"orig_version":3,"version":3}}',
               recipientAddress: 'dummy@mwcmqs.mwc.mw',
               encrypt: true,
               wallet: null, // No wallet context in test environment
@@ -854,10 +872,13 @@ class FFITestService {
           // We can't check if methods are null, so we'll try to call them.
           try {
             // Try to access the methods - this will throw if they don't exist.
-            final startMethod = Libmwc.startMwcMqsListener;
-            final stopMethod = Libmwc.stopMwcMqsListener;
-            
-            // If we get here, methods exist.
+            final methods = <Function>[
+              Libmwc.startMwcMqsListener,
+              Libmwc.stopMwcMqsListener,
+            ];
+            if (methods.length != 2) {
+              throw TestException('Libmwc MWCMQS methods not available');
+            }
           } catch (methodError) {
             throw TestException('Libmwc MWCMQS methods not available: ${methodError.toString()}');
           }
