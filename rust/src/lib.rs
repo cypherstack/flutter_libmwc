@@ -1596,12 +1596,13 @@ pub fn tx_strategies(
         minimum_confirmations,
         max_outputs: 500,
         num_change_outputs: 1,
+        selection_strategy_is_use_all: false,
         estimate_only: Some(true),
         message: None,
         ..Default::default()
     };
 
-    match owner::init_send_tx(&mut **w, keychain_mask.as_ref(), &args, true, 1) {
+    match owner::init_send_tx(&mut **w, keychain_mask.as_ref(), &args, false, 1) {
         Ok(slate) => {
             result.push(Strategy {
                 selection_strategy_is_use_all: false,
@@ -1981,6 +1982,7 @@ impl Task for Listener {
 
     fn run(&self, cancel_tok: &CancellationToken) -> Result<Self::Output, anyhow::Error> {
         install_panic_hook();
+        cancel_tok.is_done()?;
         // export_task! runs us on a fresh thread; seed CHAIN_TYPE for it.
         let target_chaintype = ChainTypes::Mainnet;
         global::set_global_chain_type(target_chaintype);
@@ -1992,6 +1994,7 @@ impl Task for Listener {
         let wlt = tuple_wallet_data.0;
         let sek_key = tuple_wallet_data.1;
         let mwcmqs_conf = serde_json::from_str::<MQSConfig>(&self.mwcmqs_config)?;
+        cancel_tok.is_done()?;
 
         unsafe {
             ensure_wallet!(wlt, wallet);
@@ -2000,14 +2003,26 @@ impl Task for Listener {
                     wallet.clone(),
                     mwcmqs_conf.clone(),
                     Arc::new(Mutex::new(sek_key.clone())),
-                    true,
+                    false,
                 );
                 match mwcmqs_broker {
-                    Ok((_, _subsriber)) => {
+                    Ok((_, mut subscriber)) => {
+                        if cancel_tok.cancelled() {
+                            // Cancellation may race a slow broker start. Stop
+                            // the newly installed broker before the task exits
+                            // so it cannot become orphaned.
+                            subscriber.stop();
+                            return Err(anyhow::anyhow!(
+                                "MWCMQS listener start was cancelled"
+                            ));
+                        }
                         println!("MWCMQS listener started successfully.");
                     }
                     Err(e) => {
-                        println!("Error starting MWCMQS listener: {}", e);
+                        return Err(anyhow::anyhow!(
+                            "Error starting MWCMQS listener: {}",
+                            e
+                        ));
                     }
                 }
             }
@@ -2043,26 +2058,39 @@ pub unsafe extern "C" fn mwc_rust_mwcmqs_listener_start(
         mwcmqs_config: mwcmqs_config.parse().unwrap()
     };
 
-    let handler = mwc_listener_spawn(&listen);
-    let handler_value = handler.read();
-    let boxed_handler = Box::new(handler_value);
-    Box::into_raw(boxed_handler) as *mut _
+    mwc_listener_spawn(&listen) as *mut _
+}
+
+#[no_mangle]
+pub extern "C" fn mwc_rust_mwcmqs_listener_is_running() -> bool {
+    mwc_wallet_impls::adapters::get_mwcmqs_brocker()
+        .map(|(_, subscriber)| subscriber.is_running())
+        .unwrap_or(false)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn mwc_listener_cancel(handler: *mut c_void) -> *const c_char {
     let handle = handler as *mut TaskHandle<usize>;
     mwc_listener_cancel_internal(handle);
+    // Initialization runs on a short-lived task. Waiting consumes its handle
+    // and prevents a late successful start from escaping this stop request.
+    let task_result = mwc_listener_wait(handle);
+    if !task_result.is_null() {
+        mwc_listener_result_destroy(task_result);
+    }
     if let Some((_, mut subscriber)) = mwc_wallet_impls::adapters::get_mwcmqs_brocker() {
         if subscriber.is_running() {
             if subscriber.stop() {
                 println!("MWCMQS listener stopped successfully.");
             } else {
-                println!("Unable to stop the MWCMQS listener.");
+                // `stop` also resets the local broker; false means its relay
+                // notification failed, not that the local listener survived.
+                println!("MWCMQS listener stopped; relay notification failed.");
             }   
         }
     }
-    let error_msg = format!("{}", mwc_listener_cancelled(handle));
+    let stopped = !mwc_rust_mwcmqs_listener_is_running();
+    let error_msg = format!("{}", stopped);
     let error_msg_ptr = CString::new(error_msg).unwrap();
     let ptr = error_msg_ptr.as_ptr();
     std::mem::forget(error_msg_ptr);
@@ -2314,7 +2342,7 @@ fn _tx_finalize_core(
     wallet: &Wallet,
     keychain_mask: Option<SecretKey>,
     slate_json: &str,
-) -> Result<String, Error> {
+) -> Result<(String, bool), Error> {
     // Inflate & upgrade slate
     let slate = Slate::deserialize_upgrade_plain(slate_json)?;
 
@@ -2323,21 +2351,24 @@ fn _tx_finalize_core(
     let finalized = owner_api.finalize_tx(keychain_mask.as_ref(), &slate)?;
 
     // Post the finalized transaction to the network via node client.
-    {
+    let posted = {
         wallet_lock!(wallet, w);
         if let Some(ref tx) = finalized.tx {
             match w.w2n_client().post_tx(tx, true) {
                 Ok(_) => {
                     debug!("Transaction posted (broadcast) for mining");
+                    true
                 },
                 Err(e) => {
                     debug!("Warning: Failed to post (broadcast) transaction to network: {}", e);
+                    false
                 }
             }
         } else {
             debug!("Warning: Finalized slate does not contain a transaction to post");
+            false
         }
-    }
+    };
 
     // Build the same composite tuple shape as init_send does: (txs_json, slate_json).
     let txs = owner_api.retrieve_txs(
@@ -2361,7 +2392,7 @@ fn _tx_finalize_core(
         serde_json::to_string(&txs.1).unwrap(),
         fix_slate_for_mwcqt_compatibility(&finalized, current_height)?,
     );
-    Ok(serde_json::to_string(&pair).unwrap())
+    Ok((serde_json::to_string(&pair).unwrap(), posted))
 }
 
 #[no_mangle]
@@ -2403,9 +2434,13 @@ pub unsafe extern "C" fn mwc_rust_tx_finalize(
     ensure_wallet!(wlt, wallet);
 
     let out = match _tx_finalize_core(&wallet, sek_key.clone(), slate_str) {
-        Ok(final_slate) => {
-            let empty_json = r#"{\"slate_msg\": \"\"}"#;
-            let response_tuple = (&final_slate, &empty_json);
+        Ok((final_slate, posted)) => {
+            let metadata = serde_json::json!({
+                "slate_msg": "",
+                "posted": posted,
+            })
+            .to_string();
+            let response_tuple = (&final_slate, &metadata);
             serde_json::to_string(&response_tuple).unwrap()
         }
         Err(e) => format!("Error {}", e),

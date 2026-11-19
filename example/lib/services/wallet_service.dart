@@ -453,7 +453,7 @@ class WalletService {
   }
 
 /// Start MWCMQS listener using same FFI functions as test battery.
-  static void startMwcMqsListener() {
+  static Future<void> startMwcMqsListener() async {
     try {
       if (_currentWalletHandle == null) {
         throw Exception('No wallet is currently open');
@@ -469,7 +469,7 @@ class WalletService {
       });
       
       // Use the same FFI function as test battery.
-      Libmwc.startMwcMqsListener(
+      await Libmwc.startMwcMqsListener(
         wallet: _currentWalletHandle!,
         mwcmqsConfig: mwcmqsConfig,
       );
@@ -483,12 +483,15 @@ class WalletService {
   }
 
 /// Stop MWCMQS listener using same FFI functions as test battery.
-  static void stopMwcMqsListener() {
+  static Future<void> stopMwcMqsListener() async {
     try {
       _logInfo('Stopping MWCMQS listener');
       
       // Use the same FFI function as test battery.
-      Libmwc.stopMwcMqsListener();
+      final wallet = _currentWalletHandle;
+      if (wallet != null) {
+        await Libmwc.stopMwcMqsListener(wallet: wallet);
+      }
       
       _logInfo('MWCMQS listener stopped successfully');
       
