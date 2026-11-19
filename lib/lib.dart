@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi';
 
@@ -20,6 +21,40 @@ class BadMWCHTTPAddressException implements Exception {
 
 abstract class ListenerManager {
   static Pointer<Void>? pointer;
+  static String? wallet;
+  static String? preferredWallet;
+
+  static bool owns(String candidate) =>
+      pointer != null && wallet == candidate;
+}
+
+bool isMwcNativeError(String result) =>
+    RegExp(r'^error(?:\s|:|$)', caseSensitive: false)
+        .hasMatch(result.trimLeft());
+
+bool isMwcDecodeFailure(String result) {
+  if (isMwcNativeError(result)) return true;
+  try {
+    final decoded = jsonDecode(result);
+    return decoded is Map && decoded['success'] == false;
+  } catch (_) {
+    return false;
+  }
+}
+
+bool parseMwcFinalizePosted(String result) {
+  final outer = jsonDecode(result) as List<dynamic>;
+  if (outer.length < 2 || outer[1] is! String) {
+    return true;
+  }
+  try {
+    final metadata = jsonDecode(outer[1] as String);
+    return metadata is! Map<String, dynamic> || metadata['posted'] != false;
+  } on FormatException {
+    // Older native builds returned an escaped pseudo-JSON value here. The
+    // app ignored that metadata, so preserve its successful-finalize behavior.
+    return true;
+  }
 }
 
 ///
@@ -166,7 +201,7 @@ abstract class Libmwc {
         ));
 
         //If balances is valid json return, else return error
-        if (balances.toUpperCase().contains("ERROR")) {
+        if (isMwcNativeError(balances)) {
           throw Exception(balances);
         }
         var jsonBalances = json.decode(balances);
@@ -279,7 +314,7 @@ abstract class Libmwc {
           note: note,
         ));
 
-        if (result.toUpperCase().contains("ERROR")) {
+        if (isMwcNativeError(result)) {
           throw Exception("Error creating transaction ${result.toString()}");
         }
 
@@ -334,7 +369,7 @@ abstract class Libmwc {
           refreshFromNode: refreshFromNode,
         ));
 
-        if (result.toUpperCase().contains("ERROR")) {
+        if (isMwcNativeError(result)) {
           throw Exception(
               "Error getting mwc transactions ${result.toString()}");
         }
@@ -502,7 +537,7 @@ abstract class Libmwc {
           }
         }
 
-        if (fees.toUpperCase().contains("ERROR")) {
+        if (isMwcNativeError(fees)) {
           //Check if the error is an
           //Throw the returned error
           throw Exception(fees);
@@ -667,7 +702,7 @@ abstract class Libmwc {
         amount: amount,
         address: address,
       ));
-      if (result.toUpperCase().contains("ERROR")) {
+      if (isMwcNativeError(result)) {
         throw Exception("Error creating transaction ${result.toString()}");
       }
 
@@ -688,22 +723,174 @@ abstract class Libmwc {
     }
   }
 
-  static void startMwcMqsListener({
-    required String wallet,
-    required String mwcmqsConfig,
-  }) {
-    try {
-      ListenerManager.pointer =
-          lib_mwc.mwcMqsListenerStart(wallet, mwcmqsConfig);
-    } catch (e) {
-      throw ("Error starting wallet listener ${e.toString()}");
+  static int _startMwcMqsListenerWrapper(
+    ({String wallet, String mwcmqsConfig}) data,
+  ) => lib_mwc.mwcMqsListenerStart(data.wallet, data.mwcmqsConfig).address;
+
+  static bool _stopMwcMqsListenerWrapper(int address) =>
+      lib_mwc.mwcMqsListenerStop(Pointer<Void>.fromAddress(address)) == 'true';
+
+  @visibleForTesting
+  static Future<bool> waitForMwcMqsListener({
+    required FutureOr<bool> Function() isRunning,
+    int attempts = 100,
+    Duration pollInterval = const Duration(milliseconds: 100),
+  }) async {
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      if (await isRunning()) return true;
+      if (attempt + 1 < attempts) await Future<void>.delayed(pollInterval);
     }
+    return false;
   }
 
-  static void stopMwcMqsListener() {
-    if (ListenerManager.pointer != null) {
-      lib_mwc.mwcMqsListenerStop(ListenerManager.pointer!);
+  @visibleForTesting
+  static Future<bool> canReuseMwcMqsListener({
+    required String wallet,
+    FutureOr<bool> Function()? isRunning,
+  }) async {
+    if (!ListenerManager.owns(wallet)) return false;
+    return await (isRunning ?? lib_mwc.mwcMqsListenerIsRunning)();
+  }
+
+  @visibleForTesting
+  static Future<bool> shouldKeepCurrentMwcMqsListener({
+    required String wallet,
+    required bool allowTakeover,
+    FutureOr<bool> Function()? isRunning,
+  }) async {
+    if (ListenerManager.pointer == null ||
+        ListenerManager.owns(wallet) ||
+        allowTakeover) {
+      return false;
     }
+    return await (isRunning ?? lib_mwc.mwcMqsListenerIsRunning)();
+  }
+
+  @visibleForTesting
+  static bool shouldDeferToPreferredMwcMqsWallet({
+    required String wallet,
+    required bool allowTakeover,
+  }) =>
+      !allowTakeover &&
+      ListenerManager.preferredWallet != null &&
+      ListenerManager.preferredWallet != wallet;
+
+  static String _txReceiveWrapper(
+    ({String wallet, String slateJson}) data,
+  ) => lib_mwc.txReceive(data.wallet, data.slateJson);
+
+  static String _txFinalizeWrapper(
+    ({String wallet, String slateJson}) data,
+  ) => lib_mwc.txFinalize(data.wallet, data.slateJson);
+
+  static Future<String> _txInitWrapper(
+    ({
+      String wallet,
+      int selectionStrategyIsAll,
+      int minimumConfirmations,
+      String message,
+      int amount,
+    }) data,
+  ) => lib_mwc.txInit(
+    data.wallet,
+    data.selectionStrategyIsAll,
+    data.minimumConfirmations,
+    data.message,
+    data.amount,
+  );
+
+  static Future<String> _encodeSlatepackWrapper(
+    ({String slateJson, String recipientAddress}) data,
+  ) => lib_mwc.encodeSlatepack(data.slateJson, data.recipientAddress);
+
+  static Future<String> _encodeSlatepackEnhancedWrapper(
+    ({String wallet, String slateJson, String recipientAddress}) data,
+  ) => lib_mwc.encodeSlatepackEnhanced(
+    data.wallet,
+    data.slateJson,
+    data.recipientAddress,
+  );
+
+  static Future<String> _decodeSlatepackWrapper(String slatepack) =>
+      lib_mwc.decodeSlatepack(slatepack);
+
+  static Future<String> _decodeSlatepackEnhancedWrapper(
+    ({String wallet, String slatepack}) data,
+  ) => lib_mwc.decodeSlatepackEnhanced(data.wallet, data.slatepack);
+
+  static Future<void> startMwcMqsListener({
+    required String wallet,
+    required String mwcmqsConfig,
+    bool allowTakeover = false,
+  }) async {
+    await m.protect(() async {
+      try {
+        if (allowTakeover) ListenerManager.preferredWallet = wallet;
+        if (shouldDeferToPreferredMwcMqsWallet(
+          wallet: wallet,
+          allowTakeover: allowTakeover,
+        )) {
+          return;
+        }
+        if (await canReuseMwcMqsListener(wallet: wallet)) return;
+        if (await shouldKeepCurrentMwcMqsListener(
+          wallet: wallet,
+          allowTakeover: allowTakeover,
+        )) {
+          return;
+        }
+        final previous = ListenerManager.pointer;
+        if (previous != null) {
+          final stopped = await compute(
+            _stopMwcMqsListenerWrapper,
+            previous.address,
+          );
+          // Native wait consumes the task handle even when the subscriber's
+          // local shutdown later reports failure.
+          ListenerManager.pointer = null;
+          ListenerManager.wallet = null;
+          if (!stopped) {
+            throw StateError('Existing MWCMQS listener did not stop');
+          }
+        }
+        final address = await compute(
+          _startMwcMqsListenerWrapper,
+          (wallet: wallet, mwcmqsConfig: mwcmqsConfig),
+        );
+        final running = await waitForMwcMqsListener(
+          isRunning: lib_mwc.mwcMqsListenerIsRunning,
+        );
+        if (!running) {
+          await compute(_stopMwcMqsListenerWrapper, address);
+          throw StateError('MWCMQS listener failed to start');
+        }
+        ListenerManager.pointer = Pointer<Void>.fromAddress(address);
+        ListenerManager.wallet = wallet;
+      } catch (e) {
+        throw ("Error starting wallet listener ${e.toString()}");
+      }
+    });
+  }
+
+  static Future<bool> stopMwcMqsListener({
+    required String wallet,
+    bool releasePreference = false,
+  }) async {
+    return m.protect(() async {
+      if (releasePreference && ListenerManager.preferredWallet == wallet) {
+        ListenerManager.preferredWallet = null;
+      }
+      if (!ListenerManager.owns(wallet)) return false;
+      final pointer = ListenerManager.pointer!;
+      final stopped = await compute(
+        _stopMwcMqsListenerWrapper,
+        pointer.address,
+      );
+      // Native wait consumes this handle, so it must never remain registered.
+      ListenerManager.pointer = null;
+      ListenerManager.wallet = null;
+      return stopped;
+    });
   }
 
   /// Receive a transaction slate (step 2 of slatepack flow).
@@ -713,8 +900,11 @@ abstract class Libmwc {
   }) async {
     return await m.protect(() async {
       try {
-        final String result = lib_mwc.txReceive(wallet, slateJson);
-        if (result.toUpperCase().contains("ERROR")) {
+        final result = await compute(
+          _txReceiveWrapper,
+          (wallet: wallet, slateJson: slateJson),
+        );
+        if (isMwcNativeError(result)) {
           throw Exception("Error receiving transaction $result");
         }
 
@@ -759,8 +949,11 @@ abstract class Libmwc {
   }) async {
     return await m.protect(() async {
       try {
-        final String result = lib_mwc.txReceive(wallet, slateJson);
-        if (result.toUpperCase().contains("ERROR")) {
+        final result = await compute(
+          _txReceiveWrapper,
+          (wallet: wallet, slateJson: slateJson),
+        );
+        if (isMwcNativeError(result)) {
           throw Exception("Error receiving transaction $result");
         }
 
@@ -793,14 +986,17 @@ abstract class Libmwc {
   }
 
   /// Finalize a transaction slate (step 3 of slatepack flow).
-  static Future<({String slateId, String commitId})> txFinalize({
+  static Future<({String slateId, String commitId, bool posted})> txFinalize({
     required String wallet,
     required String slateJson,
   }) async {
     return await m.protect(() async {
       try {
-        final String result = lib_mwc.txFinalize(wallet, slateJson);
-        if (result.toUpperCase().contains("ERROR")) {
+        final result = await compute(
+          _txFinalizeWrapper,
+          (wallet: wallet, slateJson: slateJson),
+        );
+        if (isMwcNativeError(result)) {
           throw Exception("Error finalizing transaction $result");
         }
 
@@ -815,9 +1011,10 @@ abstract class Libmwc {
         final commitId =
             outputs.isEmpty ? '' : (outputs[0]['commit'] as String? ?? '');
 
-        final ({String slateId, String commitId}) data = (
+        final ({String slateId, String commitId, bool posted}) data = (
           slateId: part1[0]['tx_slate_id'],
           commitId: commitId,
+          posted: parseMwcFinalizePosted(result),
         );
 
         return data;
@@ -840,14 +1037,17 @@ abstract class Libmwc {
     String message = '',
   }) async {
     return await m.protect(() async {
-      final result = await lib_mwc.txInit(
-        wallet,
-        selectionStrategyIsAll ? 1 : 0,
-        minimumConfirmations,
-        message,
-        amount,
+      final result = await compute(
+        _txInitWrapper,
+        (
+          wallet: wallet,
+          selectionStrategyIsAll: selectionStrategyIsAll ? 1 : 0,
+          minimumConfirmations: minimumConfirmations,
+          message: message,
+          amount: amount,
+        ),
       );
-      if (result.toUpperCase().contains('ERROR')) {
+      if (isMwcNativeError(result)) {
         throw Exception('Error initializing slate: $result');
       }
       return result; // This is the raw Slate JSON (S1)
@@ -896,20 +1096,28 @@ abstract class Libmwc {
       // Prefer wallet-aware encoding whenever wallet is provided so the sender key
       // is included even for unencrypted slatepacks (improves compatibility).
       if (wallet != null) {
-        slatepackResult = await lib_mwc.encodeSlatepackEnhanced(
-          wallet,
-          slateJson,
-          (recipientAddress ?? ''),
+        slatepackResult = await m.protect(
+          () => compute(
+            _encodeSlatepackEnhancedWrapper,
+            (
+              wallet: wallet,
+              slateJson: slateJson,
+              recipientAddress: recipientAddress ?? '',
+            ),
+          ),
         );
       } else {
         // Fallback to basic function (no wallet context).
-        slatepackResult = await lib_mwc.encodeSlatepack(
-          slateJson,
-          (recipientAddress ?? ''),
+        slatepackResult = await compute(
+          _encodeSlatepackWrapper,
+          (
+            slateJson: slateJson,
+            recipientAddress: recipientAddress ?? '',
+          ),
         );
       }
 
-      if (slatepackResult.toUpperCase().contains("ERROR")) {
+      if (isMwcNativeError(slatepackResult)) {
         // Do not produce local Base58 armor for interoperability; surface the error.
         throw Exception("Error encoding slatepack: $slatepackResult");
       }
@@ -946,9 +1154,9 @@ abstract class Libmwc {
     required String slatepack,
   }) async {
     try {
-      final decodeResult = await lib_mwc.decodeSlatepack(slatepack);
+      final decodeResult = await compute(_decodeSlatepackWrapper, slatepack);
 
-      if (decodeResult.toUpperCase().contains("ERROR")) {
+      if (isMwcDecodeFailure(decodeResult)) {
         // Fallback: decode locally-armored unencrypted slatepack.
         final local = _dearmorSlatepackLocally(slatepack);
         return (
@@ -1028,10 +1236,14 @@ abstract class Libmwc {
     required String slatepack,
   }) async {
     try {
-      final decodeResult =
-          await lib_mwc.decodeSlatepackEnhanced(wallet, slatepack);
+      final decodeResult = await m.protect(
+        () => compute(
+          _decodeSlatepackEnhancedWrapper,
+          (wallet: wallet, slatepack: slatepack),
+        ),
+      );
 
-      if (decodeResult.toUpperCase().contains("ERROR")) {
+      if (isMwcDecodeFailure(decodeResult)) {
         // Fallback to basic decode which may handle unencrypted local armor
         return await decodeSlatepack(slatepack: slatepack);
       }

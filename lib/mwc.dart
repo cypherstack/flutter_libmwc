@@ -201,6 +201,11 @@ Pointer<Void> mwcMqsListenerStart(String wallet, String MWCMQSConfig) {
   );
 }
 
+@Native<Bool Function()>(symbol: 'mwc_rust_mwcmqs_listener_is_running')
+external bool _mwcMqsListenerIsRunning();
+
+bool mwcMqsListenerIsRunning() => _mwcMqsListenerIsRunning();
+
 @Native<MwcMqsListenerStopFFI>(symbol: 'mwc_listener_cancel')
 external Pointer<Utf8> _MwcMqsListenerStop(Pointer<Void> handler);
 

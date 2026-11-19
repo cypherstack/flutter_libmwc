@@ -865,7 +865,7 @@ class FFITestService {
           // Test high-level API call structure.
           try {
             // This should fail gracefully since we don't have a real wallet/server.
-            Libmwc.startMwcMqsListener(
+            await Libmwc.startMwcMqsListener(
               wallet: '[test_wallet_handle]',
               mwcmqsConfig: jsonEncode({
                 'mwcmqs_domain': 'mqs.mwc.mw',
